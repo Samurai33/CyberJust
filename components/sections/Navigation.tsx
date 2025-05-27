@@ -20,13 +20,20 @@ export function Navigation() {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          {["CASOS", "PROTOCOLOS", "ESPECIALISTAS", "PROTEÇÃO", "DENÚNCIAS"].map((item) => (
+          {[
+            { name: "CASOS", href: "#casos" },
+            { name: "EPISÓDIOS", href: "/episodes" },
+            { name: "PROTOCOLOS", href: "#protocolos" },
+            { name: "ESPECIALISTAS", href: "#especialistas" },
+            { name: "PROTEÇÃO", href: "#protecao" },
+            { name: "DENÚNCIAS", href: "#denuncias" },
+          ].map((item) => (
             <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
+              key={item.name}
+              href={item.href}
               className="text-cyan-400 hover:text-white transition-all duration-300 hover:glow-text relative group text-sm font-mono"
             >
-              {item}
+              {item.name}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-red-500 group-hover:w-full transition-all duration-300" />
             </a>
           ))}
