@@ -67,7 +67,7 @@ const episodes: Episode[] = [
       "Este especial abordará os perigos que crianças enfrentam online e estratégias eficazes de proteção, com depoimentos de especialistas.",
     status: "AGENDADO",
     threat: "ALTO",
-    audioUrl: "/placeholder-audio.mp3",
+    audioUrl: "https://audio.jukehost.co.uk/O2Voc6ZqKgWKe9b3ho7xZOBWVu5Yp2oh",
   },
 ]
 
