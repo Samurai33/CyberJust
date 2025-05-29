@@ -5,8 +5,6 @@ import "./globals.css"
 import { AudioProvider } from "@/contexts/AudioContext"
 import { UIProvider } from "@/contexts/UIContext"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
-import { BookmarkProvider } from "@/contexts/BookmarkContext"
-import { RatingProvider } from "@/contexts/RatingContext"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -31,7 +29,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  generator: "v0.dev",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -44,11 +42,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ErrorBoundary>
           <UIProvider>
-            <AudioProvider>
-              <BookmarkProvider>
-                <RatingProvider>{children}</RatingProvider>
-              </BookmarkProvider>
-            </AudioProvider>
+            <AudioProvider>{children}</AudioProvider>
           </UIProvider>
         </ErrorBoundary>
       </body>

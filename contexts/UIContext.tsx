@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { createContext, useContext, useState, useEffect } from "react"
 
 interface Episode {
@@ -20,30 +21,15 @@ interface UIState {
   activeEpisode: number | null
   selectedEpisodeModal: Episode | null
   selectedLuluModal: boolean
-  episodeFilters: {
-    search: string
-    status: string
-    threat: string
-    category: string
-  }
 }
 
 interface UIContextType extends UIState {
   setActiveEpisode: (episode: number | null) => void
   setSelectedEpisodeModal: (episode: Episode | null) => void
   setSelectedLuluModal: (show: boolean) => void
-  setEpisodeFilters: (filters: Partial<UIState["episodeFilters"]>) => void
-  resetFilters: () => void
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined)
-
-const initialFilters = {
-  search: "",
-  status: "all",
-  threat: "all",
-  category: "all",
-}
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
   const [glitchText, setGlitchText] = useState("CYBERJUSTIÇA")
@@ -51,7 +37,6 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const [activeEpisode, setActiveEpisode] = useState<number | null>(null)
   const [selectedEpisodeModal, setSelectedEpisodeModal] = useState<Episode | null>(null)
   const [selectedLuluModal, setSelectedLuluModal] = useState(false)
-  const [episodeFilters, setEpisodeFiltersState] = useState(initialFilters)
 
   // Mouse tracking effect
   useEffect(() => {
@@ -86,39 +71,15 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(glitchInterval)
   }, [])
 
-  // Close modals when clicking outside or pressing escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSelectedEpisodeModal(null)
-        setSelectedLuluModal(false)
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [])
-
-  const setEpisodeFilters = (filters: Partial<UIState["episodeFilters"]>) => {
-    setEpisodeFiltersState((prev) => ({ ...prev, ...filters }))
-  }
-
-  const resetFilters = () => {
-    setEpisodeFiltersState(initialFilters)
-  }
-
   const value: UIContextType = {
     glitchText,
     mousePosition,
     activeEpisode,
     selectedEpisodeModal,
     selectedLuluModal,
-    episodeFilters,
     setActiveEpisode,
     setSelectedEpisodeModal,
     setSelectedLuluModal,
-    setEpisodeFilters,
-    resetFilters,
   }
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>
