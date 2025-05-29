@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 
 export function ProtectionSection() {
   return (
-    <section id="proteção" className="py-20 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
+    <section id="protecao" className="py-20 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 font-mono">
