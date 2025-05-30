@@ -64,7 +64,7 @@ export function HeroSection({ episodes }: HeroSectionProps) {
           <Button
             size="lg"
             className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500 shadow-lg shadow-red-500/25 group"
-            onClick={() => playEpisode(episodes[0])}
+            onClick={() => episodes.length > 0 && playEpisode(episodes[0])}
           >
             <Play className="w-5 h-5 mr-2 group-hover:animate-pulse" />
             OUÇA AGORA

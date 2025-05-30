@@ -5,6 +5,9 @@ import { useUI } from "@/contexts/UIContext"
 export function Background() {
   const { mousePosition } = useUI()
 
+  // Ensure mousePosition is defined with fallback values
+  const safeMousePosition = mousePosition || { x: 0, y: 0 }
+
   return (
     <>
       {/* Animated Background Grid */}
@@ -13,7 +16,7 @@ export function Background() {
         <div
           className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.1)_1px,transparent_1px)] bg-[size:50px_50px]"
           style={{
-            transform: `translate(${mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px)`,
+            transform: `translate(${safeMousePosition.x * 0.01}px, ${safeMousePosition.y * 0.01}px)`,
           }}
         />
       </div>

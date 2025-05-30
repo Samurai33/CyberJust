@@ -202,14 +202,6 @@
   box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00;
 }
 
-/* Text Truncation */
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

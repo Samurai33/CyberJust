@@ -40,7 +40,6 @@ export function AudioPlayer() {
               <div className="min-w-0 flex-1">
                 <div className="text-white font-mono text-sm truncate">
                   EP {currentEpisode.id}: {currentEpisode.title}
-                  {!currentEpisode.audioUrl && <span className="text-yellow-400 ml-2">[DEMO]</span>}
                 </div>
                 <div className="text-gray-400 text-xs font-mono">CyberJustiça Brasil</div>
               </div>

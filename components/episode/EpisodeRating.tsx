@@ -1,162 +1,188 @@
 "use client"
 
 import { useState } from "react"
-import { Star, MessageSquare, Save, X } from "lucide-react"
+import { Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { useEpisodeRatings } from "@/hooks/useEpisodeRatings"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { useRatings } from "@/contexts/RatingContext"
 
 interface EpisodeRatingProps {
-  episodeId: string
+  episodeId: string | number
 }
 
 export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
-  const { rateEpisode, getRating, removeRating } = useEpisodeRatings()
-  const [isEditing, setIsEditing] = useState(false)
-  const [tempRating, setTempRating] = useState(0)
-  const [tempReview, setTempReview] = useState("")
-  const [hoveredStar, setHoveredStar] = useState(0)
+  const { getEpisodeRatings, getAverageRating, getUserRating, addRating, updateRating } = useRatings()
+  const [selectedRating, setSelectedRating] = useState(0)
+  const [review, setReview] = useState("")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const currentRating = getRating(episodeId)
+  const episodeRatings = getEpisodeRatings(episodeId)
+  const averageRating = getAverageRating(episodeId)
+  const userRating = getUserRating(episodeId)
 
-  const handleStartEdit = () => {
-    setIsEditing(true)
-    setTempRating(currentRating?.rating || 0)
-    setTempReview(currentRating?.review || "")
-  }
-
-  const handleSave = () => {
-    if (tempRating > 0) {
-      rateEpisode(episodeId, tempRating, tempReview.trim() || undefined)
-      setIsEditing(false)
+  const handleSubmitRating = () => {
+    if (selectedRating > 0) {
+      if (userRating) {
+        updateRating(userRating.id, { rating: selectedRating, review: review || undefined })
+      } else {
+        addRating(episodeId, selectedRating, review || undefined)
+      }
+      setIsDialogOpen(false)
+      setSelectedRating(0)
+      setReview("")
     }
   }
 
-  const handleCancel = () => {
-    setIsEditing(false)
-    setTempRating(0)
-    setTempReview("")
-    setHoveredStar(0)
-  }
+  const renderStars = (rating: number, interactive = false, size: "sm" | "md" | "lg" = "md") => {
+    const starSize = size === "sm" ? "w-3 h-3" : size === "md" ? "w-4 h-4" : "w-5 h-5"
 
-  const renderStars = (rating: number, interactive = false) => {
-    return Array.from({ length: 5 }, (_, i) => {
-      const starNumber = i + 1
-      const isFilled = starNumber <= (interactive ? hoveredStar || tempRating : rating)
-
-      return (
-        <Star
-          key={i}
-          className={`w-5 h-5 ${
-            isFilled ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-          } ${interactive ? "cursor-pointer hover:text-yellow-300" : ""} transition-colors`}
-          onClick={interactive ? () => setTempRating(starNumber) : undefined}
-          onMouseEnter={interactive ? () => setHoveredStar(starNumber) : undefined}
-          onMouseLeave={interactive ? () => setHoveredStar(0) : undefined}
-        />
-      )
-    })
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`${starSize} ${
+              star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"
+            } ${interactive ? "cursor-pointer hover:text-yellow-300" : ""}`}
+            onClick={interactive ? () => setSelectedRating(star) : undefined}
+          />
+        ))}
+      </div>
+    )
   }
 
   return (
-    <Card className="bg-black/50 border-gray-800 backdrop-blur-sm">
+    <Card className="bg-gray-900 border-gray-700">
       <CardHeader>
-        <CardTitle className="text-white font-mono flex items-center gap-2">
+        <CardTitle className="text-cyan-400 flex items-center gap-2">
           <Star className="w-5 h-5" />
-          AVALIAÇÃO
+          Avaliações do Episódio
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {!isEditing && !currentRating ? (
-          <div className="text-center py-6">
-            <div className="flex justify-center mb-3">{renderStars(0)}</div>
-            <p className="text-gray-400 mb-4">Avalie este episódio</p>
-            <Button
-              onClick={handleStartEdit}
-              className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500"
-            >
-              <Star className="w-4 h-4 mr-2" />
-              AVALIAR EPISÓDIO
-            </Button>
+      <CardContent className="space-y-4">
+        {/* Average Rating Display */}
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            {renderStars(Math.round(averageRating), false, "lg")}
+            <span className="text-2xl font-bold text-white">{averageRating.toFixed(1)}</span>
           </div>
-        ) : !isEditing && currentRating ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {renderStars(currentRating.rating)}
-                <span className="text-yellow-400 font-mono">{currentRating.rating}/5</span>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleStartEdit}
-                className="border-gray-600 text-gray-400 hover:text-white"
-              >
-                EDITAR
-              </Button>
-            </div>
+          <p className="text-gray-400 text-sm">
+            {episodeRatings.length} avaliação{episodeRatings.length !== 1 ? "ões" : ""}
+          </p>
+        </div>
 
-            {currentRating.review && (
-              <div className="border-l-2 border-yellow-500/50 pl-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <MessageSquare className="w-4 h-4 text-yellow-400" />
-                  <span className="text-yellow-400 font-mono text-sm">COMENTÁRIO</span>
+        {/* User Rating Section */}
+        <div className="space-y-3">
+          {userRating ? (
+            <Card className="bg-gray-800 border-gray-600">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">Sua avaliação:</span>
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="border-gray-600">
+                        Editar
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-gray-900 border-gray-700">
+                      <DialogHeader>
+                        <DialogTitle className="text-white">Editar Avaliação</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm text-gray-400 mb-2 block">Classificação:</label>
+                          {renderStars(selectedRating || userRating.rating, true, "lg")}
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-400 mb-2 block">Comentário (opcional):</label>
+                          <Textarea
+                            value={review}
+                            onChange={(e) => setReview(e.target.value)}
+                            placeholder="Compartilhe sua opinião sobre este episódio..."
+                            className="bg-gray-800 border-gray-600"
+                            rows={3}
+                          />
+                        </div>
+                        <Button
+                          onClick={handleSubmitRating}
+                          disabled={selectedRating === 0}
+                          className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500"
+                        >
+                          Atualizar Avaliação
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">{currentRating.review}</p>
-              </div>
-            )}
+                <div className="flex items-center gap-2 mb-2">
+                  {renderStars(userRating.rating)}
+                  <Badge variant="outline" className="text-xs">
+                    {new Date(userRating.timestamp).toLocaleDateString("pt-BR")}
+                  </Badge>
+                </div>
+                {userRating.review && <p className="text-gray-300 text-sm">{userRating.review}</p>}
+              </CardContent>
+            </Card>
+          ) : (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500">
+                  <Star className="w-4 h-4 mr-2" />
+                  Avaliar Episódio
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-gray-900 border-gray-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Avaliar Episódio</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Classificação:</label>
+                    {renderStars(selectedRating, true, "lg")}
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Comentário (opcional):</label>
+                    <Textarea
+                      value={review}
+                      onChange={(e) => setReview(e.target.value)}
+                      placeholder="Compartilhe sua opinião sobre este episódio..."
+                      className="bg-gray-800 border-gray-600"
+                      rows={3}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleSubmitRating}
+                    disabled={selectedRating === 0}
+                    className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500"
+                  >
+                    Enviar Avaliação
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
 
-            <div className="text-xs text-gray-500">
-              Avaliado em {currentRating.updatedAt.toLocaleDateString("pt-BR")}
-            </div>
-
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => removeRating(episodeId)}
-              className="border-red-500/50 text-red-400 hover:bg-red-500/10"
-            >
-              REMOVER AVALIAÇÃO
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-400 mb-2 block">Classificação</label>
-              <div className="flex items-center gap-2">
-                {renderStars(tempRating, true)}
-                <span className="text-yellow-400 font-mono ml-2">
-                  {tempRating > 0 ? `${tempRating}/5` : "Selecione"}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-400 mb-2 block">Comentário (opcional)</label>
-              <Textarea
-                placeholder="Compartilhe sua opinião sobre este episódio..."
-                value={tempReview}
-                onChange={(e) => setTempReview(e.target.value)}
-                className="bg-gray-900/50 border-gray-700 text-white placeholder-gray-400"
-                rows={3}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSave}
-                disabled={tempRating === 0}
-                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                SALVAR AVALIAÇÃO
-              </Button>
-              <Button variant="outline" onClick={handleCancel}>
-                <X className="w-4 h-4 mr-2" />
-                CANCELAR
-              </Button>
-            </div>
+        {/* Recent Reviews */}
+        {episodeRatings.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-400">Avaliações Recentes:</h4>
+            {episodeRatings.slice(0, 3).map((rating) => (
+              <Card key={rating.id} className="bg-gray-800 border-gray-600">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    {renderStars(rating.rating, false, "sm")}
+                    <Badge variant="outline" className="text-xs">
+                      {new Date(rating.timestamp).toLocaleDateString("pt-BR")}
+                    </Badge>
+                  </div>
+                  {rating.review && <p className="text-gray-300 text-sm">{rating.review}</p>}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </CardContent>

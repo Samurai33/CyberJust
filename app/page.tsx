@@ -29,6 +29,17 @@ interface Episode {
 
 const episodes: Episode[] = [
   {
+    id: 7,
+    title: "Brasil: Fraudes Digitais - Ameaças Avançadas e Respostas",
+    date: "15/01/2024",
+    description:
+      "Análise profunda das fraudes digitais mais sofisticadas que atingem o Brasil, com especialistas revelando as técnicas mais avançadas usadas por criminosos e as respostas das autoridades.",
+    status: "ATIVO",
+    threat: "CRÍTICO",
+    audioUrl: "/audio/brasil-fraudes-digitais.mp3",
+    duration: "45:30",
+  },
+  {
     id: 13,
     title: "Crimes cibernéticos, fraude e estelionato",
     date: "15/05/2024",
@@ -67,7 +78,7 @@ const episodes: Episode[] = [
       "Este especial abordará os perigos que crianças enfrentam online e estratégias eficazes de proteção, com depoimentos de especialistas.",
     status: "AGENDADO",
     threat: "ALTO",
-    audioUrl: "https://audio.jukehost.co.uk/O2Voc6ZqKgWKe9b3ho7xZOBWVu5Yp2oh",
+    audioUrl: "/placeholder-audio.mp3",
   },
 ]
 
