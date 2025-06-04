@@ -3,7 +3,8 @@
 import { TrendingUp, Users, Clock, Target, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { getEpisodeAnalytics } from "@/data/episodes"
+import { getEpisodeAnalytics } from "@/services/analytics"
+import { calculateCompletionRate, calculateEngagementScore } from "@/lib/utils"
 
 interface EpisodeAnalyticsProps {
   episodeId: string | number
@@ -22,9 +23,10 @@ export function EpisodeAnalytics({ episodeId }: EpisodeAnalyticsProps) {
     )
   }
 
-  const completionRate = analytics.views > 0 ? (analytics.completions / analytics.views) * 100 : 0
+  const completionRate = calculateCompletionRate(analytics.views, analytics.completions)
   const averageListenMinutes = Math.floor(analytics.averageListenTime / 60)
   const averageListenSeconds = analytics.averageListenTime % 60
+  const engagementScore = calculateEngagementScore(completionRate, analytics.averageListenTime)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -84,9 +86,7 @@ export function EpisodeAnalytics({ episodeId }: EpisodeAnalyticsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-orange-400">
-            {Math.round((completionRate + (analytics.averageListenTime / 3600) * 100) / 2)}%
-          </div>
+          <div className="text-2xl font-bold text-orange-400">{engagementScore}%</div>
           <p className="text-xs text-gray-500">Score de engajamento</p>
         </CardContent>
       </Card>
@@ -110,9 +110,7 @@ export function EpisodeAnalytics({ episodeId }: EpisodeAnalyticsProps) {
               <div className="text-sm text-gray-400">Marcadores</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-semibold text-white">
-                {((analytics.completions / analytics.views) * 100).toFixed(1)}%
-              </div>
+              <div className="text-lg font-semibold text-white">{completionRate.toFixed(1)}%</div>
               <div className="text-sm text-gray-400">Taxa de Conclusão</div>
             </div>
             <div className="text-center">

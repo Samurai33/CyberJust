@@ -5,17 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useUI } from "@/contexts/UIContext"
 import { useAudio } from "@/contexts/AudioContext"
-
-interface Episode {
-  id: number | string
-  title: string
-  date: string
-  description: string
-  status: string
-  threat: string
-  audioUrl?: string | null
-  duration?: string
-}
+import type { Episode } from "@/types"
 
 interface HeroSectionProps {
   episodes: Episode[]
@@ -24,6 +14,12 @@ interface HeroSectionProps {
 export function HeroSection({ episodes }: HeroSectionProps) {
   const { glitchText } = useUI()
   const { playEpisode } = useAudio()
+
+  const handlePlayLatest = () => {
+    if (episodes.length > 0) {
+      playEpisode(episodes[0])
+    }
+  }
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6">
@@ -64,7 +60,7 @@ export function HeroSection({ episodes }: HeroSectionProps) {
           <Button
             size="lg"
             className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500 shadow-lg shadow-red-500/25 group"
-            onClick={() => episodes.length > 0 && playEpisode(episodes[0])}
+            onClick={handlePlayLatest}
           >
             <Play className="w-5 h-5 mr-2 group-hover:animate-pulse" />
             OUÇA AGORA

@@ -2,30 +2,8 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useRef, useCallback, useEffect } from "react"
-
-interface Episode {
-  id: number | string
-  title: string
-  date: string
-  description: string
-  status: string
-  threat: string
-  audioUrl?: string | null
-  duration?: string
-}
-
-interface AudioState {
-  currentEpisode: Episode | null
-  isPlaying: boolean
-  currentTime: number
-  duration: number
-  volume: number
-  isMuted: boolean
-  isLoading: boolean
-  isPlayerExpanded: boolean
-  error: string | null
-  playbackHistory: Episode[]
-}
+import type { Episode, AudioState } from "@/types"
+import { formatTime } from "@/lib/utils"
 
 type AudioAction =
   | { type: "SET_EPISODE"; payload: Episode }
@@ -84,7 +62,7 @@ function audioReducer(state: AudioState, action: AudioAction): AudioState {
       const newHistory = state.playbackHistory.filter((ep) => ep.id !== action.payload.id)
       return {
         ...state,
-        playbackHistory: [action.payload, ...newHistory].slice(0, 10), // Keep last 10 episodes
+        playbackHistory: [action.payload, ...newHistory].slice(0, 10),
       }
     case "RESET_PLAYER":
       return { ...initialState, volume: state.volume, playbackHistory: state.playbackHistory }
@@ -113,12 +91,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const currentEpisodeIdRef = useRef<string | number | null>(null)
 
-  const formatTime = useCallback((time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`
-  }, [])
-
   const clearError = useCallback(() => {
     dispatch({ type: "SET_ERROR", payload: null })
   }, [])
@@ -142,7 +114,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const playEpisode = useCallback(
     (episode: Episode) => {
-      // If same episode is already playing, just toggle play/pause
       if (currentEpisodeIdRef.current === episode.id && audioRef.current) {
         if (state.isPlaying) {
           audioRef.current.pause()
@@ -156,20 +127,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // Validate that episode has an audio URL
       if (!episode.audioUrl) {
         dispatch({ type: "SET_ERROR", payload: `Áudio não disponível para o episódio ${episode.id}.` })
         return
       }
 
-      // Stop current playback if any
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current.src = ""
         audioRef.current = null
       }
 
-      // Set new episode
       dispatch({ type: "SET_EPISODE", payload: episode })
       dispatch({ type: "SET_LOADING", payload: true })
       dispatch({ type: "SET_ERROR", payload: null })
@@ -195,7 +163,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: "SET_DURATION", payload: audio.duration })
         }
         const handleTimeUpdate = () => {
-          // Only update if this is still the current episode
           if (currentEpisodeIdRef.current === episode.id) {
             dispatch({ type: "SET_CURRENT_TIME", payload: audio.currentTime })
           }
@@ -208,7 +175,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Add all event listeners
         audio.addEventListener("error", handleError)
         audio.addEventListener("loadstart", handleLoadStart)
         audio.addEventListener("canplay", handleCanPlay)
@@ -216,10 +182,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         audio.addEventListener("timeupdate", handleTimeUpdate)
         audio.addEventListener("ended", handleEnded)
 
-        // Set source and attempt to load
         audio.src = episode.audioUrl
 
-        // Try to play
         const playPromise = audio.play()
 
         if (playPromise !== undefined) {
@@ -240,7 +204,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             })
         }
 
-        // Fallback timeout in case audio doesn't load
         setTimeout(() => {
           if (state.isLoading && currentEpisodeIdRef.current === episode.id) {
             dispatch({
@@ -315,7 +278,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_PLAYER_EXPANDED", payload: !state.isPlayerExpanded })
   }, [state.isPlayerExpanded])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (audioRef.current) {

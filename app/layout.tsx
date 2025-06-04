@@ -4,34 +4,47 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AudioProvider } from "@/contexts/AudioContext"
 import { UIProvider } from "@/contexts/UIContext"
-import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { BookmarkProvider } from "@/contexts/BookmarkContext"
 import { RatingProvider } from "@/contexts/RatingContext"
+import { DashboardProvider } from "@/contexts/DashboardContext"
+import { ExpertsProvider } from "@/contexts/ExpertsContext"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "CyberJustiça Brasil - Histórias Reais de Crimes Cibernéticos",
+  title: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
   description:
-    "Desvendamos os bastidores dos maiores crimes digitais do Brasil com histórias reais, especialistas renomados e dicas essenciais para sua proteção no mundo virtual.",
-  keywords: ["crimes cibernéticos", "segurança digital", "fraudes online", "proteção digital", "Brasil"],
+    "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
+  keywords: [
+    "crimes cibernéticos",
+    "segurança digital",
+    "investigação",
+    "Brasil",
+    "proteção online",
+    "fraudes digitais",
+    "cybersecurity",
+  ],
   authors: [{ name: "CyberJustiça Brasil" }],
+  creator: "CyberJustiça Brasil",
+  publisher: "CyberJustiça Brasil",
+  robots: "index, follow",
   openGraph: {
-    title: "CyberJustiça Brasil",
-    description: "Histórias reais de crimes cibernéticos no Brasil",
     type: "website",
     locale: "pt_BR",
+    url: "https://cyberjustica.brasil.gov.br",
+    title: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
+    description:
+      "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
+    siteName: "CyberJustiça Brasil",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CyberJustiça Brasil",
-    description: "Histórias reais de crimes cibernéticos no Brasil",
+    title: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
+    description:
+      "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  generator: "v0.dev",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -43,13 +56,17 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={inter.className}>
         <ErrorBoundary>
-          <UIProvider>
-            <AudioProvider>
-              <BookmarkProvider>
-                <RatingProvider>{children}</RatingProvider>
-              </BookmarkProvider>
-            </AudioProvider>
-          </UIProvider>
+          <ExpertsProvider>
+            <DashboardProvider>
+              <AudioProvider>
+                <UIProvider>
+                  <BookmarkProvider>
+                    <RatingProvider>{children}</RatingProvider>
+                  </BookmarkProvider>
+                </UIProvider>
+              </AudioProvider>
+            </DashboardProvider>
+          </ExpertsProvider>
         </ErrorBoundary>
       </body>
     </html>

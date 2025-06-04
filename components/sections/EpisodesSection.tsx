@@ -4,52 +4,51 @@ import { Play, Download, Share2, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { EpisodeBadge } from "@/components/ui/episode-badge"
 import { useUI } from "@/contexts/UIContext"
 import { useAudio } from "@/contexts/AudioContext"
-
-interface Episode {
-  id: number | string
-  title: string
-  date: string
-  description: string
-  status: string
-  threat: string
-  audioUrl?: string | null
-  duration?: string
-}
+import { useDashboard } from "@/contexts/DashboardContext"
+import { getAudioUrl } from "@/lib/utils"
+import type { Episode } from "@/types"
 
 interface EpisodesSectionProps {
   episodes: Episode[]
 }
 
-export function EpisodesSection({ episodes }: EpisodesSectionProps) {
+export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionProps) {
   const { activeEpisode, setActiveEpisode, setSelectedEpisodeModal, setSelectedLuluModal } = useUI()
   const { playEpisode, isLoading, error, isEpisodePlaying, togglePlayPause, currentEpisode } = useAudio()
+  const { projects } = useDashboard()
 
-  const getAudioUrl = (episode: Episode): string | null => {
-    // Map specific episodes to their audio files
-    const audioMap: Record<string | number, string> = {
-      3: "/audio/namoral-combating-digital-corruption-networks.mp3",
-      7: "/audio/brasil-fraudes-digitais.mp3",
-    }
+  // Combinar episódios originais com projetos do dashboard
+  // Priorizar projetos do dashboard se tiverem o mesmo ID
+  const projectMap = new Map(projects.map((p) => [String(p.id), p]))
 
-    // Return mapped audio URL or null
-    return audioMap[episode.id] || null
-  }
+  const episodes = originalEpisodes.map((episode) => {
+    const project = projectMap.get(String(episode.id))
+    return project ? { ...episode, ...project } : episode
+  })
 
   const handlePlayEpisode = (episode: Episode) => {
-    const audioUrl = getAudioUrl(episode)
+    const audioUrl = getAudioUrl(episode.id)
     const episodeWithAudio = {
       ...episode,
       audioUrl: audioUrl,
     }
 
-    // If this episode is currently playing, toggle play/pause
     if (isEpisodePlaying(episode.id)) {
       togglePlayPause()
     } else {
-      // Otherwise, play the new episode
       playEpisode(episodeWithAudio)
+    }
+  }
+
+  const handleEpisodeClick = (episode: Episode) => {
+    if (episode.id === 6) {
+      setSelectedLuluModal(true)
+    } else {
+      setSelectedEpisodeModal(episode)
     }
   }
 
@@ -68,7 +67,7 @@ export function EpisodesSection({ episodes }: EpisodesSectionProps) {
         <div className="grid md:grid-cols-2 gap-6">
           {episodes.map((episode, index) => {
             const isCurrentlyPlaying = isEpisodePlaying(episode.id)
-            const hasAudio = getAudioUrl(episode) !== null
+            const hasAudio = getAudioUrl(episode.id) !== null
 
             return (
               <Card
@@ -82,19 +81,7 @@ export function EpisodesSection({ episodes }: EpisodesSectionProps) {
                       <Badge variant="secondary" className="bg-gray-800 text-cyan-400 font-mono">
                         EP {episode.id}
                       </Badge>
-                      <Badge
-                        className={`font-mono text-xs ${
-                          episode.status === "ATIVO"
-                            ? "bg-green-500/20 text-green-400 border-green-500/50"
-                            : episode.status === "AGENDADO"
-                              ? "bg-blue-500/20 text-blue-400 border-blue-500/50"
-                              : episode.status === "RESOLVIDO"
-                                ? "bg-purple-500/20 text-purple-400 border-purple-500/50"
-                                : "bg-gray-500/20 text-gray-400 border-gray-500/50"
-                        }`}
-                      >
-                        {episode.status}
-                      </Badge>
+                      <EpisodeBadge status={episode.status} variant="status" />
                       {isCurrentlyPlaying && (
                         <Badge className="bg-green-500/20 text-green-400 border-green-500/50 font-mono text-xs animate-pulse">
                           REPRODUZINDO
@@ -102,17 +89,7 @@ export function EpisodesSection({ episodes }: EpisodesSectionProps) {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge
-                        className={`font-mono text-xs ${
-                          episode.threat === "CRÍTICO"
-                            ? "bg-red-500/20 text-red-400 border-red-500/50"
-                            : episode.threat === "ALTO"
-                              ? "bg-orange-500/20 text-orange-400 border-orange-500/50"
-                              : "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-                        }`}
-                      >
-                        {episode.threat}
-                      </Badge>
+                      <EpisodeBadge threat={episode.threat} variant="threat" showIcon />
                       <span className="text-sm text-gray-500 font-mono">{episode.date}</span>
                     </div>
                   </div>
@@ -120,11 +97,7 @@ export function EpisodesSection({ episodes }: EpisodesSectionProps) {
                     className="group-hover:text-red-400 transition-colors font-mono cursor-pointer hover:underline"
                     onClick={(e) => {
                       e.stopPropagation()
-                      if (episode.id === 6) {
-                        setSelectedLuluModal(true)
-                      } else {
-                        setSelectedEpisodeModal(episode)
-                      }
+                      handleEpisodeClick(episode)
                     }}
                   >
                     {episode.title}
@@ -153,7 +126,7 @@ export function EpisodesSection({ episodes }: EpisodesSectionProps) {
                       disabled={isLoading || !hasAudio}
                     >
                       {isLoading && currentEpisode?.id === episode.id ? (
-                        <div className="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin" />
+                        <LoadingSpinner size="sm" className="mr-1" />
                       ) : isCurrentlyPlaying ? (
                         <Pause className="w-3 h-3 mr-1" />
                       ) : (

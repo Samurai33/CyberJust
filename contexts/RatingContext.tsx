@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useCallback } from "react"
-import { type EpisodeRating, createRating } from "@/data/episodes"
+import type { EpisodeRating } from "@/types"
+import { createRating } from "@/services/analytics"
 
 interface RatingState {
   ratings: EpisodeRating[]

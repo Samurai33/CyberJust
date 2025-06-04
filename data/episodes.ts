@@ -1,75 +1,5 @@
-export interface Episode {
-  id: number | string
-  title: string
-  date: string
-  description: string
-  status: string
-  threat: string
-  audioUrl?: string | null
-  duration?: string
-  category?: string
-  tags?: string[]
-  transcript?: TranscriptSegment[]
-  experts?: Expert[]
-  relatedCases?: string[]
-  resources?: Resource[]
-  timeline?: TimelineEvent[]
-  statistics?: Statistic[]
-  fullDescription?: string
-  keyPoints?: string[]
-  warnings?: string[]
-}
+import type { Episode } from "@/types"
 
-export interface TranscriptSegment {
-  id: string
-  timestamp: string
-  speaker: string
-  text: string
-  type?: "narration" | "interview" | "expert" | "victim"
-}
-
-export interface Expert {
-  id: string
-  name: string
-  role: string
-  organization: string
-  bio: string
-  avatar?: string
-  profileUrl?: string
-  contact?: {
-    email?: string
-    phone?: string
-    linkedin?: string
-  }
-}
-
-export interface Resource {
-  id: string
-  title: string
-  url: string
-  type: "article" | "report" | "law" | "guide" | "video" | "document"
-  description: string
-  source: string
-}
-
-export interface TimelineEvent {
-  id: string
-  date: string
-  title: string
-  description: string
-  severity: "low" | "medium" | "high" | "critical"
-  completed: boolean
-}
-
-export interface Statistic {
-  id: string
-  label: string
-  value: string
-  description: string
-  trend?: "up" | "down" | "stable"
-}
-
-// Complete episode data with proper separation
 export const episodes: Episode[] = [
   {
     id: 7,
@@ -105,9 +35,7 @@ export const episodes: Episode[] = [
         role: "Delegado Federal - Especialista em Crimes Cibernéticos",
         organization: "Polícia Federal",
         bio: "Mais de 15 anos de experiência em investigação de crimes digitais. Coordena operações nacionais contra fraudes online e lidera a força-tarefa de combate aos crimes cibernéticos.",
-        contact: {
-          email: "carlos.mendes@pf.gov.br",
-        },
+        contact: { email: "carlos.mendes@pf.gov.br" },
       },
       {
         id: "expert-7-2",
@@ -115,9 +43,7 @@ export const episodes: Episode[] = [
         role: "Promotora de Justiça - Crimes Digitais",
         organization: "Ministério Público de São Paulo",
         bio: "Especialista em direito digital e crimes cibernéticos. Atua em casos de alta complexidade envolvendo fraudes online, lavagem de dinheiro digital e crimes contra o consumidor.",
-        contact: {
-          email: "ana.silva@mpsp.mp.br",
-        },
+        contact: { email: "ana.silva@mpsp.mp.br" },
       },
     ],
     timeline: [
@@ -193,9 +119,7 @@ export const episodes: Episode[] = [
         role: "Especialista em Direito Digital",
         organization: "Patricia Peck Pinheiro Advogados",
         bio: "Advogada pioneira em direito digital no Brasil. Especialista em crimes cibernéticos e proteção de dados pessoais há mais de 20 anos.",
-        contact: {
-          email: "patricia@patriciapeck.com.br",
-        },
+        contact: { email: "patricia@patriciapeck.com.br" },
       },
     ],
     timeline: [
@@ -248,9 +172,7 @@ export const episodes: Episode[] = [
         role: "Coordenador da Operação NaMoral",
         organization: "Polícia Federal",
         bio: "Especialista em investigação de crimes de corrupção e lavagem de dinheiro digital.",
-        contact: {
-          email: "joao.santos@pf.gov.br",
-        },
+        contact: { email: "joao.santos@pf.gov.br" },
       },
     ],
     timeline: [
@@ -303,9 +225,7 @@ export const episodes: Episode[] = [
         role: "Especialista em Segurança Cibernética",
         organization: "Universidade Federal do Rio de Janeiro",
         bio: "PhD em Segurança da Informação com foco em prevenção de fraudes digitais.",
-        contact: {
-          email: "roberto.lima@ufrj.br",
-        },
+        contact: { email: "roberto.lima@ufrj.br" },
       },
     ],
     timeline: [
@@ -350,9 +270,7 @@ export const episodes: Episode[] = [
         role: "Psicóloga Especialista em Crimes Digitais contra Menores",
         organization: "Instituto de Proteção Digital",
         bio: "Especialista em psicologia infantil e crimes digitais, com mais de 10 anos de experiência em casos de exploração online.",
-        contact: {
-          email: "maria.costa@ipd.org.br",
-        },
+        contact: { email: "maria.costa@ipd.org.br" },
       },
     ],
     timeline: [
@@ -397,9 +315,7 @@ export const episodes: Episode[] = [
         role: "Procurador da República",
         organization: "Ministério Público Federal",
         bio: "Especialista em crimes financeiros e corrupção digital, atuou em diversas operações de combate à lavagem de dinheiro.",
-        contact: {
-          email: "fernando.oliveira@mpf.mp.br",
-        },
+        contact: { email: "fernando.oliveira@mpf.mp.br" },
       },
     ],
     timeline: [
@@ -433,134 +349,22 @@ export const episodes: Episode[] = [
   },
 ]
 
-// Function to get episode by ID with proper type safety
 export function getEpisodeById(id: string | number): Episode | undefined {
   return episodes.find((episode) => episode.id.toString() === id.toString())
 }
 
-// Function to get episodes by category
 export function getEpisodesByCategory(category: string): Episode[] {
   return episodes.filter((episode) => episode.category === category)
 }
 
-// Function to get episodes by status
 export function getEpisodesByStatus(status: string): Episode[] {
   return episodes.filter((episode) => episode.status === status)
 }
 
-// Function to get episodes by threat level
 export function getEpisodesByThreat(threat: string): Episode[] {
   return episodes.filter((episode) => episode.threat === threat)
 }
 
-// Episode analytics and user interaction interfaces
-export interface EpisodeAnalytics {
-  id: string
-  episodeId: string | number
-  views: number
-  completions: number
-  averageListenTime: number
-  ratings: EpisodeRating[]
-  bookmarks: EpisodeBookmark[]
-  lastUpdated: string
-}
-
-export interface EpisodeRating {
-  id: string
-  userId: string
-  episodeId: string | number
-  rating: number // 1-5 stars
-  review?: string
-  timestamp: string
-}
-
-export interface EpisodeBookmark {
-  id: string
-  userId: string
-  episodeId: string | number
-  timestamp: number // seconds into the episode
-  note?: string
-  createdAt: string
-}
-
-export interface EpisodeComment {
-  id: string
-  userId: string
-  episodeId: string | number
-  content: string
-  timestamp?: number // optional timestamp in episode
-  parentId?: string // for replies
-  likes: number
-  createdAt: string
-  updatedAt?: string
-}
-
-export interface EpisodePlaylist {
-  id: string
-  userId: string
-  name: string
-  description?: string
-  episodeIds: (string | number)[]
-  isPublic: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-// Analytics functions
-export function getEpisodeAnalytics(episodeId: string | number): EpisodeAnalytics | null {
-  // This would typically fetch from a database
-  // For now, return mock data
-  return {
-    id: `analytics-${episodeId}`,
-    episodeId,
-    views: Math.floor(Math.random() * 10000) + 1000,
-    completions: Math.floor(Math.random() * 5000) + 500,
-    averageListenTime: Math.floor(Math.random() * 3000) + 1200, // seconds
-    ratings: [],
-    bookmarks: [],
-    lastUpdated: new Date().toISOString(),
-  }
-}
-
-// Bookmark functions
-export function createBookmark(episodeId: string | number, timestamp: number, note?: string): EpisodeBookmark {
-  return {
-    id: `bookmark-${Date.now()}`,
-    userId: "current-user", // Would be actual user ID
-    episodeId,
-    timestamp,
-    note,
-    createdAt: new Date().toISOString(),
-  }
-}
-
-// Rating functions
-export function createRating(episodeId: string | number, rating: number, review?: string): EpisodeRating {
-  return {
-    id: `rating-${Date.now()}`,
-    userId: "current-user", // Would be actual user ID
-    episodeId,
-    rating,
-    review,
-    timestamp: new Date().toISOString(),
-  }
-}
-
-// Playlist functions
-export function createPlaylist(name: string, description?: string): EpisodePlaylist {
-  return {
-    id: `playlist-${Date.now()}`,
-    userId: "current-user", // Would be actual user ID
-    name,
-    description,
-    episodeIds: [],
-    isPublic: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-// Search and recommendation functions
 export function searchEpisodes(query: string): Episode[] {
   const lowercaseQuery = query.toLowerCase()
   return episodes.filter(
@@ -576,22 +380,18 @@ export function getRecommendedEpisodes(currentEpisodeId: string | number, limit 
   const currentEpisode = getEpisodeById(currentEpisodeId)
   if (!currentEpisode) return episodes.slice(0, limit)
 
-  // Simple recommendation based on category and threat level
   const recommended = episodes
     .filter((ep) => ep.id !== currentEpisodeId)
     .sort((a, b) => {
       let scoreA = 0
       let scoreB = 0
 
-      // Same category gets higher score
       if (a.category === currentEpisode.category) scoreA += 3
       if (b.category === currentEpisode.category) scoreB += 3
 
-      // Same threat level gets medium score
       if (a.threat === currentEpisode.threat) scoreA += 2
       if (b.threat === currentEpisode.threat) scoreB += 2
 
-      // Similar tags get lower score
       const aTagMatch = a.tags?.some((tag) => currentEpisode.tags?.includes(tag)) ? 1 : 0
       const bTagMatch = b.tags?.some((tag) => currentEpisode.tags?.includes(tag)) ? 1 : 0
       scoreA += aTagMatch

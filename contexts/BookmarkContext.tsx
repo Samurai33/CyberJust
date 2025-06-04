@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useCallback } from "react"
-import { type EpisodeBookmark, createBookmark } from "@/data/episodes"
+import type { EpisodeBookmark } from "@/types"
+import { createBookmark } from "@/services/analytics"
 
 interface BookmarkState {
   bookmarks: EpisodeBookmark[]

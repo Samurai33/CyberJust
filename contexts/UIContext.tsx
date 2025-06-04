@@ -2,31 +2,8 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-
-interface Episode {
-  id: number | string
-  title: string
-  date: string
-  description: string
-  status: string
-  threat: string
-  audioUrl?: string | null
-  duration?: string
-}
-
-interface UIState {
-  glitchText: string
-  mousePosition: { x: number; y: number }
-  activeEpisode: number | null
-  selectedEpisodeModal: Episode | null
-  selectedLuluModal: boolean
-  episodeFilters: {
-    search: string
-    status: string
-    threat: string
-    category: string
-  }
-}
+import type { Episode, UIState } from "@/types"
+import { useKeyboard } from "@/hooks/useKeyboard"
 
 interface UIContextType extends UIState {
   setActiveEpisode: (episode: number | null) => void
@@ -86,18 +63,11 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(glitchInterval)
   }, [])
 
-  // Close modals when clicking outside or pressing escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSelectedEpisodeModal(null)
-        setSelectedLuluModal(false)
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  // Close modals with Escape key
+  useKeyboard("Escape", () => {
+    setSelectedEpisodeModal(null)
+    setSelectedLuluModal(false)
+  })
 
   const setEpisodeFilters = (filters: Partial<UIState["episodeFilters"]>) => {
     setEpisodeFiltersState((prev) => ({ ...prev, ...filters }))
