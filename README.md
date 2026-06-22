@@ -1,104 +1,72 @@
-﻿# 🛡️ CyberJustice Brasil
-
-[![Next.js](https://img.shields.io/badge/Next.js-15.2.4-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4.1-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)](https://github.com/Samurai33/CyberJust)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square)](https://github.com/Samurai33/CyberJust/graphs/commit-activity)
-
-> 🚨 **Advanced cybercrime investigation platform** - Combining cutting-edge technology with forensic expertise to combat digital threats in Brazil
-
 <div align="center">
-  <img src="public/cyberjus_logo.png" alt="CyberJustice Brasil Logo" width="200" height="200"/>
-  
-  [📱 Live Demo](https://cyberjustice.vercel.app) · [📚 Documentation](https://docs.cyberjustice.com) · [🐛 Report Bug](https://github.com/Samurai33/CyberJust/issues)
+
+<img src="public/cyberjus_logo.png" alt="CyberJustiça Brasil logo" width="160">
+
+# CyberJustiça Brasil
+
+### Cybercrime stories, specialist perspectives and digital-safety education
+
+[![Live Experience](https://img.shields.io/badge/Live_Experience-v0--cyber--justica.vercel.app-0EA5E9?style=for-the-badge&logo=vercel)](https://v0-cyber-justica.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
+[![CI](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml/badge.svg)](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml)
+
 </div>
 
-## ✨ Features
+## Overview
 
-### 🎯 Core Features
-- 🔍 **Digital Forensic Analysis** - Advanced investigation tools and methodologies
-- 📊 **Real-time Analytics** - Interactive dashboards with crime metrics
-- 🎙️ **Advanced Audio Player** - Playback with bookmarks and transcriptions
-- 👥 **Expert Profiles** - Connect with cybersecurity specialists
-- 📱 **Responsive Design** - Optimized interface for all devices
+CyberJustiça Brasil is a responsive media and education experience that presents
+Brazilian cybercrime cases, protection guidance, specialist profiles and
+audio-first storytelling through a cybersecurity-inspired interface.
 
-### 🛡️ Security & Performance
-- 🔐 **Secure Authentication** - Robust login and registration system
-- ⚡ **Optimized Performance** - Loading times < 1s with Next.js 15
-- 🌙 **Dark/Light Mode** - Automatically adaptive theme system
-- 📈 **SEO Optimized** - Meta tags and structured data
-- 🔄 **PWA Ready** - Works offline and installable
+The repository demonstrates product design and front-end engineering. It is not a
+law-enforcement system, forensic platform or source of legal advice.
 
-## 🚀 Quick Start
+## Experience highlights
 
-### Prerequisites
+- Cybercrime case and episode presentation
+- Audio player with bookmarks and transcript-oriented UI
+- Specialist, project, resource and timeline views
+- Digital-protection educational content
+- Responsive cyberpunk interface
+- Theme and accessibility-oriented components
+- Structured content backed by local data and services
 
-```bash
-Node.js >= 22.15.0
-pnpm >= 10.12.4
-Git >= 2.34.0
-```
+## Technology
 
-### Installation
+`Next.js 15` · `React 19` · `TypeScript` · `Tailwind CSS` · `Radix UI` ·
+`Recharts` · `React Hook Form` · `Zod`
+
+## Run locally
 
 ```bash
-# Clone the repository
 git clone https://github.com/Samurai33/CyberJust.git
 cd CyberJust
-
-# Install dependencies
 pnpm install
-
-# Run in development mode
 pnpm dev
 ```
 
-🎉 Open [http://localhost:3000](http://localhost:3000) to see the application running!
-
-## 🛠️ Tech Stack
-
-| Category | Technology | Version |
-|----------|------------|---------|
-| **Framework** | Next.js | 15.2.4 |
-| **Language** | TypeScript | 5.6.3 |
-| **Styling** | TailwindCSS | 3.4.1 |
-| **Package Manager** | pnpm | 10.12.4 |
-
-## 📜 Available Scripts
+Production build:
 
 ```bash
-pnpm dev          # Start development server
-pnpm build        # Build for production
-pnpm start        # Start production server
-pnpm lint         # Run ESLint
+pnpm build
+pnpm start
 ```
 
-## 🤝 Contributing
+## Project boundaries
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) before submitting pull requests.
+- Public content should be treated as educational and editorial.
+- Claims and case material require source verification before publication.
+- Authentication and dashboard interactions are prototype capabilities unless
+  explicitly connected to production services.
+- Do not submit sensitive personal, investigative or evidentiary data.
 
-## 🛡️ Security
+## Community and security
 
-Security is our priority. Please check our [Security Policy](SECURITY.md) for reporting vulnerabilities.
+- [Contributing guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
 
-## 📄 License
+## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-## 📋 Code of Conduct
-
-This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
-
----
-
-<div align="center">
-
-**⭐ Star this project if it was helpful to you!**
-
-**Made with ❤️ by [CyberJustice Team](https://github.com/Samurai33)**
-
-</div>
+Released under the [MIT License](LICENSE).

@@ -1,7 +1,13 @@
 {
-  "name": "my-v0-project",
+  "name": "cyberjustica-brasil",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.12.4",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
