@@ -1,5 +1,5 @@
 import type { Episode } from "@/types"
-import type { Project } from "@/types/project"
+import type { Project, ProjectFormData } from "@/types/project"
 import { episodes } from "@/data/episodes"
 import { generateId } from "@/lib/utils"
 
@@ -61,25 +61,6 @@ export function syncProjectsWithEpisodes(projects: Project[]): Project[] {
 
   // Retorna a lista combinada
   return [...projects, ...newProjects]
-}
-
-export interface ProjectFormData {
-  title: string
-  date: string
-  description: string
-  fullDescription: string
-  status: string
-  threat: string
-  audioUrl: string
-  duration: number
-  category: string
-  tags: string[]
-  keyPoints: string[]
-  warnings: string[]
-  transcript: string
-  experts: string[]
-  timeline: string[]
-  resources: string[]
 }
 
 // Cria um novo projeto com ID único
