@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Existing dashboard typing debt is tracked separately from security upgrades.
   typescript: {
     ignoreBuildErrors: true,
   },
