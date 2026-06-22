@@ -86,8 +86,6 @@ export function StatusSelect({
     { value: "ARQUIVADO", label: "ARQUIVADO" },
     { value: "RESOLVIDO", label: "RESOLVIDO" },
     { value: "AGENDADO", label: "AGENDADO" },
-    { value: "EM_ANDAMENTO", label: "EM ANDAMENTO" },
-    { value: "CONCLUIDO", label: "CONCLUÍDO" },
   ]
 
   return (
@@ -145,7 +143,7 @@ export function CategorySelect({
   onValueChange: (value: string) => void
   disabled?: boolean
   error?: boolean
-  categories: string[]
+  categories: readonly string[]
 }) {
   const categoryOptions = categories.map((category) => ({
     value: category,
