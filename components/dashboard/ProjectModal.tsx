@@ -13,6 +13,7 @@ import { useDashboard } from "@/contexts/DashboardContext"
 import { useFormValidation } from "@/hooks/useFormValidation"
 import { PROJECT_CATEGORIES } from "@/lib/projectUtils"
 import type { ProjectFormData } from "@/types/project"
+import type { EpisodeStatus, ThreatLevel } from "@/types"
 import { StatusSelect, ThreatSelect, CategorySelect } from "./DashboardSelect"
 
 // Memoize validation rules to prevent recreation
@@ -309,7 +310,7 @@ export function ProjectModal() {
                     CATEGORIA: <span className="text-red-400">*</span>
                   </label>
                   <CategorySelect
-                    value={formData.category}
+                    value={formData.category || ""}
                     onValueChange={(value) => updateField("category", value)}
                     disabled={isSubmitting}
                     error={!!(errors.category && touched.category)}
@@ -326,7 +327,7 @@ export function ProjectModal() {
                   </label>
                   <StatusSelect
                     value={formData.status}
-                    onValueChange={(value: any) => updateField("status", value)}
+                    onValueChange={(value) => updateField("status", value as EpisodeStatus)}
                     disabled={isSubmitting}
                     error={!!(errors.status && touched.status)}
                   />
@@ -343,7 +344,7 @@ export function ProjectModal() {
                   </label>
                   <ThreatSelect
                     value={formData.threat}
-                    onValueChange={(value: any) => updateField("threat", value)}
+                    onValueChange={(value) => updateField("threat", value as ThreatLevel)}
                     disabled={isSubmitting}
                     error={!!(errors.threat && touched.threat)}
                   />

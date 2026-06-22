@@ -33,9 +33,9 @@ import { DashboardSelect } from "./DashboardSelect"
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "EM_ANDAMENTO":
+    case "AGENDADO":
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-    case "CONCLUIDO":
+    case "RESOLVIDO":
       return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
     case "ATIVO":
       return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
@@ -126,8 +126,8 @@ export function Dashboard() {
   const stats = useMemo(
     () => ({
       total: projects.length,
-      inProgress: projects.filter((p) => p.status === "EM_ANDAMENTO").length,
-      completed: projects.filter((p) => p.status === "CONCLUIDO").length,
+      scheduled: projects.filter((p) => p.status === "AGENDADO").length,
+      resolved: projects.filter((p) => p.status === "RESOLVIDO").length,
       active: projects.filter((p) => p.status === "ATIVO").length,
       experts: experts.length,
     }),
@@ -196,11 +196,11 @@ export function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
-                Em Andamento
+                Agendados
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-400">{stats.inProgress}</div>
+              <div className="text-2xl font-bold text-yellow-400">{stats.scheduled}</div>
             </CardContent>
           </Card>
 
@@ -208,11 +208,11 @@ export function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
                 <Settings className="w-4 h-4" />
-                Concluídos
+                Resolvidos
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-400">{stats.completed}</div>
+              <div className="text-2xl font-bold text-purple-400">{stats.resolved}</div>
             </CardContent>
           </Card>
 

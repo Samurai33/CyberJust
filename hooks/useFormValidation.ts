@@ -78,11 +78,11 @@ export function useFormValidation<T extends Record<string, any>>(initialData: T,
         if (name.includes(".")) {
           const keys = name.split(".")
           const newData = { ...prev }
-          let current = newData
+          let current = newData as Record<string, any>
 
           for (let i = 0; i < keys.length - 1; i++) {
             current[keys[i]] = { ...current[keys[i]] }
-            current = current[keys[i]]
+            current = current[keys[i]] as Record<string, any>
           }
 
           current[keys[keys.length - 1]] = value
