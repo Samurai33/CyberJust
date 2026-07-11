@@ -11,6 +11,11 @@
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 [![CI](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml/badge.svg)](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml)
 
+[![Open Issues](https://img.shields.io/github/issues/Samurai33/CyberJust?style=flat-square)](https://github.com/Samurai33/CyberJust/issues)
+[![Open PRs](https://img.shields.io/github/issues-pr/Samurai33/CyberJust?style=flat-square)](https://github.com/Samurai33/CyberJust/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/Samurai33/CyberJust?style=flat-square)](https://github.com/Samurai33/CyberJust/commits/main)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
+
 </div>
 
 ## Overview
@@ -29,29 +34,59 @@ law-enforcement system, forensic platform or source of legal advice.
 - Specialist, project, resource and timeline views
 - Digital-protection educational content
 - Responsive cyberpunk interface
-- Theme and accessibility-oriented components
+- Server-verified dashboard access, accessible (Radix-based) UI components
 - Structured content backed by local data and services
 
 ## Technology
 
 `Next.js 16` · `React 19` · `TypeScript` · `Tailwind CSS` · `Radix UI` ·
-`Recharts` · `React Hook Form` · `Zod`
+`Recharts` · `React Hook Form` · `Zod` · `Vitest`
 
-## Run locally
+## Getting started
+
+### Prerequisites
+
+- Node.js ≥ 22
+- [pnpm](https://pnpm.io/) 10.12.4 (declared in `package.json#packageManager`)
+
+### Install and run
 
 ```bash
 git clone https://github.com/Samurai33/CyberJust.git
 cd CyberJust
 pnpm install
+```
+
+The internal dashboard (behind the logo click / auth modal) requires two
+environment variables. Copy the template and fill in real values — see
+[`.env.example`](.env.example) for how to generate the session secret:
+
+```bash
+cp .env.example .env.local
+```
+
+```bash
 pnpm dev
 ```
 
-Production build:
+Open [http://localhost:3000](http://localhost:3000).
+
+### Production build
 
 ```bash
 pnpm build
 pnpm start
 ```
+
+### Testing and type-checking
+
+```bash
+pnpm type-check   # tsc --noEmit
+pnpm test         # vitest run
+```
+
+Both run in CI (`.github/workflows/ci.yml`) on every push and pull request to
+`main`, alongside `pnpm build`.
 
 ## Project boundaries
 
@@ -64,8 +99,9 @@ pnpm start
 ## Community and security
 
 - [Contributing guide](CONTRIBUTING.md)
-- [Security policy](SECURITY.md)
+- [Security policy](SECURITY.md) — please report vulnerabilities privately, not via public issues
 - [Code of conduct](CODE_OF_CONDUCT.md)
+- [Open issues](https://github.com/Samurai33/CyberJust/issues) · [Open pull requests](https://github.com/Samurai33/CyberJust/pulls)
 
 ## License
 
