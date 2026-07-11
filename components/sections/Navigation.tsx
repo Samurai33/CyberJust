@@ -2,10 +2,10 @@
 
 import { Shield, Headphones } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useDashboard } from "@/contexts/DashboardContext"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function Navigation() {
-  const { handleLogoClick, logoClickCount, isAuthenticated } = useDashboard()
+  const { handleLogoClick, logoClickCount, isAuthenticated } = useAuth()
 
   return (
     <nav className="relative z-50 p-6 backdrop-blur-sm bg-black/50 border-b border-cyan-500/30">

@@ -1,5 +1,3 @@
-"use client"
-
 import { Navigation } from "@/components/sections/Navigation"
 import { Background } from "@/components/sections/Background"
 import { HeroSection } from "@/components/sections/HeroSection"
@@ -16,39 +14,44 @@ import { AudioPlayer } from "@/components/audio/AudioPlayer"
 import { SecurityModal } from "@/components/modals/SecurityModal"
 import { LuluModal } from "@/components/modals/LuluModal"
 import { DashboardAuthModal } from "@/components/dashboard/DashboardAuthModal"
-import { Dashboard } from "@/components/dashboard/Dashboard"
+import { HomeGate } from "@/components/HomeGate"
+import { AuthProvider } from "@/contexts/AuthContext"
+import { checkDashboardSession } from "@/app/actions/auth"
 import { episodes } from "@/data/episodes"
-import { useDashboard } from "@/contexts/DashboardContext"
 
-export default function CyberJusticaBrasil() {
-  const { isAuthenticated } = useDashboard()
+// The dashboard/marketing split depends on a per-request cookie check
+// (see checkDashboardSession) — this route can't be statically prerendered.
+export const dynamic = "force-dynamic"
 
-  if (isAuthenticated) {
-    return <Dashboard />
-  }
+export default async function CyberJusticaBrasil() {
+  const initialAuthenticated = await checkDashboardSession()
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      <Background />
-      <Navigation />
-      <HeroSection episodes={episodes} />
-      <AboutSection />
-      <EpisodesSection episodes={episodes} />
-      <CrimeTypesSection />
-      <ExpertsSection />
-      <ProtectionSection />
-      <StatsSection />
-      <ContactSection />
-      <TerminalSection />
-      <Footer />
+    <AuthProvider initialAuthenticated={initialAuthenticated}>
+      <HomeGate>
+        <div className="min-h-screen bg-black text-white overflow-x-hidden">
+          <Background />
+          <Navigation />
+          <HeroSection episodes={episodes} />
+          <AboutSection />
+          <EpisodesSection episodes={episodes} />
+          <CrimeTypesSection />
+          <ExpertsSection />
+          <ProtectionSection />
+          <StatsSection />
+          <ContactSection />
+          <TerminalSection />
+          <Footer />
 
-      {/* Modals */}
-      <SecurityModal />
-      <LuluModal />
-      <DashboardAuthModal />
+          {/* Modals */}
+          <SecurityModal />
+          <LuluModal />
+          <DashboardAuthModal />
 
-      {/* Audio Player */}
-      <AudioPlayer />
-    </div>
+          {/* Audio Player */}
+          <AudioPlayer />
+        </div>
+      </HomeGate>
+    </AuthProvider>
   )
 }

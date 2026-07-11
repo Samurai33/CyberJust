@@ -7,25 +7,27 @@ import { X, Shield, Lock, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDashboard } from "@/contexts/DashboardContext"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function DashboardAuthModal() {
-  const { showAuthModal, authenticate, closeAuthModal } = useDashboard()
+  const { showAuthModal, authenticate, closeAuthModal, isAuthenticating } = useAuth()
   const [code, setCode] = useState("")
   const [error, setError] = useState("")
   const [attempts, setAttempts] = useState(0)
 
   if (!showAuthModal) return null
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (authenticate(code)) {
+    const result = await authenticate(code)
+
+    if (result.success) {
       setCode("")
       setError("")
       setAttempts(0)
     } else {
-      setError("Código de acesso inválido")
+      setError(result.error ?? "Código de acesso inválido")
       setAttempts((prev) => prev + 1)
       setCode("")
 
@@ -109,10 +111,10 @@ export function DashboardAuthModal() {
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-                disabled={!code.trim() || attempts >= 3}
+                disabled={!code.trim() || attempts >= 3 || isAuthenticating}
               >
                 <Shield className="w-4 h-4 mr-2" />
-                AUTENTICAR
+                {isAuthenticating ? "VERIFICANDO..." : "AUTENTICAR"}
               </Button>
               <Button
                 type="button"

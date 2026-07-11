@@ -24,8 +24,9 @@ There is no test script yet. CI (`.github/workflows/ci.yml`) runs `pnpm type-che
 ## Project layout
 
 - `app/` — routes (App Router). `app/episodes/[id]/` is the episode/case detail route.
-- `components/` — `ui/` (shadcn/Radix primitives), `audio/`, `dashboard/`, `episode/`, `modals/`, `sections/`, plus `ErrorBoundary.tsx`, `theme-provider.tsx`
-- `contexts/` — cross-cutting React context (theme, auth session) — keep this for genuinely global state only
+- `components/` — `ui/` (shadcn/Radix primitives), `audio/`, `dashboard/`, `episode/`, `modals/`, `sections/`, plus `ErrorBoundary.tsx`, `HomeGate.tsx` (client/server auth boundary for the homepage)
+- `app/actions/` — Server Actions (`auth.ts`: dashboard password check + session cookie, server-only)
+- `contexts/` — cross-cutting React context (`AuthContext` for the dashboard session, `DashboardContext` for project/expert CRUD state, etc.) — keep this for genuinely global state only. The app has no light/dark toggle; it's permanently dark (see `app/globals.css`), so there's no theme context.
 - `hooks/` — data/state hooks, convention: return `{ data, isLoading, error }`
 - `lib/` — `constants.ts`, `projectUtils.ts`, `utils.ts` (shared helpers)
 - `services/` — `analytics.ts`, `projectSync.ts`
@@ -42,7 +43,9 @@ There is no test script yet. CI (`.github/workflows/ci.yml`) runs `pnpm type-che
 
 ## Security posture
 
-This is a cybercrime-investigation platform — even while mostly frontend-only today, treat auth (`DashboardAuthModal`), any future API routes/server actions, and any future case/PII data with the higher bar described in the `security-guardian` skill: no secrets in `NEXT_PUBLIC_*`, no `dangerouslySetInnerHTML` on untrusted content, no client-only auth gating.
+This is a cybercrime-investigation platform — even while mostly frontend-only today, treat auth, any future API routes/server actions, and any future case/PII data with the higher bar described in the `security-guardian` skill: no secrets in `NEXT_PUBLIC_*`, no `dangerouslySetInnerHTML` on untrusted content, no client-only auth gating.
+
+Dashboard auth is server-verified: `app/actions/auth.ts` checks the password against `DASHBOARD_PASSWORD` server-side and issues an HMAC-signed `httpOnly` session cookie (secret: `DASHBOARD_SESSION_SECRET`). Both env vars must be set (see `.env.example`) — without them, auth fails closed (nobody can log in), it does not fall back to a default. There's no rate limiting on login attempts (no persistence layer exists yet to track them) — the client-side "3 attempts" lockout is UX only, not a real control.
 
 ## Available skills
 

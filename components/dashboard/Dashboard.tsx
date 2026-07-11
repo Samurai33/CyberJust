@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { useDashboard } from "@/contexts/DashboardContext"
+import { useAuth } from "@/contexts/AuthContext"
 import { ProjectCard } from "./ProjectCard"
 import { ProjectModal } from "./ProjectModal"
 import { ExpertCard } from "./ExpertCard"
@@ -65,11 +66,11 @@ export function Dashboard() {
     experts,
     openProjectModal,
     openExpertModal,
-    logout,
     activeTab,
     setActiveTab,
     convertEpisodeToProject,
   } = useDashboard()
+  const { logout } = useAuth()
 
   // Project filters
   const [searchTerm, setSearchTerm] = useState("")
