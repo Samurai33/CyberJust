@@ -21,11 +21,6 @@ export const SEVERITY_COLORS: Record<SeverityLevel, string> = {
   low: "bg-green-500",
 }
 
-export const AUDIO_MAP: Record<string | number, string> = {
-  3: "/audio/namoral-combating-digital-corruption-networks.mp3",
-  7: "/audio/brasil-fraudes-digitais.mp3",
-}
-
 export const NAVIGATION_ITEMS = [
   { label: "CASOS", href: "#casos" },
   { label: "PROTOCOLOS", href: "#protocolos" },
