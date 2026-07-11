@@ -1,9 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { ChevronDown, Play, Radio, Volume2, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useUI } from "@/contexts/UIContext"
 import { useAudio } from "@/contexts/AudioContext"
 import type { Episode } from "@/types"
 
@@ -12,8 +12,29 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ episodes }: HeroSectionProps) {
-  const { glitchText } = useUI()
+  const [glitchText, setGlitchText] = useState("CYBERJUSTIÇA")
   const { playEpisode } = useAudio()
+
+  // Glitch text effect
+  useEffect(() => {
+    const glitchInterval = setInterval(() => {
+      const glitchChars = ["█", "▓", "▒", "░", "▄", "▀", "■", "□", "◆", "◇"]
+      const originalText = "CYBERJUSTIÇA"
+      let glitched = originalText
+
+      if (Math.random() < 0.3) {
+        const randomIndex = Math.floor(Math.random() * originalText.length)
+        const randomChar = glitchChars[Math.floor(Math.random() * glitchChars.length)]
+        glitched = originalText.substring(0, randomIndex) + randomChar + originalText.substring(randomIndex + 1)
+
+        setTimeout(() => setGlitchText(originalText), 150)
+      }
+
+      setGlitchText(glitched)
+    }, 2500)
+
+    return () => clearInterval(glitchInterval)
+  }, [])
 
   const handlePlayLatest = () => {
     if (episodes.length > 0) {

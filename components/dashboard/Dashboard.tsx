@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
+import { useDebounce } from "@/hooks/useDebounce"
 import {
   Plus,
   Search,
@@ -9,7 +10,6 @@ import {
   FolderOpen,
   Settings,
   Radio,
-  AlertTriangle,
   Clock,
   Calendar,
   Users,
@@ -31,34 +31,7 @@ import { episodes } from "@/data/episodes"
 import { EPISODE_STATUS, THREAT_LEVELS } from "@/lib/constants"
 import { PROJECT_CATEGORIES } from "@/lib/projectUtils"
 import { DashboardSelect } from "./DashboardSelect"
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "AGENDADO":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-    case "RESOLVIDO":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-    case "ATIVO":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-  }
-}
-
-const getThreatColor = (threat: string) => {
-  switch (threat) {
-    case "CRÍTICO":
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-    case "ALTO":
-      return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300"
-    case "MÉDIO":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-    case "BAIXO":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-  }
-}
+import { EpisodeBadge } from "@/components/ui/episode-badge"
 
 export function Dashboard() {
   const {
@@ -92,11 +65,13 @@ export function Dashboard() {
     setExpertSearchTerm("")
   }, [])
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
-      const searchLower = searchTerm.toLowerCase()
+      const searchLower = debouncedSearchTerm.toLowerCase()
       const matchesSearch =
-        !searchTerm ||
+        !debouncedSearchTerm ||
         project.title.toLowerCase().includes(searchLower) ||
         project.description.toLowerCase().includes(searchLower) ||
         (project.fullDescription && project.fullDescription.toLowerCase().includes(searchLower)) ||
@@ -109,7 +84,7 @@ export function Dashboard() {
 
       return matchesSearch && matchesStatus && matchesThreat && matchesCategory
     })
-  }, [projects, searchTerm, statusFilter, threatFilter, categoryFilter])
+  }, [projects, debouncedSearchTerm, statusFilter, threatFilter, categoryFilter])
 
   const filteredExperts = useMemo(() => {
     return experts.filter((expert) => {
@@ -135,11 +110,8 @@ export function Dashboard() {
     [projects, experts],
   )
 
-  const hasActiveFilters = useMemo(() => {
-    return (
-      searchTerm || statusFilter !== "all" || threatFilter !== "all" || categoryFilter !== "all" || expertSearchTerm
-    )
-  }, [searchTerm, statusFilter, threatFilter, categoryFilter, expertSearchTerm])
+  const hasActiveFilters =
+    searchTerm || statusFilter !== "all" || threatFilter !== "all" || categoryFilter !== "all" || expertSearchTerm
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -168,7 +140,7 @@ export function Dashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
           <Card className="bg-gray-900 border-gray-700">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
@@ -375,13 +347,8 @@ export function Dashboard() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge className={getStatusColor(episode.status)} variant="outline">
-                            {episode.status}
-                          </Badge>
-                          <Badge className={getThreatColor(episode.threat)} variant="outline">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            {episode.threat}
-                          </Badge>
+                          <EpisodeBadge status={episode.status} />
+                          <EpisodeBadge variant="threat" threat={episode.threat} showIcon />
                         </div>
                         <CardTitle className="text-white group-hover:text-cyan-400 transition-colors">
                           {episode.title}

@@ -2,155 +2,83 @@
 
 import type React from "react"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { X, Save, Users, Mail, Phone, Linkedin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDashboard } from "@/contexts/DashboardContext"
-import { useFormValidation } from "@/hooks/useFormValidation"
+import { expertSchema, type ExpertFormValues, type ProjectExpert } from "@/types/project"
 
-// Memoize validation rules to prevent recreation
-const expertValidationRules = {
-  name: {
-    required: true,
-    minLength: 2,
-    maxLength: 100,
+const emptyExpertValues: ExpertFormValues = {
+  name: "",
+  role: "",
+  organization: "",
+  bio: "",
+  avatar: "",
+  contact: {
+    email: "",
+    phone: "",
+    linkedin: "",
   },
-  role: {
-    required: true,
-    minLength: 2,
-    maxLength: 100,
-  },
-  bio: {
-    required: true,
-    minLength: 10,
-    maxLength: 1000,
-  },
-  organization: {
-    maxLength: 100,
-  },
-  avatar: {
-    custom: (value: string) => {
-      if (!value) return null
-      try {
-        new URL(value)
-        return null
-      } catch {
-        return "URL inválida"
-      }
+}
+
+function expertToFormValues(expert: ProjectExpert): ExpertFormValues {
+  return {
+    name: expert.name || "",
+    role: expert.role || "",
+    organization: expert.organization || "",
+    bio: expert.bio || "",
+    avatar: expert.avatar || "",
+    contact: {
+      email: expert.contact?.email || "",
+      phone: expert.contact?.phone || "",
+      linkedin: expert.contact?.linkedin || "",
     },
-  },
-  "contact.email": {
-    custom: (value: string) => {
-      if (!value) return null
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailPattern.test(value)) {
-        return "Email inválido"
-      }
-      return null
-    },
-  },
-  "contact.phone": {
-    custom: (value: string) => {
-      if (!value) return null
-      const phonePattern = /^[+]?[1-9][\d]{0,15}$/
-      if (!phonePattern.test(value.replace(/[\s\-()]/g, ""))) {
-        return "Telefone inválido"
-      }
-      return null
-    },
-  },
-  "contact.linkedin": {
-    custom: (value: string) => {
-      if (!value) return null
-      const linkedinPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/
-      if (!linkedinPattern.test(value)) {
-        return "URL do LinkedIn inválida"
-      }
-      return null
-    },
-  },
+  }
 }
 
 export function ExpertModal() {
   const { showExpertModal, selectedExpert, isEditingExpert, createExpert, updateExpert, closeExpertModal } =
     useDashboard()
 
-  // Memoize initial form data to prevent recreation
-  const initialFormData = useMemo(
-    () => ({
-      name: "",
-      role: "",
-      organization: "",
-      bio: "",
-      avatar: "",
-      contact: {
-        email: "",
-        phone: "",
-        linkedin: "",
-      },
-    }),
-    [],
-  )
-
   const {
-    data: formData,
-    errors,
-    touched,
-    updateField,
-    validateAll,
-    resetForm,
-    setFormData,
-    isValid,
-  } = useFormValidation(initialFormData, expertValidationRules)
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ExpertFormValues>({
+    resolver: zodResolver(expertSchema),
+    defaultValues: emptyExpertValues,
+  })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Memoize expert data to prevent unnecessary effect triggers
-  const expertData = useMemo(() => {
-    if (!selectedExpert || !isEditingExpert) return null
-
-    return {
-      name: selectedExpert.name || "",
-      role: selectedExpert.role || "",
-      organization: selectedExpert.organization || "",
-      bio: selectedExpert.bio || "",
-      avatar: selectedExpert.avatar || "",
-      contact: {
-        email: selectedExpert.contact?.email || "",
-        phone: selectedExpert.contact?.phone || "",
-        linkedin: selectedExpert.contact?.linkedin || "",
-      },
-    }
-  }, [selectedExpert, isEditingExpert])
-
+  // Reset the form whenever the modal opens or the selected expert changes,
+  // instead of syncing local state via an effect on every render.
   useEffect(() => {
     if (!showExpertModal) return
 
-    if (expertData) {
-      setFormData(expertData)
-    } else {
-      resetForm()
-    }
-  }, [showExpertModal, expertData, resetForm, setFormData])
+    reset(selectedExpert && isEditingExpert ? expertToFormValues(selectedExpert) : emptyExpertValues)
+  }, [showExpertModal, selectedExpert, isEditingExpert, reset])
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-
-      if (!validateAll()) {
-        return
-      }
-
+  const onSubmit = useCallback(
+    async (values: ExpertFormValues) => {
       setIsSubmitting(true)
 
       try {
+        const payload: Omit<ProjectExpert, "id"> = {
+          ...values,
+          organization: values.organization ?? "",
+        }
+
         if (isEditingExpert && selectedExpert) {
-          await updateExpert(selectedExpert.id, formData)
+          await updateExpert(selectedExpert.id, payload)
         } else {
-          await createExpert(formData)
+          await createExpert(payload)
         }
       } catch (error) {
         console.error("Erro ao salvar agente:", error)
@@ -158,20 +86,13 @@ export function ExpertModal() {
         setIsSubmitting(false)
       }
     },
-    [validateAll, isEditingExpert, selectedExpert, updateExpert, createExpert, formData],
+    [isEditingExpert, selectedExpert, updateExpert, createExpert],
   )
 
   const handleClose = useCallback(() => {
-    resetForm()
+    reset(emptyExpertValues)
     closeExpertModal()
-  }, [resetForm, closeExpertModal])
-
-  const updateContactField = useCallback(
-    (field: string, value: string) => {
-      updateField(`contact.${field}`, value)
-    },
-    [updateField],
-  )
+  }, [reset, closeExpertModal])
 
   if (!showExpertModal) return null
 
@@ -201,7 +122,7 @@ export function ExpertModal() {
         </CardHeader>
 
         <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -210,15 +131,12 @@ export function ExpertModal() {
                     NOME: <span className="text-red-400">*</span>
                   </label>
                   <Input
-                    value={formData.name}
-                    onChange={(e) => updateField("name", e.target.value)}
+                    {...register("name")}
                     placeholder="Nome do agente..."
-                    className={`bg-gray-900 border-cyan-500/30 text-white ${
-                      errors.name && touched.name ? "border-red-500" : ""
-                    }`}
+                    className={`bg-gray-900 border-cyan-500/30 text-white ${errors.name ? "border-red-500" : ""}`}
                     disabled={isSubmitting}
                   />
-                  {errors.name && touched.name && <p className="text-red-400 text-xs mt-1 font-mono">{errors.name}</p>}
+                  {errors.name && <p className="text-red-400 text-xs mt-1 font-mono">{errors.name.message}</p>}
                 </div>
 
                 <div>
@@ -226,47 +144,40 @@ export function ExpertModal() {
                     CARGO: <span className="text-red-400">*</span>
                   </label>
                   <Input
-                    value={formData.role}
-                    onChange={(e) => updateField("role", e.target.value)}
+                    {...register("role")}
                     placeholder="Cargo do agente..."
-                    className={`bg-gray-900 border-cyan-500/30 text-white ${
-                      errors.role && touched.role ? "border-red-500" : ""
-                    }`}
+                    className={`bg-gray-900 border-cyan-500/30 text-white ${errors.role ? "border-red-500" : ""}`}
                     disabled={isSubmitting}
                   />
-                  {errors.role && touched.role && <p className="text-red-400 text-xs mt-1 font-mono">{errors.role}</p>}
+                  {errors.role && <p className="text-red-400 text-xs mt-1 font-mono">{errors.role.message}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-400 mb-2 font-mono">ORGANIZAÇÃO:</label>
                   <Input
-                    value={formData.organization}
-                    onChange={(e) => updateField("organization", e.target.value)}
+                    {...register("organization")}
                     placeholder="Organização do agente..."
                     className={`bg-gray-900 border-cyan-500/30 text-white ${
-                      errors.organization && touched.organization ? "border-red-500" : ""
+                      errors.organization ? "border-red-500" : ""
                     }`}
                     disabled={isSubmitting}
                   />
-                  {errors.organization && touched.organization && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.organization}</p>
+                  {errors.organization && (
+                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.organization.message}</p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-400 mb-2 font-mono">AVATAR URL:</label>
                   <Input
-                    value={formData.avatar}
-                    onChange={(e) => updateField("avatar", e.target.value)}
+                    {...register("avatar")}
                     placeholder="URL da imagem do agente..."
                     className={`bg-gray-900 border-cyan-500/30 text-white ${
-                      errors.avatar && touched.avatar ? "border-red-500" : ""
+                      errors.avatar ? "border-red-500" : ""
                     }`}
                     disabled={isSubmitting}
                   />
-                  {errors.avatar && touched.avatar && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.avatar}</p>
-                  )}
+                  {errors.avatar && <p className="text-red-400 text-xs mt-1 font-mono">{errors.avatar.message}</p>}
                 </div>
               </div>
 
@@ -277,17 +188,16 @@ export function ExpertModal() {
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       type="email"
-                      value={formData.contact?.email || ""}
-                      onChange={(e) => updateContactField("email", e.target.value)}
+                      {...register("contact.email")}
                       placeholder="Email do agente..."
                       className={`bg-gray-900 border-cyan-500/30 text-white pl-10 ${
-                        errors["contact.email"] && touched["contact.email"] ? "border-red-500" : ""
+                        errors.contact?.email ? "border-red-500" : ""
                       }`}
                       disabled={isSubmitting}
                     />
                   </div>
-                  {errors["contact.email"] && touched["contact.email"] && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors["contact.email"]}</p>
+                  {errors.contact?.email && (
+                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.contact.email.message}</p>
                   )}
                 </div>
 
@@ -296,17 +206,16 @@ export function ExpertModal() {
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
-                      value={formData.contact?.phone || ""}
-                      onChange={(e) => updateContactField("phone", e.target.value)}
+                      {...register("contact.phone")}
                       placeholder="Telefone do agente..."
                       className={`bg-gray-900 border-cyan-500/30 text-white pl-10 ${
-                        errors["contact.phone"] && touched["contact.phone"] ? "border-red-500" : ""
+                        errors.contact?.phone ? "border-red-500" : ""
                       }`}
                       disabled={isSubmitting}
                     />
                   </div>
-                  {errors["contact.phone"] && touched["contact.phone"] && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors["contact.phone"]}</p>
+                  {errors.contact?.phone && (
+                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.contact.phone.message}</p>
                   )}
                 </div>
 
@@ -315,17 +224,16 @@ export function ExpertModal() {
                   <div className="relative">
                     <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
-                      value={formData.contact?.linkedin || ""}
-                      onChange={(e) => updateContactField("linkedin", e.target.value)}
+                      {...register("contact.linkedin")}
                       placeholder="LinkedIn do agente..."
                       className={`bg-gray-900 border-cyan-500/30 text-white pl-10 ${
-                        errors["contact.linkedin"] && touched["contact.linkedin"] ? "border-red-500" : ""
+                        errors.contact?.linkedin ? "border-red-500" : ""
                       }`}
                       disabled={isSubmitting}
                     />
                   </div>
-                  {errors["contact.linkedin"] && touched["contact.linkedin"] && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors["contact.linkedin"]}</p>
+                  {errors.contact?.linkedin && (
+                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.contact.linkedin.message}</p>
                   )}
                 </div>
               </div>
@@ -337,15 +245,14 @@ export function ExpertModal() {
                 BIOGRAFIA: <span className="text-red-400">*</span>
               </label>
               <Textarea
-                value={formData.bio}
-                onChange={(e) => updateField("bio", e.target.value)}
+                {...register("bio")}
                 placeholder="Biografia do agente..."
                 className={`bg-gray-900 border-cyan-500/30 text-white min-h-[120px] ${
-                  errors.bio && touched.bio ? "border-red-500" : ""
+                  errors.bio ? "border-red-500" : ""
                 }`}
                 disabled={isSubmitting}
               />
-              {errors.bio && touched.bio && <p className="text-red-400 text-xs mt-1 font-mono">{errors.bio}</p>}
+              {errors.bio && <p className="text-red-400 text-xs mt-1 font-mono">{errors.bio.message}</p>}
             </div>
 
             {/* Actions */}
@@ -353,7 +260,7 @@ export function ExpertModal() {
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-                disabled={isSubmitting || !isValid}
+                disabled={isSubmitting}
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isSubmitting ? "SALVANDO..." : isEditingExpert ? "ATUALIZAR AGENTE" : "CRIAR AGENTE"}
