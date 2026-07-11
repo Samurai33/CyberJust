@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { X, Save, Users, Mail, Phone, Linkedin } from "lucide-react"
+import { X, Save, Users, Mail, Phone, Link } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -222,7 +222,7 @@ export function ExpertModal() {
                 <div>
                   <label className="block text-sm text-gray-400 mb-2 font-mono">LINKEDIN:</label>
                   <div className="relative">
-                    <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       {...register("contact.linkedin")}
                       placeholder="LinkedIn do agente..."
