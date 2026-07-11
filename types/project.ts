@@ -116,10 +116,10 @@ export const projectSchema = z.object({
     .max(500, "Máximo de 500 caracteres"),
   fullDescription: z.string().max(2000, "Máximo de 2000 caracteres").optional(),
   status: z.enum(["ATIVO", "ARQUIVADO", "RESOLVIDO", "AGENDADO"], {
-    errorMap: () => ({ message: "Este campo é obrigatório" }),
+    error: "Este campo é obrigatório",
   }),
   threat: z.enum(["CRÍTICO", "ALTO", "MÉDIO", "BAIXO"], {
-    errorMap: () => ({ message: "Este campo é obrigatório" }),
+    error: "Este campo é obrigatório",
   }),
   audioUrl: optionalUrlSchema,
   duration: durationSchema,
