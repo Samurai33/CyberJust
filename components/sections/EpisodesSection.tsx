@@ -1,6 +1,6 @@
 "use client"
 
-import { Play, Download, Share2, Pause } from "lucide-react"
+import { Play, Download, Share2, Pause, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +9,7 @@ import { EpisodeBadge } from "@/components/ui/episode-badge"
 import { useUI } from "@/contexts/UIContext"
 import { useAudio } from "@/contexts/AudioContext"
 import { useDashboard } from "@/contexts/DashboardContext"
-import { getAudioUrl } from "@/lib/utils"
+import { cn, getAudioUrl } from "@/lib/utils"
 import type { Episode } from "@/types"
 
 interface EpisodesSectionProps {
@@ -72,8 +72,7 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
             return (
               <Card
                 key={`episode-${episode.id}`}
-                className="bg-black/50 border-gray-800 hover:border-red-500/50 transition-all duration-300 group hover:shadow-lg hover:shadow-red-500/25 backdrop-blur-sm cursor-pointer"
-                onClick={() => setActiveEpisode(activeEpisode === index ? null : index)}
+                className="bg-black/50 border-gray-800 hover:border-red-500/50 transition-all duration-300 group hover:shadow-lg hover:shadow-red-500/25 backdrop-blur-sm"
               >
                 <CardHeader>
                   <div className="flex items-center justify-between mb-2">
@@ -91,16 +90,29 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
                     <div className="flex items-center gap-2">
                       <EpisodeBadge threat={episode.threat} variant="threat" showIcon />
                       <span className="text-sm text-gray-500 font-mono">{episode.date}</span>
+                      <button
+                        type="button"
+                        className="text-gray-500 hover:text-white transition-colors"
+                        onClick={() => setActiveEpisode(activeEpisode === index ? null : index)}
+                        aria-expanded={activeEpisode === index}
+                        aria-label={
+                          activeEpisode === index ? "Recolher detalhes do episódio" : "Expandir detalhes do episódio"
+                        }
+                      >
+                        <ChevronDown
+                          className={cn("w-4 h-4 transition-transform duration-200", activeEpisode === index && "rotate-180")}
+                        />
+                      </button>
                     </div>
                   </div>
-                  <CardTitle
-                    className="group-hover:text-red-400 transition-colors font-mono cursor-pointer hover:underline"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleEpisodeClick(episode)
-                    }}
-                  >
-                    {episode.title}
+                  <CardTitle className="font-mono">
+                    <button
+                      type="button"
+                      className="text-left group-hover:text-red-400 transition-colors hover:underline"
+                      onClick={() => handleEpisodeClick(episode)}
+                    >
+                      {episode.title}
+                    </button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -117,8 +129,7 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
                             : "bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
                           : "bg-gray-600 hover:bg-gray-500 cursor-not-allowed"
                       }`}
-                      onClick={(e) => {
-                        e.stopPropagation()
+                      onClick={() => {
                         if (hasAudio) {
                           handlePlayEpisode(episode)
                         }
@@ -149,7 +160,12 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
                       <Download className="w-3 h-3 mr-1" />
                       BAIXAR
                     </Button>
-                    <Button size="sm" variant="outline" className="border-gray-600 text-gray-400 hover:text-white">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-gray-600 text-gray-400 hover:text-white"
+                      aria-label="Compartilhar episódio"
+                    >
                       <Share2 className="w-3 h-3" />
                     </Button>
                   </div>
