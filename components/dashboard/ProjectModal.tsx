@@ -65,7 +65,7 @@ function ChipListField({
           className="bg-gray-900 border-cyan-500/30 text-white flex-1"
           disabled={disabled}
         />
-        <Button type="button" onClick={onAdd} size="sm" variant="outline" disabled={disabled || !inputValue.trim()}>
+        <Button type="button" onClick={onAdd} size="icon" variant="outline" disabled={disabled || !inputValue.trim()}>
           {addIcon}
         </Button>
       </div>
@@ -105,9 +105,9 @@ function ChipListField({
               <Button
                 type="button"
                 onClick={() => onRemove(item)}
-                size="sm"
+                size="icon"
                 variant="ghost"
-                className="text-red-400 hover:text-red-300 p-1 h-auto"
+                className="text-red-400 hover:text-red-300 h-10 w-10"
                 disabled={disabled}
               >
                 <X className="w-4 h-4" />
@@ -264,7 +264,7 @@ export function ProjectModal() {
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={handleClose}
               className="text-gray-400 hover:text-white hover:bg-red-500/20"
               disabled={isSubmitting}
