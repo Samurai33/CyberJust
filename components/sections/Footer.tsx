@@ -27,7 +27,7 @@ export function Footer() {
 
         <div className="text-center">
           <p className="text-gray-500 text-sm font-mono">
-            {">"} "A segurança digital não é um destino, mas uma jornada contínua de vigilância e proteção."
+            {">"} &ldquo;A segurança digital não é um destino, mas uma jornada contínua de vigilância e proteção.&rdquo;
           </p>
         </div>
       </div>

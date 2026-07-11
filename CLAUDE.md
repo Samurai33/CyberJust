@@ -16,11 +16,12 @@ Cybercrime investigation platform: forensic analysis tools, expert directory, ep
 pnpm dev         # dev server
 pnpm build       # production build — check the route table for First Load JS regressions
 pnpm start       # run the production build
-pnpm type-check  # tsc --noEmit — there is no `lint` script; ESLint isn't configured (see #11)
+pnpm lint        # eslint . — flat config in eslint.config.mjs, extends eslint-config-next
+pnpm type-check  # tsc --noEmit
 pnpm test        # vitest run — coverage is still sparse, see lib/utils.test.ts and app/actions/auth.test.ts for the pattern
 ```
 
-CI (`.github/workflows/ci.yml`) runs `pnpm type-check` + `pnpm test` + `pnpm build` on PRs/pushes to `main` — it does not lint.
+CI (`.github/workflows/ci.yml`) runs `pnpm lint` + `pnpm type-check` + `pnpm test` + `pnpm build` on PRs/pushes to `main`. Three React Compiler rules (`react-hooks/set-state-in-effect`, `react-hooks/purity`, `react-hooks/immutability`) are downgraded to `warn` in `eslint.config.mjs` — they flag pre-existing patterns in vendor/shadcn code (`carousel.tsx`, `sidebar.tsx`, `use-mobile.tsx`) and `AudioPlayer.tsx`, tracked in #61 rather than rewritten as part of adding lint.
 
 ## Project layout
 
