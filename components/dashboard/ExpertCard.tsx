@@ -1,6 +1,6 @@
 "use client"
 
-import { Users, Edit, Trash2, Mail, Phone, Linkedin } from "lucide-react"
+import { Users, Edit, Trash2, Mail, Phone, Link } from "lucide-react"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,7 +63,7 @@ export function ExpertCard({ expert }: ExpertCardProps) {
           )}
           {expert.contact?.linkedin && (
             <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Linkedin className="w-3 h-3" />
+              <Link className="w-3 h-3" />
               <span>{expert.contact.linkedin}</span>
             </div>
           )}
