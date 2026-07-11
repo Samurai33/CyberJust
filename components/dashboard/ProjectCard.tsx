@@ -73,7 +73,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
           <div className="flex gap-1">
             <Button
-              size="sm"
+              size="icon"
               variant="ghost"
               onClick={() => openProjectModal(project)}
               className="text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/20"
@@ -81,7 +81,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <Edit className="w-4 h-4" />
             </Button>
             <Button
-              size="sm"
+              size="icon"
               variant="ghost"
               onClick={handleDelete}
               className="text-gray-400 hover:text-red-400 hover:bg-red-500/20"

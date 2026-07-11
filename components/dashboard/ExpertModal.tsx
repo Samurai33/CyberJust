@@ -111,7 +111,7 @@ export function ExpertModal() {
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={handleClose}
               className="text-gray-400 hover:text-white hover:bg-red-500/20"
               disabled={isSubmitting}
