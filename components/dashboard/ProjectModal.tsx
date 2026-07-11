@@ -2,7 +2,9 @@
 
 import type React from "react"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { X, Save, Plus, Tag, FileText, Clock, AlertTriangle, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,159 +12,199 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useDashboard } from "@/contexts/DashboardContext"
-import { useFormValidation } from "@/hooks/useFormValidation"
 import { PROJECT_CATEGORIES } from "@/lib/projectUtils"
-import type { ProjectFormData } from "@/types/project"
+import { projectSchema, type ProjectFormData, type ProjectFormValues, type Project } from "@/types/project"
 import type { EpisodeStatus, ThreatLevel } from "@/types"
 import { StatusSelect, ThreatSelect, CategorySelect } from "./DashboardSelect"
 
-// Memoize validation rules to prevent recreation
-const validationRules = {
-  title: {
-    required: true,
-    minLength: 3,
-    maxLength: 200,
-  },
-  date: {
-    required: true,
-    custom: (value: string) => {
-      if (!value) return "Data é obrigatória"
-      const date = new Date(value)
-      if (isNaN(date.getTime())) return "Data inválida"
-      if (date > new Date()) return "Data não pode ser futura"
-      return null
-    },
-  },
-  description: {
-    required: true,
-    minLength: 10,
-    maxLength: 500,
-  },
-  fullDescription: {
-    maxLength: 2000,
-  },
-  status: {
-    required: true,
-  },
-  threat: {
-    required: true,
-  },
-  audioUrl: {
-    custom: (value: string) => {
-      if (!value) return null
-      try {
-        new URL(value)
-        return null
-      } catch {
-        return "URL inválida"
-      }
-    },
-  },
-  duration: {
-    custom: (value: string) => {
-      if (!value) return null
-      const timePattern = /^([0-9]{1,2}):([0-5][0-9])$/
-      if (!timePattern.test(value)) {
-        return "Formato deve ser MM:SS ou HH:MM"
-      }
-      return null
-    },
-  },
-  category: {
-    required: true,
-  },
+type ChipListVariant = "badge" | "list" | "warning-list"
+
+interface ChipListFieldProps {
+  label: React.ReactNode
+  items: string[]
+  inputValue: string
+  onInputChange: (value: string) => void
+  onAdd: () => void
+  onRemove: (item: string) => void
+  placeholder: string
+  disabled?: boolean
+  addIcon?: React.ReactNode
+  variant?: ChipListVariant
+}
+
+// Shared "add/remove chip" field — used for tags, key points and warnings,
+// which previously each reimplemented the same add/remove pattern.
+function ChipListField({
+  label,
+  items,
+  inputValue,
+  onInputChange,
+  onAdd,
+  onRemove,
+  placeholder,
+  disabled,
+  addIcon = <Plus className="w-4 h-4" />,
+  variant = "badge",
+}: ChipListFieldProps) {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      onAdd()
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-sm text-gray-400 mb-2 font-mono">{label}</label>
+      <div className="flex gap-2 mb-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder={placeholder}
+          className="bg-gray-900 border-cyan-500/30 text-white flex-1"
+          disabled={disabled}
+        />
+        <Button type="button" onClick={onAdd} size="sm" variant="outline" disabled={disabled || !inputValue.trim()}>
+          {addIcon}
+        </Button>
+      </div>
+
+      {variant === "badge" ? (
+        <div className="flex flex-wrap gap-2">
+          {items.map((item) => (
+            <Badge
+              key={item}
+              variant="outline"
+              className="border-cyan-500/50 text-cyan-400 cursor-pointer hover:bg-red-500/20"
+              onClick={() => !disabled && onRemove(item)}
+            >
+              {item} ×
+            </Badge>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2 mt-2">
+          {items.map((item, index) => (
+            <div
+              key={index}
+              className={
+                variant === "warning-list"
+                  ? "flex items-center gap-2 bg-red-900/20 border border-red-500/30 p-2 rounded"
+                  : "flex items-center gap-2 bg-gray-800 p-2 rounded"
+              }
+            >
+              {variant === "warning-list" ? (
+                <AlertTriangle className="w-4 h-4 text-red-400" />
+              ) : (
+                <span className="text-cyan-400">▶</span>
+              )}
+              <span className={variant === "warning-list" ? "text-red-300 text-sm flex-1" : "text-gray-300 text-sm flex-1"}>
+                {item}
+              </span>
+              <Button
+                type="button"
+                onClick={() => onRemove(item)}
+                size="sm"
+                variant="ghost"
+                className="text-red-400 hover:text-red-300 p-1 h-auto"
+                disabled={disabled}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const emptyProjectValues: ProjectFormValues = {
+  title: "",
+  date: new Date().toISOString().split("T")[0],
+  description: "",
+  fullDescription: "",
+  status: "ATIVO",
+  threat: "MÉDIO",
+  audioUrl: "",
+  duration: "",
+  category: "",
+  tags: [],
+  keyPoints: [],
+  warnings: [],
+}
+
+function projectToFormValues(project: Project): ProjectFormValues {
+  return {
+    title: project.title || "",
+    date: project.date || new Date().toISOString().split("T")[0],
+    description: project.description || "",
+    fullDescription: project.fullDescription || "",
+    status: project.status || "ATIVO",
+    threat: project.threat || "MÉDIO",
+    audioUrl: project.audioUrl || "",
+    duration: project.duration || "",
+    category: project.category || "",
+    tags: project.tags || [],
+    keyPoints: project.keyPoints || [],
+    warnings: project.warnings || [],
+  }
 }
 
 export function ProjectModal() {
   const { showProjectModal, selectedProject, isEditing, createProject, updateProject, closeProjectModal } =
     useDashboard()
 
-  // Memoize initial form data to prevent recreation
-  const initialFormData = useMemo(
-    (): ProjectFormData => ({
-      title: "",
-      date: new Date().toISOString().split("T")[0],
-      description: "",
-      fullDescription: "",
-      status: "ATIVO",
-      threat: "MÉDIO",
-      audioUrl: null,
-      duration: "",
-      category: "",
-      tags: [],
-      keyPoints: [],
-      warnings: [],
-    }),
-    [],
-  )
-
   const {
-    data: formData,
-    errors,
-    touched,
-    updateField,
-    validateAll,
-    resetForm,
-    setFormData,
-    isValid,
-  } = useFormValidation(initialFormData, validationRules)
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    getValues,
+    reset,
+    formState: { errors },
+  } = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: emptyProjectValues,
+  })
 
   const [tagInput, setTagInput] = useState("")
   const [keyPointInput, setKeyPointInput] = useState("")
   const [warningInput, setWarningInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Memoize project data to prevent unnecessary effect triggers
-  const projectData = useMemo(() => {
-    if (!selectedProject || !isEditing) return null
+  const tags = watch("tags") ?? []
+  const keyPoints = watch("keyPoints") ?? []
+  const warnings = watch("warnings") ?? []
 
-    return {
-      title: selectedProject.title || "",
-      date: selectedProject.date || new Date().toISOString().split("T")[0],
-      description: selectedProject.description || "",
-      fullDescription: selectedProject.fullDescription || "",
-      status: selectedProject.status || "ATIVO",
-      threat: selectedProject.threat || "MÉDIO",
-      audioUrl: selectedProject.audioUrl || null,
-      duration: selectedProject.duration || "",
-      category: selectedProject.category || "",
-      tags: selectedProject.tags || [],
-      keyPoints: selectedProject.keyPoints || [],
-      warnings: selectedProject.warnings || [],
-    }
-  }, [selectedProject, isEditing])
-
-  // Reset form when modal opens/closes or when editing different project
+  // Reset the form whenever the modal opens or the selected project changes,
+  // instead of syncing local state via an effect on every render.
   useEffect(() => {
     if (!showProjectModal) return
 
-    if (projectData) {
-      setFormData(projectData)
-    } else {
-      resetForm()
-    }
+    reset(selectedProject && isEditing ? projectToFormValues(selectedProject) : emptyProjectValues)
 
-    // Reset input fields
     setTagInput("")
     setKeyPointInput("")
     setWarningInput("")
-  }, [showProjectModal, projectData, resetForm, setFormData])
+  }, [showProjectModal, selectedProject, isEditing, reset])
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-
-      if (!validateAll()) {
-        return
-      }
-
+  const onSubmit = useCallback(
+    async (values: ProjectFormValues) => {
       setIsSubmitting(true)
 
       try {
+        const payload: ProjectFormData = {
+          ...values,
+          audioUrl: values.audioUrl ? values.audioUrl : null,
+        }
+
         if (isEditing && selectedProject) {
-          await updateProject(selectedProject.id, formData)
+          await updateProject(selectedProject.id, payload)
         } else {
-          await createProject(formData)
+          await createProject(payload)
         }
       } catch (error) {
         console.error("Erro ao salvar episódio:", error)
@@ -170,71 +212,40 @@ export function ProjectModal() {
         setIsSubmitting(false)
       }
     },
-    [validateAll, isEditing, selectedProject, updateProject, createProject, formData],
+    [isEditing, selectedProject, updateProject, createProject],
   )
 
-  const addTag = useCallback(() => {
-    const trimmedTag = tagInput.trim()
-    if (trimmedTag && !formData.tags.includes(trimmedTag)) {
-      updateField("tags", [...formData.tags, trimmedTag])
-      setTagInput("")
-    }
-  }, [tagInput, formData.tags, updateField])
+  const addToList = useCallback(
+    (field: "tags" | "keyPoints" | "warnings", value: string, clearInput: () => void) => {
+      const trimmed = value.trim()
+      const current = getValues(field) ?? []
+      if (trimmed && !current.includes(trimmed)) {
+        setValue(field, [...current, trimmed], { shouldDirty: true, shouldValidate: true })
+        clearInput()
+      }
+    },
+    [getValues, setValue],
+  )
 
-  const removeTag = useCallback(
-    (tagToRemove: string) => {
-      updateField(
-        "tags",
-        formData.tags.filter((tag) => tag !== tagToRemove),
+  const removeFromList = useCallback(
+    (field: "tags" | "keyPoints" | "warnings", value: string) => {
+      const current = getValues(field) ?? []
+      setValue(
+        field,
+        current.filter((item) => item !== value),
+        { shouldDirty: true, shouldValidate: true },
       )
     },
-    [formData.tags, updateField],
+    [getValues, setValue],
   )
-
-  const addKeyPoint = useCallback(() => {
-    const trimmedPoint = keyPointInput.trim()
-    if (trimmedPoint && !formData.keyPoints?.includes(trimmedPoint)) {
-      updateField("keyPoints", [...(formData.keyPoints || []), trimmedPoint])
-      setKeyPointInput("")
-    }
-  }, [keyPointInput, formData.keyPoints, updateField])
-
-  const removeKeyPoint = useCallback(
-    (pointToRemove: string) => {
-      updateField("keyPoints", formData.keyPoints?.filter((point) => point !== pointToRemove) || [])
-    },
-    [formData.keyPoints, updateField],
-  )
-
-  const addWarning = useCallback(() => {
-    const trimmedWarning = warningInput.trim()
-    if (trimmedWarning && !formData.warnings?.includes(trimmedWarning)) {
-      updateField("warnings", [...(formData.warnings || []), trimmedWarning])
-      setWarningInput("")
-    }
-  }, [warningInput, formData.warnings, updateField])
-
-  const removeWarning = useCallback(
-    (warningToRemove: string) => {
-      updateField("warnings", formData.warnings?.filter((warning) => warning !== warningToRemove) || [])
-    },
-    [formData.warnings, updateField],
-  )
-
-  const handleKeyPress = useCallback((e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      action()
-    }
-  }, [])
 
   const handleClose = useCallback(() => {
-    resetForm()
+    reset(emptyProjectValues)
     setTagInput("")
     setKeyPointInput("")
     setWarningInput("")
     closeProjectModal()
-  }, [resetForm, closeProjectModal])
+  }, [reset, closeProjectModal])
 
   if (!showProjectModal) return null
 
@@ -264,7 +275,7 @@ export function ProjectModal() {
         </CardHeader>
 
         <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -273,17 +284,12 @@ export function ProjectModal() {
                     TÍTULO DO EPISÓDIO: <span className="text-red-400">*</span>
                   </label>
                   <Input
-                    value={formData.title}
-                    onChange={(e) => updateField("title", e.target.value)}
+                    {...register("title")}
                     placeholder="Nome do episódio..."
-                    className={`bg-gray-900 border-cyan-500/30 text-white ${
-                      errors.title && touched.title ? "border-red-500" : ""
-                    }`}
+                    className={`bg-gray-900 border-cyan-500/30 text-white ${errors.title ? "border-red-500" : ""}`}
                     disabled={isSubmitting}
                   />
-                  {errors.title && touched.title && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.title}</p>
-                  )}
+                  {errors.title && <p className="text-red-400 text-xs mt-1 font-mono">{errors.title.message}</p>}
                 </div>
 
                 <div>
@@ -294,30 +300,35 @@ export function ProjectModal() {
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       type="date"
-                      value={formData.date}
-                      onChange={(e) => updateField("date", e.target.value)}
+                      {...register("date")}
                       className={`bg-gray-900 border-cyan-500/30 text-white pl-10 ${
-                        errors.date && touched.date ? "border-red-500" : ""
+                        errors.date ? "border-red-500" : ""
                       }`}
                       disabled={isSubmitting}
                     />
                   </div>
-                  {errors.date && touched.date && <p className="text-red-400 text-xs mt-1 font-mono">{errors.date}</p>}
+                  {errors.date && <p className="text-red-400 text-xs mt-1 font-mono">{errors.date.message}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-400 mb-2 font-mono">
                     CATEGORIA: <span className="text-red-400">*</span>
                   </label>
-                  <CategorySelect
-                    value={formData.category || ""}
-                    onValueChange={(value) => updateField("category", value)}
-                    disabled={isSubmitting}
-                    error={!!(errors.category && touched.category)}
-                    categories={PROJECT_CATEGORIES}
+                  <Controller
+                    control={control}
+                    name="category"
+                    render={({ field }) => (
+                      <CategorySelect
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
+                        disabled={isSubmitting}
+                        error={!!errors.category}
+                        categories={PROJECT_CATEGORIES}
+                      />
+                    )}
                   />
-                  {errors.category && touched.category && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.category}</p>
+                  {errors.category && (
+                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.category.message}</p>
                   )}
                 </div>
 
@@ -325,15 +336,19 @@ export function ProjectModal() {
                   <label className="block text-sm text-gray-400 mb-2 font-mono">
                     STATUS: <span className="text-red-400">*</span>
                   </label>
-                  <StatusSelect
-                    value={formData.status}
-                    onValueChange={(value) => updateField("status", value as EpisodeStatus)}
-                    disabled={isSubmitting}
-                    error={!!(errors.status && touched.status)}
+                  <Controller
+                    control={control}
+                    name="status"
+                    render={({ field }) => (
+                      <StatusSelect
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value as EpisodeStatus)}
+                        disabled={isSubmitting}
+                        error={!!errors.status}
+                      />
+                    )}
                   />
-                  {errors.status && touched.status && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.status}</p>
-                  )}
+                  {errors.status && <p className="text-red-400 text-xs mt-1 font-mono">{errors.status.message}</p>}
                 </div>
               </div>
 
@@ -342,15 +357,19 @@ export function ProjectModal() {
                   <label className="block text-sm text-gray-400 mb-2 font-mono">
                     NÍVEL DE AMEAÇA: <span className="text-red-400">*</span>
                   </label>
-                  <ThreatSelect
-                    value={formData.threat}
-                    onValueChange={(value) => updateField("threat", value as ThreatLevel)}
-                    disabled={isSubmitting}
-                    error={!!(errors.threat && touched.threat)}
+                  <Controller
+                    control={control}
+                    name="threat"
+                    render={({ field }) => (
+                      <ThreatSelect
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value as ThreatLevel)}
+                        disabled={isSubmitting}
+                        error={!!errors.threat}
+                      />
+                    )}
                   />
-                  {errors.threat && touched.threat && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.threat}</p>
-                  )}
+                  {errors.threat && <p className="text-red-400 text-xs mt-1 font-mono">{errors.threat.message}</p>}
                 </div>
 
                 <div>
@@ -358,70 +377,46 @@ export function ProjectModal() {
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-400" />
                     <Input
-                      value={formData.duration}
-                      onChange={(e) => updateField("duration", e.target.value)}
+                      {...register("duration")}
                       placeholder="Ex: 45:30"
                       className={`bg-gray-900 border-cyan-500/30 text-white ${
-                        errors.duration && touched.duration ? "border-red-500" : ""
+                        errors.duration ? "border-red-500" : ""
                       }`}
                       disabled={isSubmitting}
                     />
                   </div>
-                  {errors.duration && touched.duration && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.duration}</p>
+                  {errors.duration && (
+                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.duration.message}</p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-400 mb-2 font-mono">URL DO ÁUDIO:</label>
                   <Input
-                    value={formData.audioUrl || ""}
-                    onChange={(e) => updateField("audioUrl", e.target.value || null)}
+                    {...register("audioUrl")}
                     placeholder="URL do arquivo de áudio..."
                     className={`bg-gray-900 border-cyan-500/30 text-white ${
-                      errors.audioUrl && touched.audioUrl ? "border-red-500" : ""
+                      errors.audioUrl ? "border-red-500" : ""
                     }`}
                     disabled={isSubmitting}
                   />
-                  {errors.audioUrl && touched.audioUrl && (
-                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.audioUrl}</p>
+                  {errors.audioUrl && (
+                    <p className="text-red-400 text-xs mt-1 font-mono">{errors.audioUrl.message}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2 font-mono">TAGS:</label>
-                  <div className="flex gap-2 mb-2">
-                    <Input
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyPress={(e) => handleKeyPress(e, addTag)}
-                      placeholder="Adicionar tag..."
-                      className="bg-gray-900 border-cyan-500/30 text-white flex-1"
-                      disabled={isSubmitting}
-                    />
-                    <Button
-                      type="button"
-                      onClick={addTag}
-                      size="sm"
-                      variant="outline"
-                      disabled={isSubmitting || !tagInput.trim()}
-                    >
-                      <Tag className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.tags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="border-cyan-500/50 text-cyan-400 cursor-pointer hover:bg-red-500/20"
-                        onClick={() => !isSubmitting && removeTag(tag)}
-                      >
-                        {tag} ×
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+                <ChipListField
+                  label="TAGS:"
+                  items={tags}
+                  inputValue={tagInput}
+                  onInputChange={setTagInput}
+                  onAdd={() => addToList("tags", tagInput, () => setTagInput(""))}
+                  onRemove={(tag) => removeFromList("tags", tag)}
+                  placeholder="Adicionar tag..."
+                  disabled={isSubmitting}
+                  addIcon={<Tag className="w-4 h-4" />}
+                  variant="badge"
+                />
               </div>
             </div>
 
@@ -431,131 +426,70 @@ export function ProjectModal() {
                 DESCRIÇÃO CURTA: <span className="text-red-400">*</span>
               </label>
               <Textarea
-                value={formData.description}
-                onChange={(e) => updateField("description", e.target.value)}
+                {...register("description")}
                 placeholder="Descrição curta do episódio..."
                 className={`bg-gray-900 border-cyan-500/30 text-white min-h-[80px] ${
-                  errors.description && touched.description ? "border-red-500" : ""
+                  errors.description ? "border-red-500" : ""
                 }`}
                 disabled={isSubmitting}
               />
-              {errors.description && touched.description && (
-                <p className="text-red-400 text-xs mt-1 font-mono">{errors.description}</p>
+              {errors.description && (
+                <p className="text-red-400 text-xs mt-1 font-mono">{errors.description.message}</p>
               )}
             </div>
 
             <div>
               <label className="block text-sm text-gray-400 mb-2 font-mono">DESCRIÇÃO COMPLETA:</label>
               <Textarea
-                value={formData.fullDescription}
-                onChange={(e) => updateField("fullDescription", e.target.value)}
+                {...register("fullDescription")}
                 placeholder="Descrição detalhada do episódio..."
                 className={`bg-gray-900 border-cyan-500/30 text-white min-h-[120px] ${
-                  errors.fullDescription && touched.fullDescription ? "border-red-500" : ""
+                  errors.fullDescription ? "border-red-500" : ""
                 }`}
                 disabled={isSubmitting}
               />
-              {errors.fullDescription && touched.fullDescription && (
-                <p className="text-red-400 text-xs mt-1 font-mono">{errors.fullDescription}</p>
+              {errors.fullDescription && (
+                <p className="text-red-400 text-xs mt-1 font-mono">{errors.fullDescription.message}</p>
               )}
             </div>
 
             {/* Key Points */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-2 font-mono">PONTOS PRINCIPAIS:</label>
-              <div className="flex gap-2 mb-2">
-                <Input
-                  value={keyPointInput}
-                  onChange={(e) => setKeyPointInput(e.target.value)}
-                  onKeyPress={(e) => handleKeyPress(e, addKeyPoint)}
-                  placeholder="Adicionar ponto principal..."
-                  className="bg-gray-900 border-cyan-500/30 text-white flex-1"
-                  disabled={isSubmitting}
-                />
-                <Button
-                  type="button"
-                  onClick={addKeyPoint}
-                  size="sm"
-                  variant="outline"
-                  disabled={isSubmitting || !keyPointInput.trim()}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="space-y-2 mt-2">
-                {formData.keyPoints?.map((point, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-gray-800 p-2 rounded">
-                    <span className="text-cyan-400">▶</span>
-                    <span className="text-gray-300 text-sm flex-1">{point}</span>
-                    <Button
-                      type="button"
-                      onClick={() => removeKeyPoint(point)}
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-400 hover:text-red-300 p-1 h-auto"
-                      disabled={isSubmitting}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ChipListField
+              label="PONTOS PRINCIPAIS:"
+              items={keyPoints}
+              inputValue={keyPointInput}
+              onInputChange={setKeyPointInput}
+              onAdd={() => addToList("keyPoints", keyPointInput, () => setKeyPointInput(""))}
+              onRemove={(point) => removeFromList("keyPoints", point)}
+              placeholder="Adicionar ponto principal..."
+              disabled={isSubmitting}
+              variant="list"
+            />
 
             {/* Warnings */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-2 font-mono">
-                <AlertTriangle className="w-4 h-4 inline mr-1" />
-                AVISOS:
-              </label>
-              <div className="flex gap-2 mb-2">
-                <Input
-                  value={warningInput}
-                  onChange={(e) => setWarningInput(e.target.value)}
-                  onKeyPress={(e) => handleKeyPress(e, addWarning)}
-                  placeholder="Adicionar aviso..."
-                  className="bg-gray-900 border-cyan-500/30 text-white flex-1"
-                  disabled={isSubmitting}
-                />
-                <Button
-                  type="button"
-                  onClick={addWarning}
-                  size="sm"
-                  variant="outline"
-                  disabled={isSubmitting || !warningInput.trim()}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="space-y-2 mt-2">
-                {formData.warnings?.map((warning, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 bg-red-900/20 border border-red-500/30 p-2 rounded"
-                  >
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
-                    <span className="text-red-300 text-sm flex-1">{warning}</span>
-                    <Button
-                      type="button"
-                      onClick={() => removeWarning(warning)}
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-400 hover:text-red-300 p-1 h-auto"
-                      disabled={isSubmitting}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ChipListField
+              label={
+                <>
+                  <AlertTriangle className="w-4 h-4 inline mr-1" />
+                  AVISOS:
+                </>
+              }
+              items={warnings}
+              inputValue={warningInput}
+              onInputChange={setWarningInput}
+              onAdd={() => addToList("warnings", warningInput, () => setWarningInput(""))}
+              onRemove={(warning) => removeFromList("warnings", warning)}
+              placeholder="Adicionar aviso..."
+              disabled={isSubmitting}
+              variant="warning-list"
+            />
 
             {/* Actions */}
             <div className="flex gap-4 pt-4 border-t border-gray-700">
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-                disabled={isSubmitting || !isValid}
+                disabled={isSubmitting}
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isSubmitting ? "SALVANDO..." : isEditing ? "ATUALIZAR EPISÓDIO" : "CRIAR EPISÓDIO"}

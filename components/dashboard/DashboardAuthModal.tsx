@@ -3,29 +3,31 @@
 import type React from "react"
 
 import { useState } from "react"
-import { X, Shield, Lock, AlertTriangle } from "lucide-react"
+import { Shield, Lock, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDashboard } from "@/contexts/DashboardContext"
+import { Label } from "@/components/ui/label"
+import { CardContent, CardHeader } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function DashboardAuthModal() {
-  const { showAuthModal, authenticate, closeAuthModal } = useDashboard()
+  const { showAuthModal, authenticate, closeAuthModal, isAuthenticating } = useAuth()
   const [code, setCode] = useState("")
   const [error, setError] = useState("")
   const [attempts, setAttempts] = useState(0)
 
-  if (!showAuthModal) return null
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (authenticate(code)) {
+    const result = await authenticate(code)
+
+    if (result.success) {
       setCode("")
       setError("")
       setAttempts(0)
     } else {
-      setError("Código de acesso inválido")
+      setError(result.error ?? "Código de acesso inválido")
       setAttempts((prev) => prev + 1)
       setCode("")
 
@@ -39,28 +41,35 @@ export function DashboardAuthModal() {
     }
   }
 
+  const handleClose = () => {
+    closeAuthModal()
+    // The modal used to unmount on close (resetting local state as a side
+    // effect); now that Dialog keeps it mounted for animations, reset the
+    // form explicitly so it doesn't reappear pre-filled next time it opens.
+    setCode("")
+    setError("")
+    setAttempts(0)
+  }
+
   return (
-    <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
-      <Card className="bg-black border-2 border-cyan-500/50 max-w-md w-full shadow-2xl shadow-cyan-500/25">
+    <Dialog
+      open={showAuthModal}
+      onOpenChange={(open) => {
+        if (!open) handleClose()
+      }}
+    >
+      <DialogContent className="bg-black border-2 border-cyan-500/50 max-w-md w-full gap-0 p-0 shadow-2xl shadow-cyan-500/25">
         <CardHeader className="bg-gradient-to-r from-cyan-900/50 to-red-900/50 border-b border-cyan-500/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center">
-                <Shield className="w-5 h-5 text-black" />
-              </div>
-              <div>
-                <CardTitle className="text-cyan-400 font-mono">ACESSO RESTRITO</CardTitle>
-                <p className="text-xs text-gray-400 font-mono">SISTEMA DE GERENCIAMENTO</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center shrink-0">
+              <Shield className="w-5 h-5 text-black" />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={closeAuthModal}
-              className="text-gray-400 hover:text-white hover:bg-red-500/20"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+            <div>
+              <DialogTitle className="text-cyan-400 font-mono text-2xl font-semibold leading-none tracking-tight">
+                ACESSO RESTRITO
+              </DialogTitle>
+              <p className="text-xs text-gray-400 font-mono mt-1.5">SISTEMA DE GERENCIAMENTO</p>
+            </div>
           </div>
         </CardHeader>
 
@@ -77,8 +86,11 @@ export function DashboardAuthModal() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-2 font-mono">CÓDIGO DE ACESSO:</label>
+              <Label htmlFor="dashboard-access-code" className="block text-sm text-gray-400 mb-2 font-mono">
+                CÓDIGO DE ACESSO:
+              </Label>
               <Input
+                id="dashboard-access-code"
                 type="password"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
@@ -109,15 +121,15 @@ export function DashboardAuthModal() {
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-                disabled={!code.trim() || attempts >= 3}
+                disabled={!code.trim() || attempts >= 3 || isAuthenticating}
               >
                 <Shield className="w-4 h-4 mr-2" />
-                AUTENTICAR
+                {isAuthenticating ? "VERIFICANDO..." : "AUTENTICAR"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={closeAuthModal}
+                onClick={handleClose}
                 className="border-gray-600 text-gray-400 hover:text-white"
               >
                 CANCELAR
@@ -129,7 +141,7 @@ export function DashboardAuthModal() {
             <p className="text-xs text-gray-500 text-center font-mono">SISTEMA PROTEGIDO • ACESSO AUTORIZADO APENAS</p>
           </div>
         </CardContent>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

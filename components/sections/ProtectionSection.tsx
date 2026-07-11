@@ -1,5 +1,3 @@
-"use client"
-
 import { Lock, Shield, AlertTriangle, Phone } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { PROTECTION_TIPS } from "@/lib/constants"

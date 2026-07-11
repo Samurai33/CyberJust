@@ -1,10 +1,11 @@
 "use client"
 
-import { Play, Clock, AlertTriangle } from "lucide-react"
+import { Play, Clock } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { EpisodeBadge } from "@/components/ui/episode-badge"
 import { getRecommendedEpisodes } from "@/data/episodes"
 import { useAudio } from "@/contexts/AudioContext"
 
@@ -23,21 +24,6 @@ export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeR
       7: "/audio/brasil-fraudes-digitais.mp3",
     }
     return audioMap[episodeId] || null
-  }
-
-  const getThreatColor = (threat: string) => {
-    switch (threat) {
-      case "CRÍTICO":
-        return "bg-red-500/20 text-red-400 border-red-500/50"
-      case "ALTO":
-        return "bg-orange-500/20 text-orange-400 border-orange-500/50"
-      case "MÉDIO":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-      case "BAIXO":
-        return "bg-green-500/20 text-green-400 border-green-500/50"
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/50"
-    }
   }
 
   if (recommendations.length === 0) {
@@ -67,10 +53,7 @@ export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeR
                     <Badge variant="outline" className="text-xs">
                       EP {episode.id}
                     </Badge>
-                    <Badge className={`text-xs ${getThreatColor(episode.threat)}`}>
-                      <AlertTriangle className="w-3 h-3 mr-1" />
-                      {episode.threat}
-                    </Badge>
+                    <EpisodeBadge variant="threat" threat={episode.threat} showIcon />
                   </div>
                   {episode.duration && (
                     <div className="flex items-center gap-1 text-gray-400 text-xs">

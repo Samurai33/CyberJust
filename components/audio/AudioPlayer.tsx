@@ -1,9 +1,11 @@
 "use client"
 
+import { useMemo } from "react"
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Minimize2, Radio } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Slider } from "@/components/ui/slider"
 import { useAudio } from "@/contexts/AudioContext"
 
 export function AudioPlayer() {
@@ -24,6 +26,24 @@ export function AudioPlayer() {
     formatTime,
   } = useAudio()
 
+  // Stable per-episode waveform bar heights. Previously these were generated
+  // inline with Math.random() on every render, which meant all 50 bars were
+  // recomputed on every `timeupdate` tick (several times/sec during playback).
+  // A tiny seeded PRNG keyed on episode id keeps the shape stable for a given
+  // episode while still varying between episodes.
+  const waveformHeights = useMemo(() => {
+    const seedStr = String(currentEpisode?.id ?? "default")
+    let seed = 0
+    for (let i = 0; i < seedStr.length; i++) {
+      seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0
+    }
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0
+      return seed / 4294967296
+    }
+    return Array.from({ length: 50 }, () => 20 + random() * 60)
+  }, [currentEpisode?.id])
+
   if (!currentEpisode) return null
 
   return (
@@ -31,9 +51,9 @@ export function AudioPlayer() {
       <div className="container mx-auto px-6 py-4">
         {/* Compact Player */}
         {!isPlayerExpanded && (
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
             {/* Episode Info */}
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex items-center gap-3 w-full md:flex-1 md:min-w-0">
               <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Radio className="w-6 h-6 text-white" />
               </div>
@@ -46,7 +66,7 @@ export function AudioPlayer() {
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <Button
                 size="sm"
                 variant="ghost"
@@ -82,28 +102,22 @@ export function AudioPlayer() {
             </div>
 
             {/* Progress */}
-            <div className="flex items-center gap-2 flex-1 max-w-xs">
+            <div className="flex items-center gap-2 w-full md:flex-1 md:max-w-xs">
               <span className="text-xs text-gray-400 font-mono">{formatTime(currentTime)}</span>
-              <div
-                className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden cursor-pointer"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect()
-                  const x = e.clientX - rect.left
-                  const percentage = x / rect.width
-                  const newTime = percentage * duration
-                  seek(newTime)
-                }}
-              >
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-red-500 rounded-full transition-all duration-300"
-                  style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-                />
-              </div>
+              <Slider
+                value={[Math.min(currentTime, duration || 100)]}
+                min={0}
+                max={duration || 100}
+                step={0.1}
+                onValueChange={([newTime]) => seek(newTime)}
+                aria-label="Buscar posição de reprodução"
+                className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-gray-800 [&>span:first-child>span]:bg-gradient-to-r [&>span:first-child>span]:from-cyan-400 [&>span:first-child>span]:to-red-500 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-cyan-400 [&_[role=slider]]:bg-black [&_[role=slider]]:opacity-0 [&_[role=slider]]:transition-opacity [&_[role=slider]]:hover:opacity-100 [&_[role=slider]]:focus-visible:opacity-100"
+              />
               <span className="text-xs text-gray-400 font-mono">{formatTime(duration)}</span>
             </div>
 
             {/* Volume & Expand */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center md:justify-end gap-2 w-full md:w-auto">
               <Button size="sm" variant="ghost" className="text-gray-400 hover:text-white" onClick={toggleMute}>
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </Button>
@@ -150,14 +164,14 @@ export function AudioPlayer() {
             {/* Waveform Visualization */}
             <div className="relative h-20 bg-gray-900/50 rounded-lg overflow-hidden border border-cyan-500/30">
               <div className="absolute inset-0 flex items-center justify-center gap-1 px-4">
-                {[...Array(50)].map((_, i) => (
+                {waveformHeights.map((height, i) => (
                   <div
                     key={i}
                     className={`w-1 bg-gradient-to-t from-cyan-400 to-red-500 rounded-full transition-all duration-300 ${
                       isPlaying ? "animate-pulse" : ""
                     }`}
                     style={{
-                      height: `${20 + Math.random() * 60}%`,
+                      height: `${height}%`,
                       animationDelay: `${i * 0.1}s`,
                       opacity: i < (currentTime / duration) * 50 ? 1 : 0.3,
                     }}
@@ -213,21 +227,15 @@ export function AudioPlayer() {
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-400 font-mono min-w-[3rem]">{formatTime(currentTime)}</span>
 
-                <div
-                  className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden cursor-pointer"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    const x = e.clientX - rect.left
-                    const percentage = x / rect.width
-                    const newTime = percentage * duration
-                    seek(newTime)
-                  }}
-                >
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-red-500 rounded-full transition-all duration-300 shadow-lg shadow-cyan-500/25"
-                    style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-                  />
-                </div>
+                <Slider
+                  value={[Math.min(currentTime, duration || 100)]}
+                  min={0}
+                  max={duration || 100}
+                  step={0.1}
+                  onValueChange={([newTime]) => seek(newTime)}
+                  aria-label="Buscar posição de reprodução"
+                  className="flex-1 [&>span:first-child]:bg-gray-800 [&>span:first-child>span]:bg-gradient-to-r [&>span:first-child>span]:from-cyan-400 [&>span:first-child>span]:to-red-500 [&>span:first-child>span]:shadow-lg [&>span:first-child>span]:shadow-cyan-500/25 [&_[role=slider]]:border-cyan-400 [&_[role=slider]]:bg-black"
+                />
 
                 <span className="text-sm text-gray-400 font-mono min-w-[3rem]">{formatTime(duration)}</span>
               </div>
@@ -240,20 +248,15 @@ export function AudioPlayer() {
               </Button>
 
               <div className="flex items-center gap-2 w-32">
-                <div
-                  className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden cursor-pointer"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    const x = e.clientX - rect.left
-                    const percentage = x / rect.width
-                    setVolume(percentage)
-                  }}
-                >
-                  <div
-                    className="h-full bg-gradient-to-r from-purple-400 to-cyan-500 rounded-full"
-                    style={{ width: `${isMuted ? 0 : volume * 100}%` }}
-                  />
-                </div>
+                <Slider
+                  value={[isMuted ? 0 : volume]}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  onValueChange={([newVolume]) => setVolume(newVolume)}
+                  aria-label="Volume"
+                  className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-gray-800 [&>span:first-child>span]:bg-gradient-to-r [&>span:first-child>span]:from-purple-400 [&>span:first-child>span]:to-cyan-500 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-purple-400 [&_[role=slider]]:bg-black"
+                />
               </div>
 
               <span className="text-xs text-gray-400 font-mono min-w-[2rem]">

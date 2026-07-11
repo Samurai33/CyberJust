@@ -1,6 +1,7 @@
 "use client"
 
 import { Users, Edit, Trash2, Mail, Phone, Linkedin } from "lucide-react"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,12 +18,14 @@ export function ExpertCard({ expert }: ExpertCardProps) {
   return (
     <Card className="bg-black/50 border-gray-800 hover:border-cyan-500/50 transition-all duration-300 group hover:shadow-lg hover:shadow-cyan-500/25 backdrop-blur-sm">
       <CardHeader className="text-center">
-        <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="relative w-20 h-20 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden">
           {expert.avatar ? (
-            <img
+            <Image
               src={expert.avatar || "/placeholder.svg"}
               alt={expert.name}
-              className="w-full h-full rounded-full object-cover"
+              fill
+              sizes="80px"
+              className="rounded-full object-cover"
             />
           ) : (
             <Users className="w-10 h-10 text-white" />
