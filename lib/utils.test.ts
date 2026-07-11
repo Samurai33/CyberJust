@@ -3,7 +3,6 @@ import {
   getStatusColor,
   getThreatColor,
   getSeverityColor,
-  getAudioUrl,
   formatTime,
   formatDate,
   truncateText,
@@ -38,12 +37,6 @@ describe("getSeverityColor", () => {
   it("falls back to bg-gray-500 for an unknown severity", () => {
     // @ts-expect-error deliberately passing an invalid severity
     expect(getSeverityColor("NOT_REAL")).toBe("bg-gray-500")
-  })
-})
-
-describe("getAudioUrl", () => {
-  it("returns null for an episode id with no mapped audio", () => {
-    expect(getAudioUrl("no-such-episode-id")).toBeNull()
   })
 })
 

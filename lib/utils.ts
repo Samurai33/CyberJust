@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { EpisodeStatus, ThreatLevel, SeverityLevel } from "@/types"
-import { EPISODE_STATUS, THREAT_LEVELS, SEVERITY_COLORS, AUDIO_MAP } from "./constants"
+import { EPISODE_STATUS, THREAT_LEVELS, SEVERITY_COLORS } from "./constants"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -17,10 +17,6 @@ export function getThreatColor(threat: ThreatLevel): string {
 
 export function getSeverityColor(severity: SeverityLevel): string {
   return SEVERITY_COLORS[severity] || "bg-gray-500"
-}
-
-export function getAudioUrl(episodeId: string | number): string | null {
-  return AUDIO_MAP[episodeId] || null
 }
 
 export function formatTime(time: number): string {
