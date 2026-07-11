@@ -24,8 +24,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
+      # pnpm 10+ withholds native postinstall scripts (e.g. sharp) pending explicit
+      # approval; --frozen-lockfile install succeeds but leaves them unbuilt, which
+      # breaks `next build`. Approve them non-interactively so image optimization works.
+      - name: Approve native build scripts
+        run: pnpm approve-builds --all
 
+      # `pnpm lint` is intentionally not run here: this repo has no ESLint config yet
+      # (`next lint` needs an interactive setup prompt on first run). Tracked separately.
       - name: Build
         run: pnpm build
