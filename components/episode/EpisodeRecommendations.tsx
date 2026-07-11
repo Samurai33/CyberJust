@@ -18,14 +18,6 @@ export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeR
   const { playEpisode } = useAudio()
   const recommendations = getRecommendedEpisodes(currentEpisodeId, limit)
 
-  const getAudioUrl = (episodeId: string | number): string | null => {
-    const audioMap: Record<string | number, string> = {
-      3: "/audio/namoral-combating-digital-corruption-networks.mp3",
-      7: "/audio/brasil-fraudes-digitais.mp3",
-    }
-    return audioMap[episodeId] || null
-  }
-
   if (recommendations.length === 0) {
     return (
       <Card className="bg-gray-900 border-gray-700">
@@ -43,7 +35,7 @@ export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeR
       </CardHeader>
       <CardContent className="space-y-4">
         {recommendations.map((episode) => {
-          const hasAudio = getAudioUrl(episode.id) !== null
+          const hasAudio = !!episode.audioUrl
 
           return (
             <Card key={episode.id} className="bg-gray-800 border-gray-600 hover:border-cyan-500/50 transition-colors">
@@ -70,12 +62,7 @@ export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeR
                   {hasAudio && (
                     <Button
                       size="sm"
-                      onClick={() =>
-                        playEpisode({
-                          ...episode,
-                          audioUrl: getAudioUrl(episode.id),
-                        })
-                      }
+                      onClick={() => playEpisode(episode)}
                       className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
                     >
                       <Play className="w-3 h-3 mr-1" />

@@ -9,7 +9,7 @@ import { EpisodeBadge } from "@/components/ui/episode-badge"
 import { useUI } from "@/contexts/UIContext"
 import { useAudio } from "@/contexts/AudioContext"
 import { useDashboard } from "@/contexts/DashboardContext"
-import { cn, getAudioUrl } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import type { Episode } from "@/types"
 
 interface EpisodesSectionProps {
@@ -31,16 +31,10 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
   })
 
   const handlePlayEpisode = (episode: Episode) => {
-    const audioUrl = getAudioUrl(episode.id)
-    const episodeWithAudio = {
-      ...episode,
-      audioUrl: audioUrl,
-    }
-
     if (isEpisodePlaying(episode.id)) {
       togglePlayPause()
     } else {
-      playEpisode(episodeWithAudio)
+      playEpisode(episode)
     }
   }
 
@@ -67,7 +61,7 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
         <div className="grid md:grid-cols-2 gap-6">
           {episodes.map((episode, index) => {
             const isCurrentlyPlaying = isEpisodePlaying(episode.id)
-            const hasAudio = getAudioUrl(episode.id) !== null
+            const hasAudio = !!episode.audioUrl
 
             return (
               <Card
