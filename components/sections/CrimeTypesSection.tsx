@@ -1,5 +1,3 @@
-"use client"
-
 import { CreditCard, Database, Heart, UserCheck } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { EpisodeBadge } from "@/components/ui/episode-badge"

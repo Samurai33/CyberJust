@@ -54,9 +54,6 @@ export function ExpertsProvider({ children }: { children: React.ReactNode }) {
       const updatedExperts = [...experts, newExpert]
       setExperts(updatedExperts)
 
-      // Força uma atualização no localStorage
-      localStorage.setItem("cyberjustica-experts", JSON.stringify(updatedExperts))
-
       // Dispara um evento customizado para notificar outras partes da aplicação
       window.dispatchEvent(new CustomEvent("expertsUpdated", { detail: updatedExperts }))
     },
@@ -75,9 +72,6 @@ export function ExpertsProvider({ children }: { children: React.ReactNode }) {
       )
       setExperts(updatedExperts)
 
-      // Força uma atualização no localStorage
-      localStorage.setItem("cyberjustica-experts", JSON.stringify(updatedExperts))
-
       // Dispara um evento customizado para notificar outras partes da aplicação
       window.dispatchEvent(new CustomEvent("expertsUpdated", { detail: updatedExperts }))
     },
@@ -88,9 +82,6 @@ export function ExpertsProvider({ children }: { children: React.ReactNode }) {
     (id: string) => {
       const updatedExperts = experts.filter((expert) => expert.id !== id)
       setExperts(updatedExperts)
-
-      // Força uma atualização no localStorage
-      localStorage.setItem("cyberjustica-experts", JSON.stringify(updatedExperts))
 
       // Dispara um evento customizado para notificar outras partes da aplicação
       window.dispatchEvent(new CustomEvent("expertsUpdated", { detail: updatedExperts }))

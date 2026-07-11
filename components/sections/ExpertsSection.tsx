@@ -1,6 +1,7 @@
 "use client"
 
 import { Users } from "lucide-react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useExperts } from "@/contexts/ExpertsContext"
@@ -17,19 +18,21 @@ export function ExpertsSection() {
       setUpdateTrigger((prev) => prev + 1)
     }
 
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "cyberjustica-experts") {
+        handleExpertsUpdate()
+      }
+    }
+
     // Escuta o evento customizado de atualização de experts
     window.addEventListener("expertsUpdated", handleExpertsUpdate)
 
     // Também escuta mudanças no localStorage
-    window.addEventListener("storage", (e) => {
-      if (e.key === "cyberjustica-experts") {
-        handleExpertsUpdate()
-      }
-    })
+    window.addEventListener("storage", handleStorageChange)
 
     return () => {
       window.removeEventListener("expertsUpdated", handleExpertsUpdate)
-      window.removeEventListener("storage", handleExpertsUpdate)
+      window.removeEventListener("storage", handleStorageChange)
     }
   }, [refreshExperts])
 
@@ -75,9 +78,11 @@ export function ExpertsSection() {
               <CardHeader className="text-center">
                 <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
                   {expert.avatar ? (
-                    <img
+                    <Image
                       src={expert.avatar || "/placeholder.svg"}
                       alt={expert.name}
+                      width={80}
+                      height={80}
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (

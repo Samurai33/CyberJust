@@ -10,6 +10,7 @@ import {
   CustomSelectTrigger,
   CustomSelectValue,
 } from "@/components/ui/custom-select"
+import { EPISODE_STATUS, THREAT_LEVELS } from "@/lib/constants"
 
 interface DashboardSelectProps {
   value: string
@@ -54,7 +55,7 @@ export function DashboardSelect({
         <CustomSelectValue placeholder={placeholder} />
         <ChevronDown className={cn("h-4 w-4 opacity-50 transition-transform duration-200", isOpen && "rotate-180")} />
       </CustomSelectTrigger>
-      <CustomSelectContent className="bg-gray-900 border-gray-700 text-white shadow-2xl" style={{ zIndex: 9999 }}>
+      <CustomSelectContent className="bg-popover border-border text-popover-foreground shadow-2xl" style={{ zIndex: 9999 }}>
         {options.map((option) => (
           <CustomSelectItem
             key={option.value}
@@ -81,12 +82,10 @@ export function StatusSelect({
   disabled?: boolean
   error?: boolean
 }) {
-  const statusOptions = [
-    { value: "ATIVO", label: "ATIVO" },
-    { value: "ARQUIVADO", label: "ARQUIVADO" },
-    { value: "RESOLVIDO", label: "RESOLVIDO" },
-    { value: "AGENDADO", label: "AGENDADO" },
-  ]
+  const statusOptions = Object.keys(EPISODE_STATUS).map((status) => ({
+    value: status,
+    label: status,
+  }))
 
   return (
     <DashboardSelect
@@ -112,12 +111,10 @@ export function ThreatSelect({
   disabled?: boolean
   error?: boolean
 }) {
-  const threatOptions = [
-    { value: "CRÍTICO", label: "CRÍTICO" },
-    { value: "ALTO", label: "ALTO" },
-    { value: "MÉDIO", label: "MÉDIO" },
-    { value: "BAIXO", label: "BAIXO" },
-  ]
+  const threatOptions = Object.keys(THREAT_LEVELS).map((threat) => ({
+    value: threat,
+    label: threat,
+  }))
 
   return (
     <DashboardSelect

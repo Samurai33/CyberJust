@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 import { Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useRatings } from "@/contexts/RatingContext"
@@ -18,6 +19,10 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
   const [selectedRating, setSelectedRating] = useState(0)
   const [review, setReview] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const uid = useId()
+  const ratingLabelId = `${uid}-rating-label`
+  const reviewFieldId = `${uid}-review`
 
   const episodeRatings = getEpisodeRatings(episodeId)
   const averageRating = getAverageRating(episodeId)
@@ -39,16 +44,35 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
   const renderStars = (rating: number, interactive = false, size: "sm" | "md" | "lg" = "md") => {
     const starSize = size === "sm" ? "w-3 h-3" : size === "md" ? "w-4 h-4" : "w-5 h-5"
 
+    const starIcon = (star: number) => (
+      <Star
+        key={star}
+        className={`${starSize} ${star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"} ${
+          interactive ? "group-hover:text-yellow-300" : ""
+        }`}
+      />
+    )
+
+    if (!interactive) {
+      return (
+        <div className="flex items-center gap-1">{[1, 2, 3, 4, 5].map((star) => starIcon(star))}</div>
+      )
+    }
+
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" role="radiogroup" aria-label="Classificação em estrelas">
         {[1, 2, 3, 4, 5].map((star) => (
-          <Star
+          <button
             key={star}
-            className={`${starSize} ${
-              star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"
-            } ${interactive ? "cursor-pointer hover:text-yellow-300" : ""}`}
-            onClick={interactive ? () => setSelectedRating(star) : undefined}
-          />
+            type="button"
+            role="radio"
+            aria-checked={star === rating}
+            aria-label={`${star} de 5 estrelas`}
+            onClick={() => setSelectedRating(star)}
+            className="group cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400"
+          >
+            {starIcon(star)}
+          </button>
         ))}
       </div>
     )
@@ -87,22 +111,29 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
                         Editar
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-gray-900 border-gray-700">
+                    <DialogContent className="bg-card border-border">
                       <DialogHeader>
                         <DialogTitle className="text-white">Editar Avaliação</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
-                          <label className="text-sm text-gray-400 mb-2 block">Classificação:</label>
-                          {renderStars(selectedRating || userRating.rating, true, "lg")}
+                          <Label id={ratingLabelId} className="text-sm text-gray-400 mb-2 block">
+                            Classificação:
+                          </Label>
+                          <div aria-labelledby={ratingLabelId}>
+                            {renderStars(selectedRating || userRating.rating, true, "lg")}
+                          </div>
                         </div>
                         <div>
-                          <label className="text-sm text-gray-400 mb-2 block">Comentário (opcional):</label>
+                          <Label htmlFor={reviewFieldId} className="text-sm text-gray-400 mb-2 block">
+                            Comentário (opcional):
+                          </Label>
                           <Textarea
+                            id={reviewFieldId}
                             value={review}
                             onChange={(e) => setReview(e.target.value)}
                             placeholder="Compartilhe sua opinião sobre este episódio..."
-                            className="bg-gray-800 border-gray-600"
+                            className="bg-secondary border-border"
                             rows={3}
                           />
                         </div>
@@ -134,22 +165,27 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
                   Avaliar Episódio
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-gray-900 border-gray-700">
+              <DialogContent className="bg-card border-border">
                 <DialogHeader>
                   <DialogTitle className="text-white">Avaliar Episódio</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Classificação:</label>
-                    {renderStars(selectedRating, true, "lg")}
+                    <Label id={ratingLabelId} className="text-sm text-gray-400 mb-2 block">
+                      Classificação:
+                    </Label>
+                    <div aria-labelledby={ratingLabelId}>{renderStars(selectedRating, true, "lg")}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Comentário (opcional):</label>
+                    <Label htmlFor={reviewFieldId} className="text-sm text-gray-400 mb-2 block">
+                      Comentário (opcional):
+                    </Label>
                     <Textarea
+                      id={reviewFieldId}
                       value={review}
                       onChange={(e) => setReview(e.target.value)}
                       placeholder="Compartilhe sua opinião sobre este episódio..."
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-secondary border-border"
                       rows={3}
                     />
                   </div>

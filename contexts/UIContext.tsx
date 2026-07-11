@@ -1,11 +1,11 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState } from "react"
 import type { Episode, UIState } from "@/types"
 import { useKeyboard } from "@/hooks/useKeyboard"
 
-interface UIContextType extends UIState {
+interface UIContextType extends Omit<UIState, "glitchText" | "mousePosition"> {
   setActiveEpisode: (episode: number | null) => void
   setSelectedEpisodeModal: (episode: Episode | null) => void
   setSelectedLuluModal: (show: boolean) => void
@@ -23,45 +23,10 @@ const initialFilters = {
 }
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
-  const [glitchText, setGlitchText] = useState("CYBERJUSTIÇA")
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [activeEpisode, setActiveEpisode] = useState<number | null>(null)
   const [selectedEpisodeModal, setSelectedEpisodeModal] = useState<Episode | null>(null)
   const [selectedLuluModal, setSelectedLuluModal] = useState(false)
   const [episodeFilters, setEpisodeFiltersState] = useState(initialFilters)
-
-  // Mouse tracking effect
-  useEffect(() => {
-    if (typeof window === "undefined") return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
-    }
-
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
-  }, [])
-
-  // Glitch text effect
-  useEffect(() => {
-    const glitchInterval = setInterval(() => {
-      const glitchChars = ["█", "▓", "▒", "░", "▄", "▀", "■", "□", "◆", "◇"]
-      const originalText = "CYBERJUSTIÇA"
-      let glitched = originalText
-
-      if (Math.random() < 0.3) {
-        const randomIndex = Math.floor(Math.random() * originalText.length)
-        const randomChar = glitchChars[Math.floor(Math.random() * glitchChars.length)]
-        glitched = originalText.substring(0, randomIndex) + randomChar + originalText.substring(randomIndex + 1)
-
-        setTimeout(() => setGlitchText(originalText), 150)
-      }
-
-      setGlitchText(glitched)
-    }, 2500)
-
-    return () => clearInterval(glitchInterval)
-  }, [])
 
   // Close modals with Escape key
   useKeyboard("Escape", () => {
@@ -78,8 +43,6 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value: UIContextType = {
-    glitchText,
-    mousePosition,
     activeEpisode,
     selectedEpisodeModal,
     selectedLuluModal,

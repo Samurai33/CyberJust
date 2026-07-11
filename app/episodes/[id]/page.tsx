@@ -1,11 +1,5 @@
-"use client"
-
-import { useState } from "react"
-import { useParams, notFound } from "next/navigation"
 import {
-  Play,
   Calendar,
-  AlertTriangle,
   Clock,
   Share2,
   Download,
@@ -17,6 +11,7 @@ import {
   Bookmark,
 } from "lucide-react"
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -24,69 +19,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { getEpisodeById } from "@/data/episodes"
-import { useAudio } from "@/contexts/AudioContext"
+import { EpisodeBadge } from "@/components/ui/episode-badge"
 import { EpisodeBookmarks } from "@/components/episode/EpisodeBookmarks"
 import { EpisodeRating } from "@/components/episode/EpisodeRating"
 import { EpisodeAnalytics } from "@/components/episode/EpisodeAnalytics"
 import { EpisodeRecommendations } from "@/components/episode/EpisodeRecommendations"
+import { EpisodePlayButton } from "@/components/episode/EpisodePlayButton"
+import { EpisodeResourceButton } from "@/components/episode/EpisodeResourceButton"
 
-export default function EpisodeDetailPage() {
-  const params = useParams()
-  const { playEpisode, isEpisodePlaying, isLoading } = useAudio()
-  const [activeTab, setActiveTab] = useState("transcript")
+const getSeverityColor = (severity: string) => {
+  switch (severity) {
+    case "critical":
+      return "bg-red-500"
+    case "high":
+      return "bg-orange-500"
+    case "medium":
+      return "bg-yellow-500"
+    case "low":
+      return "bg-green-500"
+    default:
+      return "bg-gray-500"
+  }
+}
 
-  const episode = getEpisodeById(params.id as string)
+export default async function EpisodePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const episode = getEpisodeById(id)
 
   if (!episode) {
     notFound()
   }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ATIVO":
-        return "bg-green-500/20 text-green-400 border-green-500/50"
-      case "ARQUIVADO":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-      case "RESOLVIDO":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/50"
-      case "AGENDADO":
-        return "bg-purple-500/20 text-purple-400 border-purple-500/50"
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/50"
-    }
-  }
-
-  const getThreatColor = (threat: string) => {
-    switch (threat) {
-      case "CRÍTICO":
-        return "bg-red-500/20 text-red-400 border-red-500/50"
-      case "ALTO":
-        return "bg-orange-500/20 text-orange-400 border-orange-500/50"
-      case "MÉDIO":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-      case "BAIXO":
-        return "bg-green-500/20 text-green-400 border-green-500/50"
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/50"
-    }
-  }
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case "critical":
-        return "bg-red-500"
-      case "high":
-        return "bg-orange-500"
-      case "medium":
-        return "bg-yellow-500"
-      case "low":
-        return "bg-green-500"
-      default:
-        return "bg-gray-500"
-    }
-  }
-
-  const isCurrentlyPlaying = isEpisodePlaying(episode.id)
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -104,11 +66,8 @@ export default function EpisodeDetailPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-4 mb-4">
-            <Badge className={getStatusColor(episode.status)}>{episode.status}</Badge>
-            <Badge className={getThreatColor(episode.threat)}>
-              <AlertTriangle className="w-3 h-3 mr-1" />
-              {episode.threat}
-            </Badge>
+            <EpisodeBadge status={episode.status} />
+            <EpisodeBadge variant="threat" threat={episode.threat} showIcon />
             {episode.category && (
               <Badge variant="outline" className="border-cyan-500/50 text-cyan-400">
                 {episode.category}
@@ -153,25 +112,7 @@ export default function EpisodeDetailPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-4">
-            {episode.audioUrl && (
-              <Button
-                size="lg"
-                onClick={() => playEpisode(episode)}
-                disabled={isLoading}
-                className={`${
-                  isCurrentlyPlaying
-                    ? "bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-400 hover:to-cyan-500"
-                    : "bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
-                }`}
-              >
-                {isLoading ? (
-                  <div className="w-5 h-5 mr-2 border border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Play className="w-5 h-5 mr-2" />
-                )}
-                {isCurrentlyPlaying ? "Reproduzindo..." : "Ouvir Episódio"}
-              </Button>
-            )}
+            <EpisodePlayButton episode={episode} />
 
             <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
               <Share2 className="w-5 h-5 mr-2" />
@@ -186,7 +127,7 @@ export default function EpisodeDetailPage() {
         </div>
 
         {/* Tabbed Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs defaultValue="transcript" className="w-full">
           <TabsList className="grid w-full grid-cols-6 bg-gray-900 border-gray-700">
             <TabsTrigger value="transcript" className="data-[state=active]:bg-white data-[state=active]:text-black">
               <BookOpen className="w-4 h-4 mr-2" />
@@ -346,14 +287,7 @@ export default function EpisodeDetailPage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-gray-300 mb-4">{resource.description}</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => window.open(resource.url, "_blank")}
-                      >
-                        Acessar Recurso
-                      </Button>
+                      <EpisodeResourceButton url={resource.url} />
                     </CardContent>
                   </Card>
                 ))

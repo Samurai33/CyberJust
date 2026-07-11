@@ -1,5 +1,3 @@
-"use client"
-
 import { TrendingUp } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useReducer, useCallback } from "react"
+import { createContext, useContext, useReducer, useCallback, useMemo } from "react"
 import type { EpisodeRating } from "@/types"
 import { createRating } from "@/services/analytics"
 
@@ -98,15 +98,18 @@ export function RatingProvider({ children }: { children: React.ReactNode }) {
     [state.ratings],
   )
 
-  const value: RatingContextType = {
-    ...state,
-    addRating,
-    updateRating,
-    removeRating,
-    getEpisodeRatings,
-    getAverageRating,
-    getUserRating,
-  }
+  const value: RatingContextType = useMemo(
+    () => ({
+      ...state,
+      addRating,
+      updateRating,
+      removeRating,
+      getEpisodeRatings,
+      getAverageRating,
+      getUserRating,
+    }),
+    [state, addRating, updateRating, removeRating, getEpisodeRatings, getAverageRating, getUserRating],
+  )
 
   return <RatingContext.Provider value={value}>{children}</RatingContext.Provider>
 }

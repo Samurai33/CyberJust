@@ -15,11 +15,10 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 ### Pull Requests
 
 1. Fork the repo and create your branch from `main`
-2. If you've added code that should be tested, add tests
+2. If you've added code that should be tested, add tests (there's a minimal Vitest setup — see `pnpm test`; test coverage is still sparse, adding to it is welcome)
 3. If you've changed APIs, update the documentation
-4. Ensure the test suite passes
-5. Make sure your code lints
-6. Issue that pull request!
+4. Run `pnpm type-check` and `pnpm build` — both must pass (this is what CI checks)
+5. Issue that pull request!
 
 ## 📋 Contribution Guidelines
 
@@ -60,9 +59,9 @@ pnpm dev
 
 3. **Test your changes**
    ```bash
-   pnpm lint
    pnpm type-check
    pnpm build
+   pnpm test
    ```
 
 4. **Commit your changes**
@@ -116,10 +115,9 @@ chore: update dependencies
 ## 🎨 Coding Standards
 
 ### TypeScript/JavaScript
-- Use TypeScript for all new code
-- Follow ESLint and Prettier configurations
+- Use TypeScript for all new code, `strict: true` is enabled — don't add `any`/`as` escape hatches to work around a real type error
+- No ESLint config exists yet (tracked in [#11](https://github.com/Samurai33/CyberJust/issues/11)) — `pnpm type-check` is the enforced check for now
 - Use meaningful variable and function names
-- Add JSDoc comments for public APIs
 
 ### React Components
 - Use functional components with hooks
@@ -186,9 +184,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 ## 🆘 Getting Help
 
 - Check existing issues and discussions
-- Ask questions in GitHub Discussions
-- Join our Discord community
-- Contact maintainers directly
+- Ask questions in GitHub Discussions or open an issue
 
 ## 🙏 Recognition
 

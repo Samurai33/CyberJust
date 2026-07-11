@@ -1,9 +1,21 @@
 "use client"
 
-import { useUI } from "@/contexts/UIContext"
+import { useEffect, useState } from "react"
 
 export function Background() {
-  const { mousePosition } = useUI()
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+
+  // Mouse tracking effect
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => window.removeEventListener("mousemove", handleMouseMove)
+  }, [])
 
   // Ensure mousePosition is defined with fallback values
   const safeMousePosition = mousePosition || { x: 0, y: 0 }

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useReducer, useCallback } from "react"
+import { createContext, useContext, useReducer, useCallback, useMemo } from "react"
 import type { EpisodeBookmark } from "@/types"
 import { createBookmark } from "@/services/analytics"
 
@@ -87,14 +87,17 @@ export function BookmarkProvider({ children }: { children: React.ReactNode }) {
     [state.bookmarks],
   )
 
-  const value: BookmarkContextType = {
-    ...state,
-    addBookmark,
-    removeBookmark,
-    updateBookmark,
-    getEpisodeBookmarks,
-    hasBookmarkAtTime,
-  }
+  const value: BookmarkContextType = useMemo(
+    () => ({
+      ...state,
+      addBookmark,
+      removeBookmark,
+      updateBookmark,
+      getEpisodeBookmarks,
+      hasBookmarkAtTime,
+    }),
+    [state, addBookmark, removeBookmark, updateBookmark, getEpisodeBookmarks, hasBookmarkAtTime],
+  )
 
   return <BookmarkContext.Provider value={value}>{children}</BookmarkContext.Provider>
 }
