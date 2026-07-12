@@ -1,10 +1,35 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { randomBytes, createHmac, timingSafeEqual } from "crypto"
 
 const SESSION_COOKIE = "cj_dashboard_session"
 const SESSION_MAX_AGE = 60 * 60 * 8 // 8 hours
+
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX_ATTEMPTS = 5
+
+// Best-effort, in-memory login limiter: resets on cold start and isn't
+// shared across serverless instances/regions. Raises the bar over the old
+// client-side-only "3 attempts" UX lockout without requiring an external
+// store; swap for Vercel KV/Upstash if this ever needs to be watertight.
+const loginAttemptsByIp = new Map<string, { count: number; windowStart: number }>()
+
+async function isRateLimited(): Promise<boolean> {
+  const headerList = await headers()
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+
+  const now = Date.now()
+  const entry = loginAttemptsByIp.get(ip)
+
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    loginAttemptsByIp.set(ip, { count: 1, windowStart: now })
+    return false
+  }
+
+  entry.count += 1
+  return entry.count > RATE_LIMIT_MAX_ATTEMPTS
+}
 
 function getSessionSecret(): string | null {
   return process.env.DASHBOARD_SESSION_SECRET ?? null
@@ -28,6 +53,10 @@ export async function authenticateDashboard(code: string): Promise<{ success: bo
   if (!password || !secret) {
     // Fail closed: if the server isn't configured, nobody gets in.
     return { success: false, error: "Autenticação não configurada no servidor." }
+  }
+
+  if (await isRateLimited()) {
+    return { success: false, error: "Muitas tentativas. Aguarde um minuto e tente novamente." }
   }
 
   if (!safeEqual(code, password)) {

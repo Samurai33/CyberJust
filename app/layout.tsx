@@ -9,10 +9,12 @@ import { RatingProvider } from "@/contexts/RatingContext"
 import { DashboardProvider } from "@/contexts/DashboardContext"
 import { ExpertsProvider } from "@/contexts/ExpertsContext"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { SITE_URL } from "@/lib/constants"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
   description:
     "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
@@ -32,7 +34,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://cyberjustica.brasil.gov.br",
+    url: SITE_URL,
     title: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
     description:
       "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
@@ -44,7 +46,6 @@ export const metadata: Metadata = {
     description:
       "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
   },
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
