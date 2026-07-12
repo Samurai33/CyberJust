@@ -3,34 +3,15 @@
 import { useState, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { useDebounce } from "@/hooks/useDebounce"
-import {
-  Plus,
-  Search,
-  LogOut,
-  BarChart3,
-  FolderOpen,
-  Settings,
-  Radio,
-  Clock,
-  Calendar,
-  Users,
-  Filter,
-  X,
-} from "lucide-react"
+import { Plus, LogOut, BarChart3, FolderOpen, Settings, Radio, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { useDashboard } from "@/contexts/DashboardContext"
 import { useAuth } from "@/contexts/AuthContext"
-import { ProjectCard } from "./ProjectCard"
-import { ExpertCard } from "./ExpertCard"
-import { episodes } from "@/data/episodes"
-import { EPISODE_STATUS, THREAT_LEVELS } from "@/lib/constants"
-import { PROJECT_CATEGORIES } from "@/lib/projectUtils"
-import { DashboardSelect } from "./DashboardSelect"
-import { EpisodeBadge } from "@/components/ui/episode-badge"
+import { ProjectsTabContent } from "./ProjectsTabContent"
+import { HomepageEpisodesTabContent } from "./HomepageEpisodesTabContent"
+import { ExpertsTabContent } from "./ExpertsTabContent"
 
 // Deferred to their own chunks — react-hook-form + zod forms only needed once a modal opens (#34).
 const ProjectModal = dynamic(() => import("./ProjectModal").then((mod) => mod.ProjectModal), { ssr: false })
@@ -219,251 +200,37 @@ export function Dashboard() {
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            {/* Filters */}
-            <div className="mb-8 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="border-gray-600"
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    FILTROS
-                  </Button>
-                  {hasActiveFilters && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearFilters}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      LIMPAR
-                    </Button>
-                  )}
-                </div>
-                <div className="text-sm text-gray-400">
-                  {filteredProjects.length} de {projects.length} episódios
-                </div>
-              </div>
-
-              {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Buscar episódios..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-gray-900 border-gray-700 text-white"
-                    />
-                  </div>
-
-                  <DashboardSelect
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
-                    placeholder="Status"
-                    options={[
-                      { value: "all", label: "Todos os Status" },
-                      ...Object.keys(EPISODE_STATUS).map((status) => ({
-                        value: status,
-                        label: status,
-                      })),
-                    ]}
-                    className="w-full md:w-48"
-                  />
-
-                  <DashboardSelect
-                    value={threatFilter}
-                    onValueChange={setThreatFilter}
-                    placeholder="Nível de Ameaça"
-                    options={[
-                      { value: "all", label: "Todas as Ameaças" },
-                      ...Object.keys(THREAT_LEVELS).map((threat) => ({
-                        value: threat,
-                        label: threat,
-                      })),
-                    ]}
-                    className="w-full md:w-48"
-                  />
-
-                  <DashboardSelect
-                    value={categoryFilter}
-                    onValueChange={setCategoryFilter}
-                    placeholder="Categoria"
-                    options={[
-                      { value: "all", label: "Todas as Categorias" },
-                      ...PROJECT_CATEGORIES.map((category) => ({
-                        value: category,
-                        label: category,
-                      })),
-                    ]}
-                    className="w-full md:w-48"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Projects Grid */}
-            {filteredProjects.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-            ) : (
-              <Card className="bg-gray-900 border-gray-700">
-                <CardContent className="p-12 text-center">
-                  <FolderOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl text-gray-400 mb-2">Nenhum episódio encontrado</h3>
-                  <p className="text-gray-500 mb-6">
-                    {projects.length === 0
-                      ? "Comece criando seu primeiro episódio."
-                      : hasActiveFilters
-                        ? "Tente ajustar os filtros de busca."
-                        : "Nenhum episódio disponível."}
-                  </p>
-                  {projects.length === 0 && (
-                    <Button
-                      onClick={() => openProjectModal()}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      CRIAR PRIMEIRO EPISÓDIO
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            <ProjectsTabContent
+              projects={projects}
+              filteredProjects={filteredProjects}
+              searchTerm={searchTerm}
+              onSearchTermChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              threatFilter={threatFilter}
+              onThreatFilterChange={setThreatFilter}
+              categoryFilter={categoryFilter}
+              onCategoryFilterChange={setCategoryFilter}
+              showFilters={showFilters}
+              onToggleFilters={() => setShowFilters((prev) => !prev)}
+              hasActiveFilters={!!hasActiveFilters}
+              onClearFilters={clearFilters}
+              onOpenProjectModal={() => openProjectModal()}
+            />
           </TabsContent>
 
           <TabsContent value="homepage" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {episodes.map((episode) => (
-                <Card
-                  key={episode.id}
-                  className="bg-gray-900 border-gray-700 hover:border-cyan-500/50 transition-all duration-300 group"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <EpisodeBadge status={episode.status} />
-                          <EpisodeBadge variant="threat" threat={episode.threat} showIcon />
-                        </div>
-                        <CardTitle className="text-white group-hover:text-cyan-400 transition-colors">
-                          {episode.title}
-                        </CardTitle>
-                        <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {episode.date}
-                          </div>
-                          {episode.duration && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {episode.duration}
-                            </div>
-                          )}
-                          {episode.category && <span>{episode.category}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    <p className="text-gray-300 text-sm line-clamp-2">{episode.description}</p>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => convertEpisodeToProject(episode)}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        IMPORTAR PARA DASHBOARD
-                      </Button>
-                    </div>
-
-                    {/* Tags */}
-                    {episode.tags && episode.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {episode.tags.slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs border-gray-600 text-gray-400">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {episode.tags.length > 3 && (
-                          <Badge variant="outline" className="text-xs border-gray-600 text-gray-400">
-                            +{episode.tags.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <HomepageEpisodesTabContent onConvertEpisodeToProject={convertEpisodeToProject} />
           </TabsContent>
 
           <TabsContent value="experts" className="mt-6">
-            {/* Experts Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Buscar agentes..."
-                  value={expertSearchTerm}
-                  onChange={(e) => setExpertSearchTerm(e.target.value)}
-                  className="pl-10 bg-gray-900 border-gray-700 text-white"
-                />
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-gray-400">
-                  {filteredExperts.length} de {experts.length} agentes
-                </div>
-                <Button
-                  onClick={() => openExpertModal()}
-                  className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-400 hover:to-blue-500"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  NOVO AGENTE
-                </Button>
-              </div>
-            </div>
-
-            {/* Experts Grid */}
-            {filteredExperts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredExperts.map((expert) => (
-                  <ExpertCard key={expert.id} expert={expert} />
-                ))}
-              </div>
-            ) : (
-              <Card className="bg-gray-900 border-gray-700">
-                <CardContent className="p-12 text-center">
-                  <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl text-gray-400 mb-2">Nenhum agente encontrado</h3>
-                  <p className="text-gray-500 mb-6">
-                    {experts.length === 0
-                      ? "Comece adicionando seu primeiro agente especializado."
-                      : "Tente ajustar os filtros de busca."}
-                  </p>
-                  {experts.length === 0 && (
-                    <Button
-                      onClick={() => openExpertModal()}
-                      className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-400 hover:to-blue-500"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      ADICIONAR PRIMEIRO AGENTE
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            <ExpertsTabContent
+              experts={experts}
+              filteredExperts={filteredExperts}
+              expertSearchTerm={expertSearchTerm}
+              onExpertSearchTermChange={setExpertSearchTerm}
+              onOpenExpertModal={() => openExpertModal()}
+            />
           </TabsContent>
         </Tabs>
 
