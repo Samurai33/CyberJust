@@ -5,11 +5,14 @@
 // bootstrap scripts under this approach. img-src allows any https origin
 // because expert.avatar (dashboard form) is a free-text URL - see
 // next.config images.unoptimized below for the same constraint. media-src
-// allows GitHub Releases + its githubusercontent.com CDN redirect target,
-// since episode audioUrl (contexts/AudioContext.tsx: `audio.src = ...`)
-// points at github.com/.../releases/download/... - without this it silently
-// falls back to default-src 'self' and every episode's audio 404s in the
-// browser console with a CSP violation, not a network error.
+// allows jsDelivr, which serves episode audio (contexts/AudioContext.tsx:
+// `audio.src = ...`) committed under media/audio/ - GitHub Release assets
+// were tried first, but GitHub forces Content-Type: application/octet-stream
+// + Content-Disposition: attachment + X-Content-Type-Options: nosniff on
+// every release asset, which browsers correctly refuse to play inline
+// (NotSupportedError) no matter what the CSP allows. jsDelivr serves the
+// same bytes with a real Content-Type: audio/mp4 and no attachment
+// disposition. Don't move audio back to GitHub Releases for this reason.
 const CSP = [
   "default-src 'self'",
   // vercel.live is Vercel's Preview Comments/feedback toolbar, injected on
@@ -19,7 +22,7 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  "media-src 'self' https://github.com https://*.githubusercontent.com",
+  "media-src 'self' https://cdn.jsdelivr.net",
   "connect-src 'self' https://vercel.live wss://ws-us3.pusher.com",
   "frame-src 'self' https://vercel.live",
   "object-src 'none'",
