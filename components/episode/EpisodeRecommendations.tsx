@@ -1,6 +1,6 @@
 "use client"
 
-import { Play, Clock } from "lucide-react"
+import { Play, Pause, Clock } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +15,7 @@ interface EpisodeRecommendationsProps {
 }
 
 export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeRecommendationsProps) {
-  const { playEpisode } = useAudio()
+  const { playEpisode, isEpisodePlaying } = useAudio()
   const recommendations = getRecommendedEpisodes(currentEpisodeId, limit)
 
   if (recommendations.length === 0) {
@@ -36,6 +36,7 @@ export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeR
       <CardContent className="space-y-4">
         {recommendations.map((episode) => {
           const hasAudio = !!episode.audioUrl
+          const isPlaying = isEpisodePlaying(episode.id)
 
           return (
             <Card key={episode.id} className="bg-gray-800 border-gray-600 hover:border-cyan-500/50 transition-colors">
@@ -63,10 +64,14 @@ export function EpisodeRecommendations({ currentEpisodeId, limit = 3 }: EpisodeR
                     <Button
                       size="sm"
                       onClick={() => playEpisode(episode)}
-                      className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
+                      className={
+                        isPlaying
+                          ? "bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-400 hover:to-cyan-500"
+                          : "bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
+                      }
                     >
-                      <Play className="w-3 h-3 mr-1" />
-                      Ouvir
+                      {isPlaying ? <Pause className="w-3 h-3 mr-1" /> : <Play className="w-3 h-3 mr-1" />}
+                      {isPlaying ? "Reproduzindo..." : "Ouvir"}
                     </Button>
                   )}
 
