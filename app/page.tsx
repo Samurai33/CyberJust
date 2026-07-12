@@ -10,7 +10,6 @@ import { StatsSection } from "@/components/sections/StatsSection"
 import { ContactSection } from "@/components/sections/ContactSection"
 import { TerminalSection } from "@/components/sections/TerminalSection"
 import { Footer } from "@/components/sections/Footer"
-import { AudioPlayer } from "@/components/audio/AudioPlayer"
 import { SecurityModal } from "@/components/modals/SecurityModal"
 import { LuluModal } from "@/components/modals/LuluModal"
 import { DashboardAuthModal } from "@/components/dashboard/DashboardAuthModal"
@@ -47,9 +46,6 @@ export default async function CyberJusticaBrasil() {
           <SecurityModal />
           <LuluModal />
           <DashboardAuthModal />
-
-          {/* Audio Player */}
-          <AudioPlayer />
         </div>
       </HomeGate>
     </AuthProvider>

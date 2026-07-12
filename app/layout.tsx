@@ -9,6 +9,7 @@ import { RatingProvider } from "@/contexts/RatingContext"
 import { DashboardProvider } from "@/contexts/DashboardContext"
 import { ExpertsProvider } from "@/contexts/ExpertsContext"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { AudioPlayer } from "@/components/audio/AudioPlayer"
 import { SITE_URL } from "@/lib/constants"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -65,6 +66,7 @@ export default function RootLayout({
                     <RatingProvider>{children}</RatingProvider>
                   </BookmarkProvider>
                 </UIProvider>
+                <AudioPlayer />
               </AudioProvider>
             </DashboardProvider>
           </ExpertsProvider>
