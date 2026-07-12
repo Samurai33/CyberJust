@@ -17,6 +17,9 @@ vi.mock("next/headers", () => ({
       cookieJar.delete(name)
     },
   }),
+  headers: async () => ({
+    get: (name: string) => (name === "x-forwarded-for" ? "203.0.113.1" : null),
+  }),
 }))
 
 const ORIGINAL_ENV = { ...process.env }
@@ -59,6 +62,21 @@ describe("app/actions/auth", () => {
 
     expect(result.success).toBe(false)
     expect(result.error).toBeTruthy()
+    expect(cookieJar.size).toBe(0)
+  })
+
+  it("rate-limits repeated attempts from the same IP", async () => {
+    const { authenticateDashboard } = await import("./auth")
+
+    for (let i = 0; i < 5; i++) {
+      const result = await authenticateDashboard("wrong-password")
+      expect(result.error).toBe("Código de acesso inválido")
+    }
+
+    const limited = await authenticateDashboard("correct-horse-battery-staple")
+
+    expect(limited.success).toBe(false)
+    expect(limited.error).toMatch(/muitas tentativas/i)
     expect(cookieJar.size).toBe(0)
   })
 
