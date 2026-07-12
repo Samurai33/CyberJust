@@ -6,7 +6,7 @@
 
 ### Cybercrime stories, specialist perspectives and digital-safety education
 
-[![Live Experience](https://img.shields.io/badge/Live_Experience-v0--cyber--justica.vercel.app-0EA5E9?style=for-the-badge&logo=vercel)](https://v0-cyber-justica.vercel.app)
+[![Live Experience](https://img.shields.io/badge/Live_Experience-cyberjus.org-0EA5E9?style=for-the-badge&logo=vercel)](https://cyberjus.org)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 [![CI](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml/badge.svg)](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml)

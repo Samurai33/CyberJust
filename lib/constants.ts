@@ -1,10 +1,10 @@
 import type { EpisodeStatus, ThreatLevel, SeverityLevel } from "@/types"
 
-// Falls back to the project's real Vercel deployment - never a placeholder
+// Falls back to the project's real custom domain - never a placeholder
 // domain we don't own (this is an educational/editorial site, not a
 // government platform; see README "Project boundaries"). Shared by
 // app/layout.tsx metadata and the robots.ts/sitemap.ts routes.
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://v0-cyber-justica.vercel.app"
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://cyberjus.org"
 
 export const EPISODE_STATUS: Record<EpisodeStatus, { label: string; color: string }> = {
   ATIVO: { label: "Ativo", color: "bg-green-500/20 text-green-400 border-green-500/50" },
