@@ -42,12 +42,17 @@ rg -l '"use client"' components/ app/
 
 ### 3. Heavy dependency check
 
-This repo already carries Radix UI, `recharts`, `embla-carousel-react` — all reasonable, but adding another chart/carousel/animation library duplicates weight. Check `package.json` before adding a new one for something an existing dependency already covers.
+This repo carries the Radix UI primitives actually used by `components/ui/` — a `components/ui/*.tsx` file that no other file imports is dead weight (never bundled, since Next only bundles what's imported, but still a maintenance/audit-surface cost and a red flag that its backing npm package is unused too). Before adding a chart/carousel/animation library, check whether one is already a dependency for something else and whether the file that used to justify it is still imported anywhere:
+
+```bash
+# Is this ui/ component (and its backing package) actually imported anywhere?
+grep -rl "@/components/ui/<name>\"" app components contexts hooks lib services
+```
 
 ### 4. Images and audio
 
-- Use `next/image` for any content image (automatic sizing, lazy loading, format negotiation) — never a raw `<img>` for episode art, avatars, or backgrounds.
-- Audio files in `public/audio/` should stream, not be eagerly loaded — verify the `AudioPlayer`/`EpisodeAnalytics` components don't fetch the full file before playback starts.
+- Use `next/image` for any content image (automatic sizing, lazy loading, format negotiation) — never a raw `<img>` for episode art, avatars, or backgrounds. Note `next.config.mjs` sets `images.unoptimized: true` (deliberately — `expert.avatar` is a free-text URL, incompatible with Next's `remotePatterns` allowlist), so `next/image` here still gets lazy-loading/sizing but not format conversion.
+- Episode audio isn't in this repo or on Vercel at all — `audioUrl` in `data/episodes.ts` points at GitHub Release assets (`github.com/.../releases/download/...`), streamed straight from GitHub's CDN. `AudioPlayer.tsx` (`components/audio/`) is mounted once in `app/layout.tsx` so it's global across routes; it lazily creates a `new Audio()` and doesn't fetch anything until `playEpisode()` is called. If you add a new audio host, it also needs a `media-src` entry in the CSP (`next.config.mjs`) or playback silently fails with a CSP violation, not a network error.
 
 ### 5. Memoization — only where it earns its cost
 
