@@ -15,7 +15,7 @@ CyberJust sessions tend to involve large diffs (many components, a few big conte
 ## Reading code
 
 - **Grep before Read.** If you need to know whether/where something exists (an import, a function definition, a pattern), `Grep` for it — don't `Read` the whole file to eyeball it.
-- **Read with `offset`/`limit`** when you already know roughly where the relevant section is (e.g., from a prior grep's line number), instead of reading a 400+ line file top to bottom. Files like `components/dashboard/ProjectModal.tsx`, `components/ui/sidebar.tsx`, and `app/episodes/[id]/page.tsx` are large — never read them in full just to check one function.
+- **Read with `offset`/`limit`** when you already know roughly where the relevant section is (e.g., from a prior grep's line number), instead of reading a 400+ line file top to bottom. Files like `components/dashboard/ProjectModal.tsx`, `app/episodes/[id]/page.tsx`, and `components/audio/AudioPlayer.tsx` are large — never read them in full just to check one function.
 - **Don't re-read a file you just edited.** `Edit`/`Write` fail loudly if the change didn't apply — the harness already tracks the resulting state. Re-reading to "confirm" wastes a full file's worth of tokens for no new information.
 - **Don't re-run a command whose result you already have.** If `pnpm type-check` just passed and you haven't touched any `.ts`/`.tsx` file since, it will still pass — don't run it again as a ritual before every commit.
 

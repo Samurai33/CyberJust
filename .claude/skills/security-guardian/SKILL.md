@@ -22,6 +22,7 @@ Security analysis for CyberJust — a cybercrime investigation platform. Because
 | **Auth/session handling** | 🔴 Critical | `DashboardAuthModal` and any future login flow — token storage, session expiry |
 | **Dependency vulnerabilities** | 🟡 High | `pnpm audit` against `package.json` |
 | **PII / case-data exposure** | 🟡 High | Any future storage of investigation data, expert contact info, user reports |
+| **Missing/misconfigured CSP** | 🟡 High | `next.config.mjs` `headers()` — new external resources need an explicit allowlist entry, see 3b below |
 | **Open redirect / SSRF** | 🟢 Medium | Any future server action or API route accepting a URL |
 
 ## Security Analysis Workflow
@@ -58,12 +59,21 @@ rg -l '"use client"' components/ app/ | xargs grep -l "process\.env" 2>/dev/null
 
 ### 3. Auth (current + future)
 
-`DashboardAuthModal` is the current auth surface. Before it starts talking to a real backend:
+`DashboardAuthModal` + `app/actions/auth.ts` is the current auth surface — already server-verified, not a stub:
 
-- [ ] Passwords never logged, never sent in a GET query string
-- [ ] Session tokens stored in `httpOnly` cookies, not `localStorage`, if/when a real backend is added
-- [ ] Rate limiting on login attempts once a real auth endpoint exists
-- [ ] No auth check done client-side only — any protected data must be gated server-side too
+- [x] Password checked server-side (`timingSafeEqual`), never client-side only
+- [x] Session token is an HMAC-signed, `httpOnly`, `secure` (in prod) cookie — not `localStorage`
+- [x] Login attempts rate-limited server-side (5/60s per IP, in-memory in `auth.ts`) — best-effort only, resets on cold start and isn't shared across serverless instances; if this ever needs to be watertight, move it to Vercel KV/Upstash
+- [ ] Passwords never logged, never sent in a GET query string (verify on any auth change)
+- [ ] No auth check done client-side only — any protected data must be gated server-side too (verify on any new protected route/action)
+
+### 3b. Security headers / CSP
+
+`next.config.mjs` sets CSP + `X-Content-Type-Options` + `X-Frame-Options` + `Referrer-Policy` + `Permissions-Policy` via `headers()`. It's a **static (non-nonce) CSP** — a nonce-based policy forces every page to render dynamically per Next's own CSP guide, which would break the static prerendering `/episodes` and `/episodes/[id]` rely on. `'unsafe-inline'` on `script-src`/`style-src` is the accepted tradeoff for that choice.
+
+- [ ] Any new external resource (image host, font CDN, analytics script, iframe embed) needs an explicit CSP allowlist entry — it will silently fail (CSP violation, not a network error) otherwise. Check the browser console for "Refused to load/connect" before assuming a network bug.
+- [ ] `media-src` covers `github.com`/`*.githubusercontent.com` for episode audio (GitHub Release assets) — extend it if audio moves to a different host
+- [ ] `img-src` intentionally allows any `https:` origin because `expert.avatar` is a free-text URL — don't tighten this without also solving that input (would need upload-and-host, not just a URL field)
 
 ### 4. Dependency vulnerabilities
 
