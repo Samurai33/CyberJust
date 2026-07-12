@@ -4,13 +4,19 @@
 // the accepted tradeoff for Next.js's own inline streaming/hydration
 // bootstrap scripts under this approach. img-src allows any https origin
 // because expert.avatar (dashboard form) is a free-text URL - see
-// next.config images.unoptimized below for the same constraint.
+// next.config images.unoptimized below for the same constraint. media-src
+// allows GitHub Releases + its githubusercontent.com CDN redirect target,
+// since episode audioUrl (contexts/AudioContext.tsx: `audio.src = ...`)
+// points at github.com/.../releases/download/... - without this it silently
+// falls back to default-src 'self' and every episode's audio 404s in the
+// browser console with a CSP violation, not a network error.
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
+  "media-src 'self' https://github.com https://*.githubusercontent.com",
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
