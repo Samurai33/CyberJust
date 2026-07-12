@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
+import dynamic from "next/dynamic"
 import { useDebounce } from "@/hooks/useDebounce"
 import {
   Plus,
@@ -24,14 +25,16 @@ import { Badge } from "@/components/ui/badge"
 import { useDashboard } from "@/contexts/DashboardContext"
 import { useAuth } from "@/contexts/AuthContext"
 import { ProjectCard } from "./ProjectCard"
-import { ProjectModal } from "./ProjectModal"
 import { ExpertCard } from "./ExpertCard"
-import { ExpertModal } from "./ExpertModal"
 import { episodes } from "@/data/episodes"
 import { EPISODE_STATUS, THREAT_LEVELS } from "@/lib/constants"
 import { PROJECT_CATEGORIES } from "@/lib/projectUtils"
 import { DashboardSelect } from "./DashboardSelect"
 import { EpisodeBadge } from "@/components/ui/episode-badge"
+
+// Deferred to their own chunks — react-hook-form + zod forms only needed once a modal opens (#34).
+const ProjectModal = dynamic(() => import("./ProjectModal").then((mod) => mod.ProjectModal), { ssr: false })
+const ExpertModal = dynamic(() => import("./ExpertModal").then((mod) => mod.ExpertModal), { ssr: false })
 
 export function Dashboard() {
   const {
