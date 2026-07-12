@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
+import { createContext, useContext, useCallback, useMemo } from "react"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { generateId } from "@/lib/utils"
 import { EXPERTS } from "@/lib/constants"
@@ -18,32 +18,27 @@ interface ExpertsContextType {
 
 const ExpertsContext = createContext<ExpertsContextType | undefined>(undefined)
 
-export function ExpertsProvider({ children }: { children: React.ReactNode }) {
-  const [experts, setExperts] = useLocalStorage<ProjectExpert[]>("cyberjustica-experts", [])
-  const [isInitialized, setIsInitialized] = useState(false)
+// Seed data for experts when localStorage has none yet. Computed once at
+// module scope rather than inside the provider, so useLocalStorage's lazy
+// initializer (which already reads localStorage on mount with no extra
+// effect) can use it directly as the fallback instead of patching state
+// after the fact from a setState-in-effect.
+const seededExperts: ProjectExpert[] = EXPERTS.map((expert) => ({
+  id: generateId(),
+  name: expert.name,
+  role: expert.role,
+  organization: "",
+  bio: expert.description,
+  avatar: "",
+  contact: {
+    email: "",
+    phone: "",
+    linkedin: "",
+  },
+}))
 
-  // Inicializa os experts com os dados da constante EXPERTS se não houver dados no localStorage
-  useEffect(() => {
-    if (!isInitialized) {
-      if (experts.length === 0) {
-        const initialExperts: ProjectExpert[] = EXPERTS.map((expert) => ({
-          id: generateId(),
-          name: expert.name,
-          role: expert.role,
-          organization: "",
-          bio: expert.description,
-          avatar: "",
-          contact: {
-            email: "",
-            phone: "",
-            linkedin: "",
-          },
-        }))
-        setExperts(initialExperts)
-      }
-      setIsInitialized(true)
-    }
-  }, [experts.length, setExperts, isInitialized])
+export function ExpertsProvider({ children }: { children: React.ReactNode }) {
+  const [experts, setExperts] = useLocalStorage<ProjectExpert[]>("cyberjustica-experts", seededExperts)
 
   const createExpert = useCallback(
     (data: Omit<ProjectExpert, "id">) => {
