@@ -47,7 +47,7 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
     const starIcon = (star: number) => (
       <Star
         key={star}
-        className={`${starSize} ${star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"} ${
+        className={`${starSize} ${star <= rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"} ${
           interactive ? "group-hover:text-yellow-300" : ""
         }`}
       />
@@ -79,7 +79,7 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
   }
 
   return (
-    <Card className="bg-gray-900 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-cyan-400 flex items-center gap-2">
           <Star className="w-5 h-5" />
@@ -91,9 +91,9 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             {renderStars(Math.round(averageRating), false, "lg")}
-            <span className="text-2xl font-bold text-white">{averageRating.toFixed(1)}</span>
+            <span className="text-2xl font-bold text-foreground">{averageRating.toFixed(1)}</span>
           </div>
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             {episodeRatings.length} avaliação{episodeRatings.length !== 1 ? "ões" : ""}
           </p>
         </div>
@@ -101,23 +101,23 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
         {/* User Rating Section */}
         <div className="space-y-3">
           {userRating ? (
-            <Card className="bg-gray-800 border-gray-600">
+            <Card className="bg-muted border-border">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-400">Sua avaliação:</span>
+                  <span className="text-sm text-muted-foreground">Sua avaliação:</span>
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="border-gray-600">
+                      <Button size="sm" variant="outline" className="border-border">
                         Editar
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="bg-card border-border">
                       <DialogHeader>
-                        <DialogTitle className="text-white">Editar Avaliação</DialogTitle>
+                        <DialogTitle className="text-foreground">Editar Avaliação</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
-                          <Label id={ratingLabelId} className="text-sm text-gray-400 mb-2 block">
+                          <Label id={ratingLabelId} className="text-sm text-muted-foreground mb-2 block">
                             Classificação:
                           </Label>
                           <div aria-labelledby={ratingLabelId}>
@@ -125,7 +125,7 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
                           </div>
                         </div>
                         <div>
-                          <Label htmlFor={reviewFieldId} className="text-sm text-gray-400 mb-2 block">
+                          <Label htmlFor={reviewFieldId} className="text-sm text-muted-foreground mb-2 block">
                             Comentário (opcional):
                           </Label>
                           <Textarea
@@ -154,7 +154,7 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
                     {new Date(userRating.timestamp).toLocaleDateString("pt-BR")}
                   </Badge>
                 </div>
-                {userRating.review && <p className="text-gray-300 text-sm">{userRating.review}</p>}
+                {userRating.review && <p className="text-muted-foreground text-sm">{userRating.review}</p>}
               </CardContent>
             </Card>
           ) : (
@@ -167,17 +167,17 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
               </DialogTrigger>
               <DialogContent className="bg-card border-border">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Avaliar Episódio</DialogTitle>
+                  <DialogTitle className="text-foreground">Avaliar Episódio</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label id={ratingLabelId} className="text-sm text-gray-400 mb-2 block">
+                    <Label id={ratingLabelId} className="text-sm text-muted-foreground mb-2 block">
                       Classificação:
                     </Label>
                     <div aria-labelledby={ratingLabelId}>{renderStars(selectedRating, true, "lg")}</div>
                   </div>
                   <div>
-                    <Label htmlFor={reviewFieldId} className="text-sm text-gray-400 mb-2 block">
+                    <Label htmlFor={reviewFieldId} className="text-sm text-muted-foreground mb-2 block">
                       Comentário (opcional):
                     </Label>
                     <Textarea
@@ -205,9 +205,9 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
         {/* Recent Reviews */}
         {episodeRatings.length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-400">Avaliações Recentes:</h4>
+            <h4 className="text-sm font-semibold text-muted-foreground">Avaliações Recentes:</h4>
             {episodeRatings.slice(0, 3).map((rating) => (
-              <Card key={rating.id} className="bg-gray-800 border-gray-600">
+              <Card key={rating.id} className="bg-muted border-border">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between mb-2">
                     {renderStars(rating.rating, false, "sm")}
@@ -215,7 +215,7 @@ export function EpisodeRating({ episodeId }: EpisodeRatingProps) {
                       {new Date(rating.timestamp).toLocaleDateString("pt-BR")}
                     </Badge>
                   </div>
-                  {rating.review && <p className="text-gray-300 text-sm">{rating.review}</p>}
+                  {rating.review && <p className="text-muted-foreground text-sm">{rating.review}</p>}
                 </CardContent>
               </Card>
             ))}

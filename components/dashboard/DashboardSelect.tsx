@@ -45,7 +45,7 @@ export function DashboardSelect({
     >
       <CustomSelectTrigger
         className={cn(
-          "bg-gray-900 border-cyan-500/30 text-white hover:border-cyan-500/50 focus:border-cyan-500 transition-colors",
+          "bg-background border-cyan-500/30 text-foreground hover:border-cyan-500/50 focus:border-cyan-500 transition-colors",
           error && "border-red-500 focus:border-red-500",
           disabled && "opacity-50 cursor-not-allowed",
           className,
@@ -60,7 +60,7 @@ export function DashboardSelect({
           <CustomSelectItem
             key={option.value}
             value={option.value}
-            className="hover:bg-gray-800 focus:bg-gray-800 cursor-pointer"
+            className="hover:bg-accent focus:bg-accent cursor-pointer"
           >
             {option.label}
           </CustomSelectItem>
