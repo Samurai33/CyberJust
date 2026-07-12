@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Play, Calendar, Clock, Search } from "lucide-react"
+import { Play, Pause, Calendar, Clock, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,7 +20,7 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [threatFilter, setThreatFilter] = useState("all")
-  const { playEpisode } = useAudio()
+  const { playEpisode, isEpisodePlaying } = useAudio()
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
@@ -77,7 +77,10 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
 
       {/* Episodes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEpisodes.map((episode) => (
+        {filteredEpisodes.map((episode) => {
+          const isPlaying = isEpisodePlaying(episode.id)
+
+          return (
           <Card
             key={episode.id}
             className="bg-gray-900 border-gray-700 hover:border-cyan-500/50 transition-all duration-300 group"
@@ -117,10 +120,14 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
                   <Button
                     size="sm"
                     onClick={() => playEpisode(episode)}
-                    className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
+                    className={
+                      isPlaying
+                        ? "bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-400 hover:to-cyan-500"
+                        : "bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
+                    }
                   >
-                    <Play className="w-4 h-4 mr-2" />
-                    Ouvir
+                    {isPlaying ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                    {isPlaying ? "Reproduzindo..." : "Ouvir"}
                   </Button>
                 )}
 
@@ -135,7 +142,8 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
               </div>
             </CardContent>
           </Card>
-        ))}
+          )
+        })}
       </div>
 
       {filteredEpisodes.length === 0 && (
