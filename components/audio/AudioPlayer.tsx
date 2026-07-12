@@ -33,15 +33,14 @@ export function AudioPlayer() {
   // episode while still varying between episodes.
   const waveformHeights = useMemo(() => {
     const seedStr = String(currentEpisode?.id ?? "default")
-    let seed = 0
-    for (let i = 0; i < seedStr.length; i++) {
-      seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0
-    }
-    const random = () => {
-      seed = (seed * 1664525 + 1013904223) >>> 0
-      return seed / 4294967296
-    }
-    return Array.from({ length: 50 }, () => 20 + random() * 60)
+    const initialSeed = Array.from(seedStr).reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 0)
+    return Array.from({ length: 50 }).reduce<{ seed: number; heights: number[] }>(
+      (state) => {
+        const nextSeed = (state.seed * 1664525 + 1013904223) >>> 0
+        return { seed: nextSeed, heights: [...state.heights, 20 + (nextSeed / 4294967296) * 60] }
+      },
+      { seed: initialSeed, heights: [] },
+    ).heights
   }, [currentEpisode?.id])
 
   if (!currentEpisode) return null
