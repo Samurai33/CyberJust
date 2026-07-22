@@ -6,6 +6,10 @@ export function Background() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   // Computed once on mount so particles don't reshuffle on every re-render.
+  // Server and client necessarily roll different positions here (that's the
+  // point - each pageview gets its own scatter) - suppressHydrationWarning
+  // on the particle divs below tells React that's expected instead of
+  // silently correcting it as a text hydration error.
   const [particles] = useState(() =>
     Array.from({ length: 25 }, () => ({
       left: `${Math.random() * 100}%`,
@@ -50,6 +54,7 @@ export function Background() {
             key={i}
             className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-pulse"
             style={particle}
+            suppressHydrationWarning
           />
         ))}
       </div>
