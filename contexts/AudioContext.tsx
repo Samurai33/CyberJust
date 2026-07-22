@@ -229,6 +229,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         audio.preload = "metadata"
 
         const handleError = () => {
+          if (currentEpisodeIdRef.current !== episode.id) return
           dispatch({
             type: "SET_ERROR",
             payload: `Não foi possível carregar o áudio do episódio ${episode.id}. Verifique sua conexão.`,
