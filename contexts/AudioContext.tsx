@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useReducer, useRef, useCallback, useEffect } from "react"
+import { createContext, useContext, useReducer, useRef, useCallback, useEffect, useMemo } from "react"
 import type { Episode, AudioState } from "@/types"
 import { formatTime } from "@/lib/utils"
 
@@ -71,20 +71,43 @@ function audioReducer(state: AudioState, action: AudioAction): AudioState {
   }
 }
 
-interface AudioContextType extends AudioState {
+// Split into two contexts so components that only care about play/pause
+// state (the vast majority - play buttons throughout the app) don't
+// re-render on every `timeupdate` tick (several times/sec during playback).
+// Only the actual player bar and the bookmarks tab need live currentTime -
+// everything else only needs currentEpisode/isPlaying/etc., which change
+// far less often. Measured live: this was causing ~1.1-1.2s "poor" INP on
+// unrelated interactions (a tab switch, a star-rating click) while audio
+// played, because every useAudio() consumer on the page re-rendered on
+// every tick before this split.
+interface AudioControlsContextType {
+  currentEpisode: Episode | null
+  isPlaying: boolean
+  volume: number
+  isMuted: boolean
+  isLoading: boolean
+  isPlayerExpanded: boolean
+  error: string | null
+  playbackHistory: Episode[]
   playEpisode: (episode: Episode) => void
   togglePlayPause: () => void
-  seek: (time: number) => void
   setVolume: (volume: number) => void
   toggleMute: () => void
   togglePlayerExpanded: () => void
-  formatTime: (time: number) => string
   clearError: () => void
   stopPlayback: () => void
   isEpisodePlaying: (episodeId: string | number) => boolean
 }
 
-const AudioContext = createContext<AudioContextType | undefined>(undefined)
+interface AudioTimeContextType {
+  currentTime: number
+  duration: number
+  seek: (time: number) => void
+  formatTime: (time: number) => string
+}
+
+const AudioContext = createContext<AudioControlsContextType | undefined>(undefined)
+const AudioTimeContext = createContext<AudioTimeContextType | undefined>(undefined)
 
 // Episode audio is a fragmented MP4 (AAC-LC) - fine for MediaSource Extensions,
 // but not reliably demuxed by every browser via plain `audio.src = url`
@@ -206,6 +229,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         audio.preload = "metadata"
 
         const handleError = () => {
+          if (currentEpisodeIdRef.current !== episode.id) return
           dispatch({
             type: "SET_ERROR",
             payload: `Não foi possível carregar o áudio do episódio ${episode.id}. Verifique sua conexão.`,
@@ -360,27 +384,81 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const value: AudioContextType = {
-    ...state,
-    playEpisode,
-    togglePlayPause,
-    seek,
-    setVolume,
-    toggleMute,
-    togglePlayerExpanded,
-    formatTime,
-    clearError,
-    stopPlayback,
-    isEpisodePlaying,
-  }
+  // Memoized so this reference only changes when one of these specific
+  // fields does - NOT on every currentTime/duration update - so consumers
+  // that only need play/pause state don't re-render on every audio tick.
+  const controlsValue = useMemo<AudioControlsContextType>(
+    () => ({
+      currentEpisode: state.currentEpisode,
+      isPlaying: state.isPlaying,
+      volume: state.volume,
+      isMuted: state.isMuted,
+      isLoading: state.isLoading,
+      isPlayerExpanded: state.isPlayerExpanded,
+      error: state.error,
+      playbackHistory: state.playbackHistory,
+      playEpisode,
+      togglePlayPause,
+      setVolume,
+      toggleMute,
+      togglePlayerExpanded,
+      clearError,
+      stopPlayback,
+      isEpisodePlaying,
+    }),
+    [
+      state.currentEpisode,
+      state.isPlaying,
+      state.volume,
+      state.isMuted,
+      state.isLoading,
+      state.isPlayerExpanded,
+      state.error,
+      state.playbackHistory,
+      playEpisode,
+      togglePlayPause,
+      setVolume,
+      toggleMute,
+      togglePlayerExpanded,
+      clearError,
+      stopPlayback,
+      isEpisodePlaying,
+    ],
+  )
 
-  return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>
+  const timeValue = useMemo<AudioTimeContextType>(
+    () => ({
+      currentTime: state.currentTime,
+      duration: state.duration,
+      seek,
+      formatTime,
+    }),
+    [state.currentTime, state.duration, seek],
+  )
+
+  return (
+    <AudioContext.Provider value={controlsValue}>
+      <AudioTimeContext.Provider value={timeValue}>{children}</AudioTimeContext.Provider>
+    </AudioContext.Provider>
+  )
 }
 
 export function useAudio() {
   const context = useContext(AudioContext)
   if (context === undefined) {
     throw new Error("useAudio must be used within an AudioProvider")
+  }
+  return context
+}
+
+// Live playback position (currentTime/duration) - only for components that
+// actually display or seek the timeline (the player bar, the bookmarks
+// tab). Kept separate from useAudio() so play/pause-only consumers don't
+// re-render on every timeupdate tick.
+export function useAudioTime() {
+  const context = useContext(AudioTimeContext)
+  if (context === undefined) {
+    throw new Error("useAudioTime must be used within an AudioProvider")
   }
   return context
 }
