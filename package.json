@@ -3,15 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.12.4",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp"
-    ],
-    "overrides": {
-      "lodash": "4.18.1",
-      "postcss": "8.5.20"
-    }
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
