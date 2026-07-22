@@ -12,12 +12,16 @@
 // browser console with a CSP violation, not a network error.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // vercel.live is Vercel's Preview Comments/feedback toolbar, injected on
+  // preview (branch) deployments only - without it every preview logs a CSP
+  // violation for feedback.js and the toolbar silently no-ops.
+  "script-src 'self' 'unsafe-inline' https://vercel.live",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
   "media-src 'self' https://github.com https://*.githubusercontent.com",
-  "connect-src 'self'",
+  "connect-src 'self' https://vercel.live wss://ws-us3.pusher.com",
+  "frame-src 'self' https://vercel.live",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
