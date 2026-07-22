@@ -72,7 +72,7 @@ rg -l '"use client"' components/ app/ | xargs grep -l "process\.env" 2>/dev/null
 `next.config.mjs` sets CSP + `X-Content-Type-Options` + `X-Frame-Options` + `Referrer-Policy` + `Permissions-Policy` via `headers()`. It's a **static (non-nonce) CSP** — a nonce-based policy forces every page to render dynamically per Next's own CSP guide, which would break the static prerendering `/episodes` and `/episodes/[id]` rely on. `'unsafe-inline'` on `script-src`/`style-src` is the accepted tradeoff for that choice.
 
 - [ ] Any new external resource (image host, font CDN, analytics script, iframe embed) needs an explicit CSP allowlist entry — it will silently fail (CSP violation, not a network error) otherwise. Check the browser console for "Refused to load/connect" before assuming a network bug.
-- [ ] `media-src` covers `github.com`/`*.githubusercontent.com` for episode audio (GitHub Release assets) — extend it if audio moves to a different host
+- [ ] `media-src` covers `cdn.jsdelivr.net` + `blob:` for episode audio (jsDelivr CDN + MediaSource Extensions) and `connect-src` covers `cdn.jsdelivr.net` for the underlying fetch — extend both if audio moves to a different host. Do not move audio to GitHub Release assets or Git LFS (both rejected — see CLAUDE.md Security posture for why)
 - [ ] `img-src` intentionally allows any `https:` origin because `expert.avatar` is a free-text URL — don't tighten this without also solving that input (would need upload-and-host, not just a URL field)
 
 ### 4. Dependency vulnerabilities
