@@ -8,7 +8,7 @@ Cybercrime investigation platform: forensic analysis tools, expert directory, ep
 - **Language**: TypeScript (`strict: true`), path alias `@/*` -> repo root
 - **Styling**: TailwindCSS + shadcn/ui-style components (`components/ui/`, Radix UI primitives, `class-variance-authority`, `tailwind-merge`)
 - **Forms**: `react-hook-form` + `zod` (`@hookform/resolvers`)
-- **Package manager**: pnpm 10 (`pnpm-lock.yaml` is the source of truth — don't introduce `package-lock.json` changes as the primary lockfile). `package.json` already declares `pnpm.onlyBuiltDependencies: ["sharp"]` so native postinstall scripts aren't withheld.
+- **Package manager**: pnpm 10 (`pnpm-lock.yaml` is the source of truth — don't introduce `package-lock.json` changes as the primary lockfile). `overrides` (`sharp`, `lodash`, `postcss`) and `onlyBuiltDependencies: ["sharp"]` live in `pnpm-workspace.yaml`, **not** `package.json#pnpm` — pnpm 10.12.4 (the exact version pinned in `packageManager`, and what Vercel resolves via corepack) silently ignores that field now. If `pnpm install` ever prints "The 'pnpm' field in package.json is no longer read", something reintroduced it there by mistake.
 
 ## Commands
 
@@ -52,9 +52,36 @@ Dashboard auth is server-verified: `app/actions/auth.ts` checks the password aga
 
 `next.config.mjs` sets a static (non-nonce) CSP plus `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy` via `headers()`. Two things that look like bugs on this CSP but aren't — check before "fixing" either:
 - `images.unoptimized: true` — `expert.avatar` (dashboard form) is a free-text URL, and Next's image optimizer requires a fixed `images.remotePatterns` allowlist, incompatible with arbitrary hosts.
-- No `media-src` beyond `cdn.jsdelivr.net` — episode `audioUrl` is committed under `media/audio/` and served through jsDelivr's GitHub CDN (free, no bandwidth cap, correct `Content-Type: audio/mp4`). **Do not switch this to GitHub Release assets or Git LFS** — both were tried and rejected: Release assets force `Content-Type: application/octet-stream` + `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff` on every download, which browsers correctly refuse to play inline (`NotSupportedError`) regardless of CSP; LFS has a 10GB/month free bandwidth cap that real traffic streaming full episodes would blow through fast. If a new episode's audio 404s or silently refuses to play, check the CSP `media-src` allowlist and the jsDelivr URL (`@main` branch refs are cached ~12h at the CDN edge — a same-second replace of an existing file's content, not just adding a new one, may need a version-suffixed filename to bust the cache) before anything else.
+- No `media-src` beyond `cdn.jsdelivr.net` (plus `blob:` for the MediaSource object URL) — episode `audioUrl` is committed under `media/audio/` and served through jsDelivr's GitHub CDN (free, no bandwidth cap, correct `Content-Type: audio/mp4`), fetched and fed through MediaSource Extensions in `contexts/AudioContext.tsx` rather than a plain `audio.src = url` (the files are fragmented MP4/AAC-LC, which some browsers' progressive-src demuxer rejects even though `MediaSource.isTypeSupported` returns true for the same codec — a demuxer gap, not a missing codec). **Do not switch this to GitHub Release assets or Git LFS** — both were tried and rejected: Release assets force `Content-Type: application/octet-stream` + `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff` on every download, which browsers correctly refuse to play inline (`NotSupportedError`) regardless of CSP; LFS has a 10GB/month free bandwidth cap that real traffic streaming full episodes would blow through fast. If a new episode's audio 404s or silently refuses to play, check the CSP `media-src` allowlist and the jsDelivr URL (`@main` branch refs are cached ~12h at the CDN edge — a same-second replace of an existing file's content, not just adding a new one, may need a version-suffixed filename to bust the cache) before anything else.
+
+Branch protection is enabled on `main` (required status check: `build`; force-push and deletion blocked). Secret scanning, secret scanning push protection, Dependabot security updates, and Dependabot vulnerability alerts are all enabled on the GitHub repo. Launch-readiness work is tracked via GitHub milestones (see "Production Launch Readiness" and any successor milestone) rather than ad hoc — check open milestones/issues before assuming something is still broken or still missing.
 
 `SITE_URL` in `lib/constants.ts` (used by `metadataBase`, OpenGraph, `robots.ts`, `sitemap.ts`) must always point at a domain this project actually owns — it pointed at a fabricated `.gov.br` address for a while, which is the kind of mistake that looks fine until someone shares a link.
+
+## Known issues (live UX/UI audit, 2026-07-22)
+
+Reproduced live on cyberjus.org via real-browser walkthrough of the full visitor flow (home → episodes list → episode detail → rating/bookmarks) plus mobile viewport. Tracked as GitHub issues under the launch-readiness milestone — check there for current status before re-diagnosing any of these from scratch.
+
+**Dead/non-functional UI** (button exists, does nothing — no `onClick`/`href` at all):
+- Share ("Compartilhar") — present on the homepage cards (`components/sections/EpisodesSection.tsx`) and the episode detail page (`app/episodes/[id]/page.tsx`). No handler anywhere in the codebase; sharing is non-functional site-wide.
+- Download ("Download"/"BAIXAR") — same story, same two locations. Non-functional site-wide.
+- Expert "Contato" button (`app/episodes/[id]/page.tsx`, rendered whenever `expert.contact.email` is set) — no handler; looks actionable, isn't.
+
+**Real bugs:**
+- `components/sections/EpisodesSection.tsx` merges `DashboardContext` `projects` (persisted in the visitor's own `localStorage`) over the static `data/episodes.ts` by id (lines ~26-31). If a browser has a stale/pre-migration project entry (e.g. an old `/audio/*.mp3` path from before the jsDelivr move), it silently overrides an episode's real `audioUrl: null` with a broken one, showing a fully-enabled "REPRODUZIR" button that 404s on click. The `/episodes` list grid (`EpisodesFilterGrid.tsx`) doesn't do this merge and correctly hides the button — the two surfaces disagree.
+- `contexts/AudioContext.tsx`'s `error` event listener inside `playEpisode()` (~line 152) is the only playback-lifecycle handler missing the `currentEpisodeIdRef.current === episode.id` staleness guard that every sibling handler has (`timeupdate`, `ended`, the play-promise `.catch()`, the load timeout). Switching tracks quickly can surface an error message citing the *previous* episode's number instead of the one that actually failed — reproduced by playing EP7 then EP3.
+- `components/episode/EpisodePlayButton.tsx` (the big "Ouvir Episódio"/"Reproduzindo..." button on the episode detail page) always renders the `Play` icon, never `Pause`, even while `isCurrentlyPlaying` is true and the label says "Reproduzindo..." — icon contradicts label. `EpisodesSection.tsx`'s own button does this correctly (compare the two).
+
+**Mobile (375px viewport):**
+- The header's "OUÇA AGORA" CTA button isn't resized/hidden for mobile and overflows ~47px past the right edge of the viewport (measured: `right: 422` in a 375px-wide window) — visibly clipped.
+- No hamburger/mobile nav trigger exists to reveal the 5 nav links (`#casos`, `#protocolos`, `#especialistas`, `#proteção`, `#denúncias`); they're anchor links so still reachable by scrolling, but there's no quick-jump on mobile.
+
+**Performance:** three separate interactions on the episode detail page measured "poor" INP (Interaction to Next Paint, Core Web Vitals threshold >500ms) via Chrome's own INP overlay while audio was playing: the Avaliação tab trigger (1105ms), a star-rating click (1198ms), and the Compartilhar button (1102ms). All were on unrelated elements, suggesting a page-wide re-render on every interaction rather than one slow component — worth profiling with React DevTools before assuming it's isolated to the ratings dialog.
+
+**Placeholder/mock content — flagged for removal before a real launch, not fixed:**
+- `services/analytics.ts#getEpisodeAnalytics` returns `Math.random()`-generated views/completions/engagement numbers (explicitly commented "Mock data"), rendered live as "ANALYTICS DO EPISÓDIO" on every episode page. Fabricated stats shown to real visitors.
+- Every expert in `data/episodes.ts` has no `avatar` set, so the expert directory (a headline feature per README) renders the generic `public/placeholder.svg` silhouette for 100% of specialists, zero real photos.
+- Four unreferenced leftover v0.dev scaffold assets in `public/`: `placeholder-logo.png`, `placeholder-logo.svg`, `placeholder-user.jpg`, `placeholder.jpg` — grepped across `app/`, `components/`, `lib/`, `data/`, `services/`, `contexts/` with zero matches, safe to delete. (`placeholder.svg` itself is real and used — the expert-avatar fallback above — don't delete that one.)
 
 ## Available skills
 
