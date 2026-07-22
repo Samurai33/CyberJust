@@ -6,8 +6,6 @@ import {
   formatTime,
   formatDate,
   truncateText,
-  calculateCompletionRate,
-  calculateEngagementScore,
   sanitizeHtml,
 } from "./utils"
 
@@ -66,23 +64,6 @@ describe("truncateText", () => {
 
   it("truncates and appends an ellipsis when over the limit", () => {
     expect(truncateText("this is a long string", 7)).toBe("this is...")
-  })
-})
-
-describe("calculateCompletionRate", () => {
-  it("computes a percentage of completions over views", () => {
-    expect(calculateCompletionRate(100, 50)).toBe(50)
-  })
-
-  it("returns 0 when there are no views (avoids division by zero)", () => {
-    expect(calculateCompletionRate(0, 0)).toBe(0)
-  })
-})
-
-describe("calculateEngagementScore", () => {
-  it("averages completion rate and normalized listen time", () => {
-    // completionRate=100, averageListenTime=3600s (1hr) -> (100 + 100) / 2 = 100
-    expect(calculateEngagementScore(100, 3600)).toBe(100)
   })
 })
 

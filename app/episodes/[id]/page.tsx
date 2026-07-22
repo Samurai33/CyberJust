@@ -22,7 +22,6 @@ import { getEpisodeById } from "@/data/episodes"
 import { EpisodeBadge } from "@/components/ui/episode-badge"
 import { EpisodeBookmarks } from "@/components/episode/EpisodeBookmarks"
 import { EpisodeRating } from "@/components/episode/EpisodeRating"
-import { EpisodeAnalytics } from "@/components/episode/EpisodeAnalytics"
 import { EpisodeRecommendations } from "@/components/episode/EpisodeRecommendations"
 import { EpisodePlayButton } from "@/components/episode/EpisodePlayButton"
 import { EpisodeResourceButton } from "@/components/episode/EpisodeResourceButton"
@@ -305,17 +304,10 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
           </TabsContent>
         </Tabs>
 
-        {/* Analytics and Recommendations */}
-        <div className="mt-12 space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold text-cyan-400 mb-6 font-mono">ANALYTICS DO EPISÓDIO</h2>
-            <EpisodeAnalytics episodeId={episode.id} />
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-bold text-cyan-400 mb-6 font-mono">VOCÊ TAMBÉM PODE GOSTAR</h2>
-            <EpisodeRecommendations currentEpisodeId={episode.id} />
-          </div>
+        {/* Recommendations */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-cyan-400 mb-6 font-mono">VOCÊ TAMBÉM PODE GOSTAR</h2>
+          <EpisodeRecommendations currentEpisodeId={episode.id} />
         </div>
       </div>
     </div>

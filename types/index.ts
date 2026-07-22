@@ -73,17 +73,6 @@ export interface Statistic {
   trend?: "up" | "down" | "stable"
 }
 
-export interface EpisodeAnalytics {
-  id: string
-  episodeId: string | number
-  views: number
-  completions: number
-  averageListenTime: number
-  ratings: EpisodeRating[]
-  bookmarks: EpisodeBookmark[]
-  lastUpdated: string
-}
-
 export interface EpisodeRating {
   id: string
   userId: string
