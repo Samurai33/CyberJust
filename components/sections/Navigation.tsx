@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Shield, Headphones, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -41,6 +42,13 @@ export function Navigation() {
         </button>
 
         <div className="hidden md:flex items-center gap-8">
+          <Link
+            href="/episodes"
+            className="text-cyan-400 hover:text-white transition-all duration-300 hover:glow-text relative group text-sm font-mono"
+          >
+            EPISÓDIOS
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-red-500 group-hover:w-full transition-all duration-300" />
+          </Link>
           {NAV_ITEMS.map((item) => (
             <a
               key={item}
@@ -54,7 +62,7 @@ export function Navigation() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button className="bg-gradient-to-r from-cyan-500 to-red-600 hover:from-cyan-400 hover:to-red-500 border-0 shadow-lg shadow-cyan-500/25">
+          <Button className="hidden md:flex bg-gradient-to-r from-cyan-500 to-red-600 hover:from-cyan-400 hover:to-red-500 border-0 shadow-lg shadow-cyan-500/25">
             <Headphones className="w-4 h-4 mr-2" />
             OUÇA AGORA
           </Button>
@@ -73,6 +81,13 @@ export function Navigation() {
             </SheetTrigger>
             <SheetContent side="right" className="bg-black border-cyan-500/30 w-3/4">
               <div className="flex flex-col gap-6 mt-10">
+                <Link
+                  href="/episodes"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-cyan-400 hover:text-white transition-all duration-300 text-lg font-mono"
+                >
+                  EPISÓDIOS
+                </Link>
                 {NAV_ITEMS.map((item) => (
                   <a
                     key={item}

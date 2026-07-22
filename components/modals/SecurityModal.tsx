@@ -1,6 +1,8 @@
 "use client"
 
-import { FileText, AlertTriangle, Clock, Eye, MapPin } from "lucide-react"
+import Link from "next/link"
+import { FileText, AlertTriangle, Clock, Eye, MapPin, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClassifiedDocumentModal } from "@/components/modals/ClassifiedDocumentModal"
 import { useUI } from "@/contexts/UIContext"
@@ -59,6 +61,16 @@ export function SecurityModal() {
               </p>
             </CardContent>
           </Card>
+
+          <Button asChild className="w-full bg-gradient-to-r from-cyan-500 to-red-600 hover:from-cyan-400 hover:to-red-500">
+            <Link
+              href={`/episodes/${selectedEpisodeModal.id}`}
+              onClick={() => setSelectedEpisodeModal(null)}
+            >
+              Ver Detalhes Completos
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
         </>
       )}
     </ClassifiedDocumentModal>

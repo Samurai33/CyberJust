@@ -1,6 +1,7 @@
 "use client"
 
-import { Play, Download, Share2, Pause, ChevronDown } from "lucide-react"
+import Link from "next/link"
+import { Play, Download, Share2, Pause, ChevronDown, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -173,6 +174,15 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
               </Card>
             )
           })}
+        </div>
+
+        <div className="text-center mt-12">
+          <Button asChild size="lg" variant="outline" className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10">
+            <Link href="/episodes">
+              Ver Todos os Episódios
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
