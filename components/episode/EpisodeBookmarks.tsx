@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useBookmarks } from "@/contexts/BookmarkContext"
-import { useAudio } from "@/contexts/AudioContext"
+import { useAudioTime } from "@/contexts/AudioContext"
 
 interface EpisodeBookmarksProps {
   episodeId: string | number
@@ -16,7 +16,7 @@ interface EpisodeBookmarksProps {
 
 export function EpisodeBookmarks({ episodeId }: EpisodeBookmarksProps) {
   const { getEpisodeBookmarks, addBookmark, removeBookmark, updateBookmark, hasBookmarkAtTime } = useBookmarks()
-  const { currentTime, seek, formatTime } = useAudio()
+  const { currentTime, seek, formatTime } = useAudioTime()
   const [newBookmarkNote, setNewBookmarkNote] = useState("")
   const [editingBookmark, setEditingBookmark] = useState<string | null>(null)
   const [editNote, setEditNote] = useState("")

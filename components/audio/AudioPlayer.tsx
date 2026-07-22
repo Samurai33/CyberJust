@@ -6,25 +6,22 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
-import { useAudio } from "@/contexts/AudioContext"
+import { useAudio, useAudioTime } from "@/contexts/AudioContext"
 
 export function AudioPlayer() {
   const {
     currentEpisode,
     isPlaying,
-    currentTime,
-    duration,
     volume,
     isMuted,
     isPlayerExpanded,
     isLoading,
     togglePlayPause,
-    seek,
     setVolume,
     toggleMute,
     togglePlayerExpanded,
-    formatTime,
   } = useAudio()
+  const { currentTime, duration, seek, formatTime } = useAudioTime()
 
   // Stable per-episode waveform bar heights. Previously these were generated
   // inline with Math.random() on every render, which meant all 50 bars were
