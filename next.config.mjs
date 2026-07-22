@@ -4,12 +4,22 @@
 // the accepted tradeoff for Next.js's own inline streaming/hydration
 // bootstrap scripts under this approach. img-src allows any https origin
 // because expert.avatar (dashboard form) is a free-text URL - see
-// next.config images.unoptimized below for the same constraint. media-src
-// allows GitHub Releases + its githubusercontent.com CDN redirect target,
-// since episode audioUrl (contexts/AudioContext.tsx: `audio.src = ...`)
-// points at github.com/.../releases/download/... - without this it silently
-// falls back to default-src 'self' and every episode's audio 404s in the
-// browser console with a CSP violation, not a network error.
+// next.config images.unoptimized below for the same constraint.
+//
+// Episode audio (contexts/AudioContext.tsx) is fetched from jsDelivr and fed
+// through MediaSource Extensions rather than a plain `audio.src = url` - the
+// files are fragmented MP4 (AAC-LC), which isn't reliably demuxed by every
+// browser via plain progressive src loading even though the same browser's
+// MediaSource.isTypeSupported for that exact codec returns true (a demuxer
+// gap, not a missing codec). That's why connect-src needs cdn.jsdelivr.net
+// (the fetch() that pulls the bytes) and media-src needs blob: (the
+// MediaSource object URL assigned to the audio element) in addition to
+// cdn.jsdelivr.net (kept as a fallback path for browsers without MSE
+// support, which get a plain src assignment instead). GitHub Release assets
+// were tried before jsDelivr, but GitHub forces Content-Type:
+// application/octet-stream + Content-Disposition: attachment on every
+// release asset, which browsers refuse to play inline no matter what the
+// CSP allows - don't move audio back there.
 const CSP = [
   "default-src 'self'",
   // vercel.live is Vercel's Preview Comments/feedback toolbar, injected on
@@ -19,8 +29,8 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  "media-src 'self' https://github.com https://*.githubusercontent.com",
-  "connect-src 'self' https://vercel.live wss://ws-us3.pusher.com",
+  "media-src 'self' blob: https://cdn.jsdelivr.net",
+  "connect-src 'self' https://cdn.jsdelivr.net https://vercel.live wss://ws-us3.pusher.com",
   "frame-src 'self' https://vercel.live",
   "object-src 'none'",
   "base-uri 'self'",

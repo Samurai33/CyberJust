@@ -86,6 +86,61 @@ interface AudioContextType extends AudioState {
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined)
 
+// Episode audio is a fragmented MP4 (AAC-LC) - fine for MediaSource Extensions,
+// but not reliably demuxed by every browser via plain `audio.src = url`
+// progressive loading (observed live: MEDIA_ERR_SRC_NOT_SUPPORTED / "Format
+// error" even though the same browser's own MediaSource.isTypeSupported for
+// this exact codec string returns true - it's a demuxer gap, not a missing
+// codec). Feed it through MSE instead; fall back to a plain .src assignment
+// on anything that lacks MediaSource support at all (e.g. very old browsers).
+const AAC_MIME = 'audio/mp4; codecs="mp4a.40.2"'
+
+function supportsMSEForAudio(): boolean {
+  return typeof window !== "undefined" && "MediaSource" in window && MediaSource.isTypeSupported(AAC_MIME)
+}
+
+async function loadViaMediaSource(audio: HTMLAudioElement, url: string): Promise<void> {
+  const mediaSource = new MediaSource()
+  const objectUrl = URL.createObjectURL(mediaSource)
+  audio.src = objectUrl
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      mediaSource.addEventListener(
+        "sourceopen",
+        () => {
+          ;(async () => {
+            try {
+              const sourceBuffer = mediaSource.addSourceBuffer(AAC_MIME)
+              const response = await fetch(url)
+              if (!response.ok) throw new Error(`HTTP ${response.status}`)
+              const buffer = await response.arrayBuffer()
+
+              await new Promise<void>((res, rej) => {
+                sourceBuffer.addEventListener("updateend", () => res(), { once: true })
+                sourceBuffer.addEventListener("error", () => rej(new Error("SourceBuffer append failed")), {
+                  once: true,
+                })
+                sourceBuffer.appendBuffer(buffer)
+              })
+
+              if (mediaSource.readyState === "open") mediaSource.endOfStream()
+              resolve()
+            } catch (err) {
+              reject(err instanceof Error ? err : new Error(String(err)))
+            }
+          })()
+        },
+        { once: true },
+      )
+    })
+  } finally {
+    // Revoked once the MediaSource has attached its data - the audio element
+    // keeps playing from its already-buffered SourceBuffer after this.
+    URL.revokeObjectURL(objectUrl)
+  }
+}
+
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(audioReducer, initialState)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -131,6 +186,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_ERROR", payload: `Áudio não disponível para o episódio ${episode.id}.` })
         return
       }
+      const audioUrl = episode.audioUrl
 
       if (audioRef.current) {
         audioRef.current.pause()
@@ -182,26 +238,42 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         audio.addEventListener("timeupdate", handleTimeUpdate)
         audio.addEventListener("ended", handleEnded)
 
-        audio.src = episode.audioUrl
+        const startPlayback = () => {
+          const playPromise = audio.play()
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                if (currentEpisodeIdRef.current === episode.id) {
+                  dispatch({ type: "SET_PLAYING", payload: true })
+                }
+              })
+              .catch((error) => {
+                console.error("Playback failed:", error)
+                if (currentEpisodeIdRef.current === episode.id) {
+                  dispatch({
+                    type: "SET_ERROR",
+                    payload: `Reprodução falhou para o episódio ${episode.id}. Tente novamente mais tarde.`,
+                  })
+                }
+              })
+          }
+        }
 
-        const playPromise = audio.play()
-
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              if (currentEpisodeIdRef.current === episode.id) {
-                dispatch({ type: "SET_PLAYING", payload: true })
-              }
+        if (supportsMSEForAudio()) {
+          loadViaMediaSource(audio, audioUrl)
+            .then(startPlayback)
+            .catch((err) => {
+              // Some browsers advertise MSE + AAC support but still choke on
+              // this specific fragmented-MP4 layout - fall back to a plain
+              // progressive src assignment rather than erroring outright.
+              console.error("MSE load failed, falling back to direct src:", err)
+              if (currentEpisodeIdRef.current !== episode.id) return
+              audio.src = audioUrl
+              startPlayback()
             })
-            .catch((error) => {
-              console.error("Playback failed:", error)
-              if (currentEpisodeIdRef.current === episode.id) {
-                dispatch({
-                  type: "SET_ERROR",
-                  payload: `Reprodução falhou para o episódio ${episode.id}. Tente novamente mais tarde.`,
-                })
-              }
-            })
+        } else {
+          audio.src = audioUrl
+          startPlayback()
         }
 
         setTimeout(() => {

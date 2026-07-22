@@ -32,7 +32,8 @@ CI (`.github/workflows/ci.yml`) runs `pnpm lint` + `pnpm type-check` + `pnpm tes
 - `hooks/` — data/state hooks, convention: return `{ data, isLoading, error }`
 - `lib/` — `constants.ts` (incl. `SITE_URL`, shared by metadata/robots/sitemap), `projectUtils.ts`, `utils.ts` (shared helpers)
 - `services/` — `analytics.ts`, `projectSync.ts`
-- `data/` — static/seed data (e.g. `episodes.ts` — episode audio isn't in this repo or in Vercel; `audioUrl` points at GitHub Release assets, see Security posture)
+- `data/` — static/seed data (e.g. `episodes.ts` — `audioUrl` points at `media/audio/*.m4a`, served via jsDelivr's GitHub CDN rather than by Vercel, see Security posture)
+- `media/audio/` — committed episode audio (`.m4a`), served through `cdn.jsdelivr.net/gh/Samurai33/CyberJust@main/media/audio/...` rather than through Next.js/Vercel — keeps these out of the deployed function/build output entirely
 - `types/` — shared TypeScript types
 
 ## Conventions
@@ -51,7 +52,7 @@ Dashboard auth is server-verified: `app/actions/auth.ts` checks the password aga
 
 `next.config.mjs` sets a static (non-nonce) CSP plus `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy` via `headers()`. Two things that look like bugs on this CSP but aren't — check before "fixing" either:
 - `images.unoptimized: true` — `expert.avatar` (dashboard form) is a free-text URL, and Next's image optimizer requires a fixed `images.remotePatterns` allowlist, incompatible with arbitrary hosts.
-- No `media-src` beyond `github.com`/`*.githubusercontent.com` — episode `audioUrl` is hosted as GitHub Release assets (not Vercel/LFS — GitHub Releases has no bandwidth cap, unlike LFS's 10GB/month free tier, and this audio is streamed straight to visitors' browsers). If a new episode's audio 404s or silently refuses to play, check the CSP `media-src` allowlist and the release asset URL before anything else.
+- No `media-src` beyond `cdn.jsdelivr.net` — episode `audioUrl` is committed under `media/audio/` and served through jsDelivr's GitHub CDN (free, no bandwidth cap, correct `Content-Type: audio/mp4`). **Do not switch this to GitHub Release assets or Git LFS** — both were tried and rejected: Release assets force `Content-Type: application/octet-stream` + `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff` on every download, which browsers correctly refuse to play inline (`NotSupportedError`) regardless of CSP; LFS has a 10GB/month free bandwidth cap that real traffic streaming full episodes would blow through fast. If a new episode's audio 404s or silently refuses to play, check the CSP `media-src` allowlist and the jsDelivr URL (`@main` branch refs are cached ~12h at the CDN edge — a same-second replace of an existing file's content, not just adding a new one, may need a version-suffixed filename to bust the cache) before anything else.
 
 `SITE_URL` in `lib/constants.ts` (used by `metadataBase`, OpenGraph, `robots.ts`, `sitemap.ts`) must always point at a domain this project actually owns — it pointed at a fabricated `.gov.br` address for a while, which is the kind of mistake that looks fine until someone shares a link.
 
