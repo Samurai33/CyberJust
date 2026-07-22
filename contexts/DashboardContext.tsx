@@ -52,7 +52,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingExpert, setIsEditingExpert] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
-  const [projects, setProjects] = useLocalStorage<Project[]>("cyberjustica-projects", [])
+  // v2: renamed from "cyberjustica-projects" to drop any pre-jsDelivr-migration
+  // entries stuck in visitors' browsers with stale audioUrl values (e.g. an old
+  // "/audio/*.mp3" path) that would otherwise silently override a real
+  // episode's current (possibly null) audioUrl forever - syncProjectsWithEpisodes
+  // only adds missing episodes, it never refreshes existing project entries.
+  const [projects, setProjects] = useLocalStorage<Project[]>("cyberjustica-projects-v2", [])
 
   // Usa o contexto de experts
   const { experts, createExpert, updateExpert, deleteExpert } = useExperts()
