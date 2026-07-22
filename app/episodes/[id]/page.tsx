@@ -1,8 +1,6 @@
 import {
   Calendar,
   Clock,
-  Share2,
-  Download,
   Star,
   Users,
   TimerIcon as Timeline,
@@ -26,6 +24,8 @@ import { EpisodeAnalytics } from "@/components/episode/EpisodeAnalytics"
 import { EpisodeRecommendations } from "@/components/episode/EpisodeRecommendations"
 import { EpisodePlayButton } from "@/components/episode/EpisodePlayButton"
 import { EpisodeResourceButton } from "@/components/episode/EpisodeResourceButton"
+import { EpisodeShareButton } from "@/components/episode/EpisodeShareButton"
+import { EpisodeDownloadButton } from "@/components/episode/EpisodeDownloadButton"
 
 const getSeverityColor = (severity: string) => {
   switch (severity) {
@@ -114,15 +114,13 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
           <div className="flex flex-wrap gap-4">
             <EpisodePlayButton episode={episode} />
 
-            <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
-              <Share2 className="w-5 h-5 mr-2" />
-              Compartilhar
-            </Button>
+            <EpisodeShareButton
+              episodeId={episode.id}
+              title={episode.title}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            />
 
-            <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
-              <Download className="w-5 h-5 mr-2" />
-              Download
-            </Button>
+            <EpisodeDownloadButton audioUrl={episode.audioUrl} className="border-gray-600 text-gray-300 hover:bg-gray-800" />
           </div>
         </div>
 
@@ -212,8 +210,8 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
                       {expert.contact && (
                         <div className="space-y-2">
                           {expert.contact.email && (
-                            <Button size="sm" variant="outline" className="w-full">
-                              Contato
+                            <Button size="sm" variant="outline" className="w-full" asChild>
+                              <a href={`mailto:${expert.contact.email}`}>Contato</a>
                             </Button>
                           )}
                         </div>
