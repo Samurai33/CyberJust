@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { Play, Download, Share2, Pause, ChevronDown, ArrowRight } from "lucide-react"
+import { Play, Pause, ChevronDown, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EpisodeBadge } from "@/components/ui/episode-badge"
+import { EpisodeShareButton } from "@/components/episode/EpisodeShareButton"
+import { EpisodeDownloadButton } from "@/components/episode/EpisodeDownloadButton"
 import { useUI } from "@/contexts/UIContext"
 import { useAudio } from "@/contexts/AudioContext"
 import { useDashboard } from "@/contexts/DashboardContext"
@@ -146,23 +148,19 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
                             ? "PAUSAR"
                             : "REPRODUZIR"}
                     </Button>
-                    <Button
+                    <EpisodeDownloadButton
+                      audioUrl={episode.audioUrl}
                       size="sm"
-                      variant="outline"
+                      label="BAIXAR"
                       className="border-gray-600 text-gray-400 hover:text-white"
-                      disabled={!hasAudio}
-                    >
-                      <Download className="w-3 h-3 mr-1" />
-                      BAIXAR
-                    </Button>
-                    <Button
+                    />
+                    <EpisodeShareButton
+                      episodeId={episode.id}
+                      title={episode.title}
                       size="sm"
-                      variant="outline"
+                      showLabel={false}
                       className="border-gray-600 text-gray-400 hover:text-white"
-                      aria-label="Compartilhar episódio"
-                    >
-                      <Share2 className="w-3 h-3" />
-                    </Button>
+                    />
                   </div>
                   {error && currentEpisode?.id === episode.id && (
                     <div className="mt-2 text-xs text-red-400 font-mono flex items-center gap-1">

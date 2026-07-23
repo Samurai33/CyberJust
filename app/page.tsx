@@ -30,7 +30,7 @@ export default async function CyberJusticaBrasil() {
       <HomeGate>
         <div className="min-h-screen bg-black text-white overflow-x-hidden">
           <Background />
-          <Navigation />
+          <Navigation episodes={episodes} />
           <HeroSection episodes={episodes} />
           <AboutSection />
           <EpisodesSection episodes={episodes} />

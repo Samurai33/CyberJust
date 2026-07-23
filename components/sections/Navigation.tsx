@@ -6,12 +6,25 @@ import { Shield, Headphones, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useAuth } from "@/contexts/AuthContext"
+import { useAudio } from "@/contexts/AudioContext"
+import type { Episode } from "@/types"
 
 const NAV_ITEMS = ["CASOS", "PROTOCOLOS", "ESPECIALISTAS", "PROTEÇÃO", "DENÚNCIAS"]
 
-export function Navigation() {
+interface NavigationProps {
+  episodes: Episode[]
+}
+
+export function Navigation({ episodes }: NavigationProps) {
   const { handleLogoClick, logoClickCount, isAuthenticated } = useAuth()
+  const { playEpisode } = useAudio()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const handlePlayFeatured = () => {
+    if (episodes.length > 0) {
+      playEpisode(episodes[0])
+    }
+  }
 
   return (
     <nav className="relative z-50 p-6 backdrop-blur-sm bg-black/50 border-b border-cyan-500/30">
@@ -62,7 +75,10 @@ export function Navigation() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button className="hidden md:flex bg-gradient-to-r from-cyan-500 to-red-600 hover:from-cyan-400 hover:to-red-500 border-0 shadow-lg shadow-cyan-500/25">
+          <Button
+            onClick={handlePlayFeatured}
+            className="hidden md:flex bg-gradient-to-r from-cyan-500 to-red-600 hover:from-cyan-400 hover:to-red-500 border-0 shadow-lg shadow-cyan-500/25"
+          >
             <Headphones className="w-4 h-4 mr-2" />
             OUÇA AGORA
           </Button>
