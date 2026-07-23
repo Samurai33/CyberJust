@@ -62,11 +62,3 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength).trim() + "..."
 }
-
-export function calculateCompletionRate(views: number, completions: number): number {
-  return views > 0 ? (completions / views) * 100 : 0
-}
-
-export function calculateEngagementScore(completionRate: number, averageListenTime: number): number {
-  return Math.round((completionRate + (averageListenTime / 3600) * 100) / 2)
-}
