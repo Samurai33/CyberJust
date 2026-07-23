@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import {
   Calendar,
   Clock,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { SITE_URL } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +43,50 @@ const getSeverityColor = (severity: string) => {
   }
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const episode = getEpisodeById(id)
+
+  if (!episode) {
+    return { title: "Episódio não encontrado - CyberJustiça Brasil" }
+  }
+
+  const title = `${episode.title} - CyberJustiça Brasil`
+  const description = episode.description
+  const url = `${SITE_URL}/episodes/${episode.id}`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: "article" },
+    twitter: { card: "summary_large_image", title, description },
+  }
+}
+
+function episodeJsonLd(episode: NonNullable<ReturnType<typeof getEpisodeById>>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "PodcastEpisode",
+    name: episode.title,
+    description: episode.fullDescription || episode.description,
+    url: `${SITE_URL}/episodes/${episode.id}`,
+    ...(episode.audioUrl && {
+      associatedMedia: { "@type": "MediaObject", contentUrl: episode.audioUrl },
+    }),
+    ...(episode.duration && { duration: `PT${episode.duration.replace(":", "M")}S` }),
+    partOfSeries: {
+      "@type": "PodcastSeries",
+      name: "CyberJustiça Brasil",
+      url: SITE_URL,
+    },
+  }
+}
+
 export default async function EpisodePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const episode = getEpisodeById(id)
@@ -50,6 +96,11 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
   }
 
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(episodeJsonLd(episode)) }}
+      />
     <div className="min-h-screen bg-black text-white">
       <div className="container mx-auto px-6 py-12">
         {/* Back Navigation */}
@@ -309,5 +360,6 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
         </div>
       </div>
     </div>
+    </>
   )
 }

@@ -14,6 +14,20 @@ import { SITE_URL } from "@/lib/constants"
 
 const inter = Inter({ subsets: ["latin"] })
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "CyberJustiça Brasil",
+  url: SITE_URL,
+  description:
+    "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
+  publisher: {
+    "@type": "Organization",
+    name: "CyberJustiça Brasil",
+    url: SITE_URL,
+  },
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
@@ -57,6 +71,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <ErrorBoundary>
           <ExpertsProvider>
             <DashboardProvider>
