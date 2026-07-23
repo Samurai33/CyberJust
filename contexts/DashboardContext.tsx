@@ -6,12 +6,7 @@ import type { Project, ProjectFormData, ProjectExpert } from "@/types/project"
 import type { Episode } from "@/types"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { episodes } from "@/data/episodes"
-import {
-  syncProjectsWithEpisodes,
-  createNewProject,
-  episodeToProject,
-  updateEpisodesFromProjects,
-} from "@/services/projectSync"
+import { syncProjectsWithEpisodes, createNewProject, episodeToProject } from "@/services/projectSync"
 import { useExperts } from "./ExpertsContext"
 
 interface DashboardState {
@@ -77,9 +72,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       setProjects(updatedProjects)
       setShowProjectModal(false)
       setSelectedProject(null)
-
-      // Sincroniza com os episódios
-      updateEpisodesFromProjects(updatedProjects)
     },
     [projects, setProjects],
   )
@@ -93,9 +85,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       setProjects(updatedProjects)
       setShowProjectModal(false)
       setSelectedProject(null)
-
-      // Sincroniza com os episódios
-      updateEpisodesFromProjects(updatedProjects)
     },
     [projects, setProjects],
   )
@@ -116,9 +105,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       if (selectedProject && String(selectedProject.id) === String(id)) {
         setSelectedProject(null)
       }
-
-      // Sincroniza com os episódios
-      updateEpisodesFromProjects(updatedProjects)
     },
     [projects, setProjects, selectedProject],
   )
