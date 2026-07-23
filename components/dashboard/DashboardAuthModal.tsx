@@ -97,7 +97,6 @@ export function DashboardAuthModal() {
                 placeholder="Digite o código secreto..."
                 className="bg-gray-900 border-cyan-500/30 text-white font-mono text-center tracking-widest"
                 autoFocus
-                maxLength={10}
               />
             </div>
 
