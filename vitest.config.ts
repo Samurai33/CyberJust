@@ -9,5 +9,15 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
     exclude: ["node_modules", ".next", ".claude"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      include: ["app/**", "components/**", "contexts/**", "hooks/**", "lib/**", "services/**"],
+      exclude: [
+        "**/*.test.{ts,tsx}",
+        "**/*.d.ts",
+        "components/ui/**", // shadcn/ui primitives - vendored, not app logic
+      ],
+    },
   },
 })

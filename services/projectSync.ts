@@ -83,6 +83,23 @@ export function createNewProject(data: ProjectFormData): Project {
   }
 }
 
+// Combina um episódio estático com o projeto persistido correspondente
+// (dados do dashboard, guardados em localStorage). Um projeto pode
+// atualizar a maioria dos campos - incluindo um audioUrl funcional -, mas
+// nunca pode conceder áudio a um episódio cujo dado canônico diz que não
+// existe (audioUrl: null). Sem essa trava, uma entrada desatualizada em
+// localStorage (ex.: um caminho antigo pré-jsDelivr) sobrescrevia
+// silenciosamente o audioUrl real e mostrava um botão "Reproduzir"
+// habilitado que dava 404 (#105/#132) - syncProjectsWithEpisodes só
+// adiciona episódios ausentes, nunca corrige um projeto já existente.
+export function mergeEpisodeWithProject(episode: Episode, project: Project | undefined): Episode {
+  if (!project) return episode
+
+  const audioUrl = episode.audioUrl === null ? null : (project.audioUrl ?? episode.audioUrl)
+
+  return { ...episode, ...project, audioUrl }
+}
+
 // Atualiza o array de episódios com base nos projetos
 export function updateEpisodesFromProjects(projects: Project[]): void {
   // Esta função seria usada em um ambiente real para atualizar os episódios no backend
