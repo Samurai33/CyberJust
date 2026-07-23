@@ -4,6 +4,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 // exercise the full set -> read -> tamper -> delete cycle in one test file.
 const cookieJar = new Map<string, string>()
 
+// Mutable so individual tests can simulate different X-Forwarded-For chains
+// (e.g. a client spoofing extra hops in front of the real, Vercel-appended IP).
+let forwardedForHeader = "203.0.113.1"
+
 vi.mock("next/headers", () => ({
   cookies: async () => ({
     get: (name: string) => {
@@ -18,7 +22,7 @@ vi.mock("next/headers", () => ({
     },
   }),
   headers: async () => ({
-    get: (name: string) => (name === "x-forwarded-for" ? "203.0.113.1" : null),
+    get: (name: string) => (name === "x-forwarded-for" ? forwardedForHeader : null),
   }),
 }))
 
@@ -28,6 +32,7 @@ describe("app/actions/auth", () => {
   beforeEach(() => {
     cookieJar.clear()
     vi.resetModules()
+    forwardedForHeader = "203.0.113.1"
     process.env.DASHBOARD_PASSWORD = "correct-horse-battery-staple"
     process.env.DASHBOARD_SESSION_SECRET = "test-signing-secret"
   })
@@ -78,6 +83,25 @@ describe("app/actions/auth", () => {
     expect(limited.success).toBe(false)
     expect(limited.error).toMatch(/muitas tentativas/i)
     expect(cookieJar.size).toBe(0)
+  })
+
+  it("rate-limits by the last X-Forwarded-For hop, not a client-spoofable earlier one (regression, #141)", async () => {
+    const { authenticateDashboard } = await import("./auth")
+
+    // A real proxy chain has the platform-verified IP as the LAST entry;
+    // everything before it can be forged by the client. Rotating the fake
+    // leading hop on every request must NOT reset the rate-limit bucket.
+    for (let i = 0; i < 5; i++) {
+      forwardedForHeader = `10.0.0.${i}, 198.51.100.7`
+      const result = await authenticateDashboard("wrong-password")
+      expect(result.error).toBe("Código de acesso inválido")
+    }
+
+    forwardedForHeader = "10.0.0.99, 198.51.100.7"
+    const limited = await authenticateDashboard("correct-horse-battery-staple")
+
+    expect(limited.success).toBe(false)
+    expect(limited.error).toMatch(/muitas tentativas/i)
   })
 
   it("accepts the correct password and issues a session cookie", async () => {
