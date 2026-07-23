@@ -1,0 +1,85 @@
+name: 🐛 Bug report
+description: Report something that is broken or behaving unexpectedly
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please search [existing issues](https://github.com/Samurai33/CyberJust/issues) first to avoid duplicates.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A quick summary of the bug and any relevant background.
+      placeholder: When I click X on page Y, Z happens instead of the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Be specific. Include the exact URL/route, the device/viewport, and sample data if relevant.
+      placeholder: |
+        1. Go to https://cyberjus.org/...
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happens. Include screenshots, console errors, or network logs if you have them.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the app is affected? (Maintainers may adjust.)
+      options:
+        - Homepage / marketing sections
+        - Episodes list or episode detail
+        - Audio player
+        - Dashboard
+        - Accessibility
+        - Performance
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Your best guess — maintainers will confirm the P-level label.
+      options:
+        - P0 — critical (security / data risk / site down)
+        - P1 — high (user-facing or structural)
+        - P2 — medium (worth doing, not urgent)
+        - P3 — low (polish / nice to have)
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, device, viewport width. Prod (cyberjus.org) or local?
+      placeholder: e.g. Chrome 128 on Android, 375px viewport, production
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything else — why you think this happens, things you tried, related issues.
+    validations:
+      required: false
