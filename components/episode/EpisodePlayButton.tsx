@@ -1,6 +1,6 @@
 "use client"
 
-import { Play } from "lucide-react"
+import { Play, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAudio } from "@/contexts/AudioContext"
 import type { Episode } from "@/types"
@@ -31,6 +31,8 @@ export function EpisodePlayButton({ episode }: EpisodePlayButtonProps) {
     >
       {isLoading ? (
         <div className="w-5 h-5 mr-2 border border-white border-t-transparent rounded-full animate-spin" />
+      ) : isCurrentlyPlaying ? (
+        <Pause className="w-5 h-5 mr-2" />
       ) : (
         <Play className="w-5 h-5 mr-2" />
       )}
