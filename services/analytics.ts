@@ -1,23 +1,5 @@
-import type { EpisodeAnalytics, EpisodeRating, EpisodeBookmark } from "@/types"
+import type { EpisodeRating, EpisodeBookmark } from "@/types"
 import { generateId } from "@/lib/utils"
-
-export function getEpisodeAnalytics(episodeId: string | number): EpisodeAnalytics {
-  // Mock data - in a real app, this would fetch from an API
-  const views = Math.floor(Math.random() * 10000) + 1000
-  const completions = Math.floor(Math.random() * 5000) + 500
-  const averageListenTime = Math.floor(Math.random() * 3000) + 1200
-
-  return {
-    id: generateId("analytics-"),
-    episodeId,
-    views,
-    completions,
-    averageListenTime,
-    ratings: [],
-    bookmarks: [],
-    lastUpdated: new Date().toISOString(),
-  }
-}
 
 export function createRating(episodeId: string | number, rating: number, review?: string): EpisodeRating {
   return {
