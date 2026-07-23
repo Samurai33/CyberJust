@@ -12,6 +12,7 @@ import { EpisodeDownloadButton } from "@/components/episode/EpisodeDownloadButto
 import { useUI } from "@/contexts/UIContext"
 import { useAudio } from "@/contexts/AudioContext"
 import { useDashboard } from "@/contexts/DashboardContext"
+import { mergeEpisodeWithProject } from "@/services/projectSync"
 import { cn } from "@/lib/utils"
 import type { Episode } from "@/types"
 
@@ -28,10 +29,9 @@ export function EpisodesSection({ episodes: originalEpisodes }: EpisodesSectionP
   // Priorizar projetos do dashboard se tiverem o mesmo ID
   const projectMap = new Map(projects.map((p) => [String(p.id), p]))
 
-  const episodes = originalEpisodes.map((episode) => {
-    const project = projectMap.get(String(episode.id))
-    return project ? { ...episode, ...project } : episode
-  })
+  const episodes = originalEpisodes.map((episode) =>
+    mergeEpisodeWithProject(episode, projectMap.get(String(episode.id))),
+  )
 
   const handlePlayEpisode = (episode: Episode) => {
     if (isEpisodePlaying(episode.id)) {

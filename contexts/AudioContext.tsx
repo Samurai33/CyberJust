@@ -31,7 +31,7 @@ const initialState: AudioState = {
   playbackHistory: [],
 }
 
-function audioReducer(state: AudioState, action: AudioAction): AudioState {
+export function audioReducer(state: AudioState, action: AudioAction): AudioState {
   switch (action.type) {
     case "SET_EPISODE":
       return {
@@ -57,7 +57,15 @@ function audioReducer(state: AudioState, action: AudioAction): AudioState {
     case "SET_PLAYER_EXPANDED":
       return { ...state, isPlayerExpanded: action.payload }
     case "SET_ERROR":
-      return { ...state, error: action.payload, isLoading: false, isPlaying: false }
+      // Only a real error (non-null payload) should interrupt loading/playback.
+      // playEpisode() dispatches SET_ERROR(null) right after SET_LOADING(true)
+      // purely to clear a stale error from a previous episode - forcing
+      // isLoading/isPlaying false unconditionally here clobbered that same
+      // isLoading:true in the same batched update, so the loading state never
+      // had a chance to render before the plain-src/MSE load actually finished.
+      return action.payload
+        ? { ...state, error: action.payload, isLoading: false, isPlaying: false }
+        : { ...state, error: null }
     case "ADD_TO_HISTORY":
       const newHistory = state.playbackHistory.filter((ep) => ep.id !== action.payload.id)
       return {
