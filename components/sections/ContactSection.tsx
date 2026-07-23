@@ -28,8 +28,14 @@ export function ContactSection() {
                 Tem uma história para compartilhar ou um tema que gostaria de ver abordado? Preencha nosso formulário e
                 ajude a construir nossos próximos episódios.
               </p>
-              <Button variant="outline" size="sm" className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10">
-                ENVIAR SUGESTÃO
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                title="Em breve - canal de sugestões ainda não disponível"
+                className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10"
+              >
+                ENVIAR SUGESTÃO (EM BREVE)
               </Button>
             </CardContent>
           </Card>
@@ -44,7 +50,12 @@ export function ContactSection() {
                 Para denúncias de crimes cibernéticos, direcione-as aos canais oficiais: Delegacia Virtual, SaferNet ou
                 Ministério Público.
               </p>
-              <Button variant="outline" size="sm" className="border-red-500 text-red-400 hover:bg-red-500/10">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-red-500 text-red-400 hover:bg-red-500/10"
+                onClick={() => window.open("https://new.safernet.org.br/", "_blank", "noopener,noreferrer")}
+              >
                 CANAIS OFICIAIS
               </Button>
             </CardContent>
@@ -60,8 +71,14 @@ export function ContactSection() {
                 Disponível em todas as principais plataformas: Spotify, Apple Podcasts, Google Podcasts, Deezer e
                 YouTube.
               </p>
-              <Button variant="outline" size="sm" className="border-purple-500 text-purple-400 hover:bg-purple-500/10">
-                TODAS AS PLATAFORMAS
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                title="Em breve - links das plataformas de distribuição ainda não configurados"
+                className="border-purple-500 text-purple-400 hover:bg-purple-500/10"
+              >
+                TODAS AS PLATAFORMAS (EM BREVE)
               </Button>
             </CardContent>
           </Card>

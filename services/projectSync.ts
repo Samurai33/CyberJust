@@ -28,29 +28,6 @@ export function episodeToProject(episode: Episode): Project {
   }
 }
 
-// Converte um projeto para o formato de episódio
-export function projectToEpisode(project: Project): Episode {
-  return {
-    id: project.id,
-    title: project.title,
-    date: project.date,
-    description: project.description,
-    fullDescription: project.fullDescription,
-    status: project.status,
-    threat: project.threat,
-    audioUrl: project.audioUrl,
-    duration: project.duration,
-    category: project.category,
-    tags: project.tags,
-    keyPoints: project.keyPoints,
-    warnings: project.warnings,
-    transcript: project.transcript,
-    experts: project.experts,
-    timeline: project.timeline,
-    resources: project.resources,
-  }
-}
-
 // Sincroniza os projetos com os episódios existentes
 export function syncProjectsWithEpisodes(projects: Project[]): Project[] {
   // Mapeia os IDs dos projetos existentes
@@ -98,11 +75,4 @@ export function mergeEpisodeWithProject(episode: Episode, project: Project | und
   const audioUrl = episode.audioUrl === null ? null : (project.audioUrl ?? episode.audioUrl)
 
   return { ...episode, ...project, audioUrl }
-}
-
-// Atualiza o array de episódios com base nos projetos
-export function updateEpisodesFromProjects(projects: Project[]): void {
-  // Esta função seria usada em um ambiente real para atualizar os episódios no backend
-  // Como estamos usando dados estáticos, vamos apenas simular a atualização
-  console.log("Sincronizando episódios com projetos:", projects.length)
 }
