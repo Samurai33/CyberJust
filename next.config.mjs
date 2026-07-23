@@ -30,7 +30,7 @@ const CSP = [
   "img-src 'self' data: https:",
   "font-src 'self' data:",
   "media-src 'self' blob: https://cdn.jsdelivr.net",
-  "connect-src 'self' https://cdn.jsdelivr.net https://vercel.live wss://ws-us3.pusher.com",
+  "connect-src 'self' https://cdn.jsdelivr.net https://vercel.live",
   "frame-src 'self' https://vercel.live",
   "object-src 'none'",
   "base-uri 'self'",
@@ -47,6 +47,7 @@ const nextConfig = {
     unoptimized: true,
   },
   reactCompiler: true,
+  poweredByHeader: false,
   async headers() {
     return [
       {
@@ -56,6 +57,10 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
