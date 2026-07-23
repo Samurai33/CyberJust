@@ -17,7 +17,13 @@ const loginAttemptsByIp = new Map<string, { count: number; windowStart: number }
 
 async function isRateLimited(): Promise<boolean> {
   const headerList = await headers()
-  const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+  // x-forwarded-for is a comma-separated hop chain where earlier entries can
+  // be supplied by the client itself - Vercel appends the real connecting IP
+  // as the LAST hop rather than replacing the header. Taking the first entry
+  // let an attacker rotate a fake value per request and get a fresh rate-limit
+  // bucket every time; the last entry is the one the platform actually verified.
+  const forwardedFor = headerList.get("x-forwarded-for")
+  const ip = forwardedFor?.split(",").pop()?.trim() || "unknown"
 
   const now = Date.now()
   const entry = loginAttemptsByIp.get(ip)

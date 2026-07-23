@@ -1,0 +1,40 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    # Not a required status check (see branch protection) - this is a new,
+    # deliberately small smoke suite (#133). Keeping it informational avoids
+    # blocking merges on flaky-browser-install infrastructure while it proves
+    # itself out; promote to required once it's been stable for a while.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+        env:
+          DASHBOARD_PASSWORD: ci-placeholder-password
+          DASHBOARD_SESSION_SECRET: ci-placeholder-secret-not-used-in-prod
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

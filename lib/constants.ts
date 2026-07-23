@@ -4,7 +4,12 @@ import type { EpisodeStatus, ThreatLevel, SeverityLevel } from "@/types"
 // domain we don't own (this is an educational/editorial site, not a
 // government platform; see README "Project boundaries"). Shared by
 // app/layout.tsx metadata and the robots.ts/sitemap.ts routes.
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://cyberjus.org"
+//
+// Uses the "www" host, not the apex: cyberjus.org 308-redirects to
+// www.cyberjus.org, so pointing sitemap/canonical/OG URLs at the apex would
+// make every URL in sitemap.xml resolve through an extra redirect hop
+// instead of a direct 200 - worse for crawlers and for og:url previews.
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.cyberjus.org"
 
 export const EPISODE_STATUS: Record<EpisodeStatus, { label: string; color: string }> = {
   ATIVO: { label: "Ativo", color: "bg-green-500/20 text-green-400 border-green-500/50" },
