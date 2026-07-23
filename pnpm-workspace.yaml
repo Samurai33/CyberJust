@@ -2,6 +2,14 @@ overrides:
   lodash: 4.18.1
   postcss: 8.5.20
   sharp: ">=0.35.0"
+  # eslint-config-next 16.2.x still resolves @typescript-eslint 8.63.x
+  # transitively, which predates ESLint 10 support. 8.65.0 is the first
+  # release whose peer range includes eslint ^10 (the scopeManager.addGlobals
+  # crash fix, typescript-eslint#11914). Force the whole family in lockstep.
+  typescript-eslint: ">=8.65.0"
+  "@typescript-eslint/eslint-plugin": ">=8.65.0"
+  "@typescript-eslint/parser": ">=8.65.0"
+  "@typescript-eslint/utils": ">=8.65.0"
 
 onlyBuiltDependencies:
   - sharp
