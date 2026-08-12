@@ -55,7 +55,7 @@
     "eslint-config-next": "^16.2.10",
     "espree": "^11.2.0",
     "jsdom": "^29.1.1",
-    "postcss": "8.5.20",
+    "postcss": "8.5.23",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.1.1",
