@@ -7,7 +7,9 @@ import { test, expect } from "@playwright/test"
 test("homepage loads and renders the primary navigation", async ({ page }) => {
   await page.goto("/")
   await expect(page).toHaveTitle(/CyberJustiça/)
-  await expect(page.getByRole("link", { name: "EPISÓDIOS", exact: true })).toBeVisible()
+  await expect(
+    page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "EPISÓDIOS", exact: true }),
+  ).toBeVisible()
 })
 
 test("homepage 'Ver Todos os Episódios' CTA navigates to /episodes", async ({ page }) => {
@@ -51,6 +53,6 @@ test("episode audio is served from this origin with byte-range support", async (
 // proprietary AAC decoder, so actual decoding is verified in a real browser.
 test("clicking OUVIR opens the global player bar", async ({ page }) => {
   await page.goto("/episodes/7")
-  await page.getByRole("button", { name: /OUVIR/ }).click()
+  await page.getByRole("button", { name: /OUVIR/ }).first().click()
   await expect(page.getByRole("region", { name: "Player de áudio" })).toBeVisible()
 })
