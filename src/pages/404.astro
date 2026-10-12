@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+---
+<Base title="Página não encontrada" description="O endereço acessado não existe no CyberJustiça Brasil." noindex>
+  <section class="page-head">
+    <div class="wrap">
+      <p class="label"><b>404</b> / Não encontrado</p>
+      <h1>Esta página não existe.</h1>
+      <p class="lede">O link pode estar errado ou o conteúdo mudou de endereço.</p>
+      <div class="actions mt-2">
+        <a class="btn" href="/episodios/">Ver episódios <Icon name="arrow" class="ico-arrow" /></a>
+        <a class="btn btn-line" href="/">Página inicial</a>
+      </div>
+    </div>
+  </section>
+</Base>

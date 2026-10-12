@@ -1,108 +1,82 @@
 <div align="center">
 
-<img src="public/cyberjus_logo.png" alt="CyberJustiça Brasil logo" width="160">
+<img src="public/icon-192.png" alt="" width="96">
 
 # CyberJustiça Brasil
 
-### Cybercrime stories, specialist perspectives and digital-safety education
+### Podcast sobre crimes cibernéticos no Brasil: casos reais, investigação e proteção digital
 
-[![Live Experience](https://img.shields.io/badge/Live_Experience-cyberjus.org-0EA5E9?style=for-the-badge&logo=vercel)](https://cyberjus.org)
-[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
+[![Site](https://img.shields.io/badge/site-cyberjus.org-5cc8ff?style=for-the-badge)](https://www.cyberjus.org)
+[![Astro](https://img.shields.io/badge/Astro-7-8b7cff?style=for-the-badge&logo=astro&logoColor=white)](https://astro.build/)
 [![CI](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml/badge.svg)](https://github.com/Samurai33/CyberJust/actions/workflows/ci.yml)
-
-[![Open Issues](https://img.shields.io/github/issues/Samurai33/CyberJust?style=flat-square)](https://github.com/Samurai33/CyberJust/issues)
-[![Open PRs](https://img.shields.io/github/issues-pr/Samurai33/CyberJust?style=flat-square)](https://github.com/Samurai33/CyberJust/pulls)
-[![Last Commit](https://img.shields.io/github/last-commit/Samurai33/CyberJust?style=flat-square)](https://github.com/Samurai33/CyberJust/commits/main)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
+[![E2E](https://github.com/Samurai33/CyberJust/actions/workflows/e2e.yml/badge.svg)](https://github.com/Samurai33/CyberJust/actions/workflows/e2e.yml)
+[![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-f59e0b?style=flat-square)](LICENSE)
 
 </div>
 
-## Overview
+Site estático feito com [Astro](https://astro.build/), servido por nginx em Docker. Segue o design
+system N3XUS (o mesmo do [n3xus.dev](https://n3xus.dev)). Conteúdo educativo: não é um sistema
+policial nem orientação jurídica.
 
-CyberJustiça Brasil is a responsive media and education experience that presents
-Brazilian cybercrime cases, protection guidance, specialist profiles and
-audio-first storytelling through a cybersecurity-inspired interface.
+## Destaques
 
-The repository demonstrates product design and front-end engineering. It is not a
-law-enforcement system, forensic platform or source of legal advice.
+- **Player que não para ao navegar.** Usa um `<audio>` nativo com streaming por HTTP Range e
+  persiste entre páginas (`<ClientRouter />` + `transition:persist`). A Media Session API mostra o
+  episódio na tela de bloqueio e na Central de Controle e aceita teclas de mídia e fones. O player
+  continua de onde você parou e lembra velocidade e volume. É um Web Component, sem framework.
+- **Leve.** Cerca de 26 KB de JavaScript no total. Sem React, sem Tailwind, sem Node em produção.
+  As páginas funcionam sem JavaScript (o filtro de episódios usa só CSS, com `:has()`).
+- **Seguro por padrão.**
+  - Política de segurança de conteúdo (CSP) sem `'unsafe-inline'`.
+  - HSTS, COOP/CORP, `frame-ancestors 'none'` e Permissions-Policy.
+  - nginx sem root, imagens Docker e actions fixadas por hash.
+  - Dependências só com 14 dias ou mais de publicação (`minimumReleaseAge`).
+  - Zero recursos de terceiros: sem rastreadores, sem cookies, fontes servidas do próprio domínio.
+- **Responsivo de verdade.** Testado em Chrome, Safari (WebKit), iPhone, iPad e Android. Tem
+  áreas seguras do iPhone (`safe-area-inset`), alvos de toque de 44 px, layout do player por
+  container queries e respeita a preferência por menos movimento.
 
-## Experience highlights
+## Comandos
 
-- Cybercrime case and episode presentation
-- Audio player with bookmarks and transcript-oriented UI
-- Specialist, project, resource and timeline views
-- Digital-protection educational content
-- Responsive cyberpunk interface
-- Server-verified dashboard access, accessible (Radix-based) UI components
-- Structured content backed by local data and services
-
-## Technology
-
-`Next.js 16` · `React 19` · `TypeScript` · `Tailwind CSS` · `Radix UI` ·
-`Recharts` · `React Hook Form` · `Zod` · `Vitest`
-
-## Getting started
-
-### Prerequisites
-
-- Node.js ≥ 22
-- [pnpm](https://pnpm.io/) 10.12.4 (declared in `package.json#packageManager`)
-
-### Install and run
+Pré-requisitos: Node 22.12 ou superior e pnpm 10 (`corepack enable`).
 
 ```bash
-git clone https://github.com/Samurai33/CyberJust.git
-cd CyberJust
-pnpm install
+pnpm install          # dependências (lockfile congelado no CI)
+pnpm dev              # servidor de desenvolvimento em http://localhost:4321
+pnpm test             # testes unitários (Vitest)
+pnpm build            # astro check (tipos) + build estático em dist/
+docker build -t cyberjust .                                  # a mesma imagem da produção
+docker run --rm -p 127.0.0.1:18080:8080 cyberjust            # site em http://127.0.0.1:18080
+BASE_URL=http://127.0.0.1:18080 pnpm test:e2e                # e2e contra a imagem (5 navegadores)
 ```
 
-The internal dashboard (behind the logo click / auth modal) requires two
-environment variables. Copy the template and fill in real values — see
-[`.env.example`](.env.example) for how to generate the session secret:
+## Estrutura
 
-```bash
-cp .env.example .env.local
-```
+| Caminho | O que é |
+| --- | --- |
+| `src/content/episodios/*.md` | Um arquivo por episódio. O nome do arquivo vira a URL; o esquema fica em `src/content.config.ts`. |
+| `src/pages/` | Rotas: `/`, `/episodios/`, `/episodios/[id]/`, `/privacidade/`, `404`. |
+| `src/scripts/player.ts` | O player (`<cj-player>`). Qualquer botão com `data-tocar` controla o player. |
+| `src/styles/global.css` | Design system N3XUS em camadas CSS (tokens, base, layout, componentes). |
+| `src/data/site.ts` | Textos fixos: menu, tipos de crime, dicas, especialistas, canais oficiais. |
+| `docker/` | nginx: CSP e headers, redirects 301 das URLs antigas, cache. |
+| `design/` | Fontes da imagem de prévia e dos ícones (`sh design/gerar-imagens.sh`). |
+| `e2e/` | Playwright: páginas, CSP, player, headers, redirects e Range. |
 
-```bash
-pnpm dev
-```
+## Publicar um episódio
 
-Open [http://localhost:3000](http://localhost:3000).
+1. Converta o áudio para AAC em MP4 com o índice no início. Sem isso o streaming não funciona:
+   `ffmpeg -i entrada.m4a -map 0:a -c copy -movflags +faststart public/audio/<nome-novo>.m4a`
+2. Use sempre um **nome novo** de arquivo: o áudio é servido com cache imutável.
+3. Crie `src/content/episodios/<slug>.md` com `audio.arquivo`, `audio.segundos` e `audio.bytes`
+   (valores do `ffprobe` e do `ls -l`). O build valida o esquema.
+4. Abra um PR. O CI roda os testes, o build e o e2e; depois do merge, o Coolify publica.
 
-### Production build
+## Deploy
 
-```bash
-pnpm build
-pnpm start
-```
+O Coolify (VM 520) constrói o `Dockerfile` a partir da `main` e serve na porta 8080 atrás do
+Cloudflare Tunnel. O domínio canônico é `www.cyberjus.org`; o nginx redireciona `cyberjus.org` para ele.
 
-### Testing and type-checking
+## Licença
 
-```bash
-pnpm type-check   # tsc --noEmit
-pnpm test         # vitest run
-```
-
-Both run in CI (`.github/workflows/ci.yml`) on every push and pull request to
-`main`, alongside `pnpm build`.
-
-## Project boundaries
-
-- Public content should be treated as educational and editorial.
-- Claims and case material require source verification before publication.
-- Authentication and dashboard interactions are prototype capabilities unless
-  explicitly connected to production services.
-- Do not submit sensitive personal, investigative or evidentiary data.
-
-## Community and security
-
-- [Contributing guide](CONTRIBUTING.md)
-- [Security policy](SECURITY.md) — please report vulnerabilities privately, not via public issues
-- [Code of conduct](CODE_OF_CONDUCT.md)
-- [Open issues](https://github.com/Samurai33/CyberJust/issues) · [Open pull requests](https://github.com/Samurai33/CyberJust/pulls)
-
-## License
-
-Released under the [MIT License](LICENSE).
+[MIT](LICENSE).

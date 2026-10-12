@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+---
+<Base title="Privacidade" description="O que o site do CyberJustiça Brasil guarda (quase nada): sem cookies, sem rastreadores, sem contas.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="label">Transparência</p>
+      <h1>Privacidade</h1>
+      <p class="lede">Resumo: este site não usa cookies, não tem rastreadores nem anúncios e não pede nenhum dado seu.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap prose">
+      <h2>O que fica no seu aparelho</h2>
+      <p>
+        Para você continuar um episódio de onde parou, o player guarda no próprio navegador (armazenamento
+        local) a posição de cada episódio, a velocidade e o volume escolhidos. Esses dados nunca saem do seu
+        aparelho e você pode apagá-los limpando os dados do site no navegador.
+      </p>
+      <h2>O que chega ao servidor</h2>
+      <p>
+        Como em qualquer site, o servidor e a rede de entrega (Cloudflare) recebem os dados técnicos de cada
+        acesso, como endereço IP e navegador, usados só para entregar as páginas e proteger o site contra
+        ataques. Não há analytics, pixels de redes sociais nem conteúdo de terceiros: fontes, imagens e áudios
+        são servidos deste domínio.
+      </p>
+      <h2>Links externos</h2>
+      <p>
+        Os links para leis e canais oficiais (Planalto, SaferNet, Polícia Federal, Banco Central) abrem os sites
+        desses órgãos, que têm as próprias políticas de privacidade.
+      </p>
+      <h2>Código aberto</h2>
+      <p>O código do site é público e pode ser auditado em <a href={SITE.repo} rel="noopener noreferrer">GitHub</a>.</p>
+    </div>
+  </section>
+</Base>
