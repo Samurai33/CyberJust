@@ -73,18 +73,8 @@ export interface Statistic {
   trend?: "up" | "down" | "stable"
 }
 
-export interface EpisodeRating {
-  id: string
-  userId: string
-  episodeId: string | number
-  rating: number
-  review?: string
-  timestamp: string
-}
-
 export interface EpisodeBookmark {
   id: string
-  userId: string
   episodeId: string | number
   timestamp: number
   note?: string
@@ -101,19 +91,4 @@ export interface AudioState {
   isLoading: boolean
   isPlayerExpanded: boolean
   error: string | null
-  playbackHistory: Episode[]
-}
-
-export interface UIState {
-  glitchText: string
-  mousePosition: { x: number; y: number }
-  activeEpisode: number | null
-  selectedEpisodeModal: Episode | null
-  selectedLuluModal: boolean
-  episodeFilters: {
-    search: string
-    status: string
-    threat: string
-    category: string
-  }
 }

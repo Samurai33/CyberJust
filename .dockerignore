@@ -1,0 +1,16 @@
+.git
+.github
+.claude
+node_modules
+.next
+coverage
+e2e
+test-results
+playwright-report
+**/*.test.ts
+**/*.test.tsx
+.env*
+!.env.example
+Dockerfile
+.dockerignore
+*.md

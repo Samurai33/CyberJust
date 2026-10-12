@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Minimize2, Radio } from "lucide-react"
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Minimize2, Radio, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +20,8 @@ export function AudioPlayer() {
     setVolume,
     toggleMute,
     togglePlayerExpanded,
+    stopPlayback,
+    error,
   } = useAudio()
   const { currentTime, duration, seek, formatTime } = useAudioTime()
 
@@ -43,7 +45,13 @@ export function AudioPlayer() {
   if (!currentEpisode) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-t border-cyan-500/30">
+    <>
+    {/* Reserves room so the fixed bar never covers the end of the page. */}
+    <div aria-hidden="true" className="h-44 md:h-24" />
+    <section
+      aria-label="Player de áudio"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-t border-cyan-500/30 max-h-[100dvh] overflow-y-auto"
+    >
       <div className="container mx-auto px-6 py-4">
         {/* Compact Player */}
         {!isPlayerExpanded && (
@@ -57,7 +65,9 @@ export function AudioPlayer() {
                 <div className="text-white font-mono text-sm truncate">
                   EP {currentEpisode.id}: {currentEpisode.title}
                 </div>
-                <div className="text-gray-400 text-xs font-mono">CyberJustiça Brasil</div>
+                <div className={`text-xs font-mono truncate ${error ? "text-red-400" : "text-gray-400"}`} role={error ? "alert" : undefined}>
+                  {error ?? "CyberJustiça Brasil"}
+                </div>
               </div>
             </div>
 
@@ -67,7 +77,8 @@ export function AudioPlayer() {
                 size="sm"
                 variant="ghost"
                 className="text-cyan-400 hover:text-white hover:bg-cyan-500/20"
-                onClick={() => seek(Math.max(0, currentTime - 15))}
+                onClick={() => seek(currentTime - 15)}
+                aria-label="Voltar 15 segundos"
               >
                 <SkipBack className="w-4 h-4" />
               </Button>
@@ -76,7 +87,7 @@ export function AudioPlayer() {
                 size="sm"
                 className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500 w-10 h-10 rounded-full"
                 onClick={togglePlayPause}
-                disabled={isLoading}
+                aria-label={isPlaying ? "Pausar" : "Reproduzir"}
               >
                 {isLoading ? (
                   <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin" />
@@ -91,7 +102,8 @@ export function AudioPlayer() {
                 size="sm"
                 variant="ghost"
                 className="text-cyan-400 hover:text-white hover:bg-cyan-500/20"
-                onClick={() => seek(Math.min(duration, currentTime + 15))}
+                onClick={() => seek(currentTime + 15)}
+                aria-label="Avançar 15 segundos"
               >
                 <SkipForward className="w-4 h-4" />
               </Button>
@@ -114,7 +126,13 @@ export function AudioPlayer() {
 
             {/* Volume & Expand */}
             <div className="flex items-center justify-center md:justify-end gap-2 w-full md:w-auto">
-              <Button size="sm" variant="ghost" className="text-gray-400 hover:text-white" onClick={toggleMute}>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-gray-400 hover:text-white"
+                onClick={toggleMute}
+                aria-label={isMuted ? "Ativar som" : "Silenciar"}
+              >
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </Button>
 
@@ -123,8 +141,18 @@ export function AudioPlayer() {
                 variant="ghost"
                 className="text-gray-400 hover:text-white"
                 onClick={togglePlayerExpanded}
+                aria-label="Expandir player"
               >
                 <Maximize2 className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-gray-400 hover:text-white"
+                onClick={stopPlayback}
+                aria-label="Fechar player"
+              >
+                <X className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -152,6 +180,7 @@ export function AudioPlayer() {
                 variant="ghost"
                 className="text-gray-400 hover:text-white"
                 onClick={togglePlayerExpanded}
+                aria-label="Recolher player"
               >
                 <Minimize2 className="w-4 h-4" />
               </Button>
@@ -169,7 +198,7 @@ export function AudioPlayer() {
                     style={{
                       height: `${height}%`,
                       animationDelay: `${i * 0.1}s`,
-                      opacity: i < (currentTime / duration) * 50 ? 1 : 0.3,
+                      opacity: duration > 0 && i < (currentTime / duration) * 50 ? 1 : 0.3,
                     }}
                   />
                 ))}
@@ -187,7 +216,7 @@ export function AudioPlayer() {
               <Button
                 variant="ghost"
                 className="text-cyan-400 hover:text-white hover:bg-cyan-500/20"
-                onClick={() => seek(Math.max(0, currentTime - 15))}
+                onClick={() => seek(currentTime - 15)}
               >
                 <SkipBack className="w-6 h-6" />
                 <span className="ml-2 font-mono text-sm">-15s</span>
@@ -197,7 +226,7 @@ export function AudioPlayer() {
                 size="lg"
                 className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500 w-16 h-16 rounded-full shadow-lg shadow-red-500/25"
                 onClick={togglePlayPause}
-                disabled={isLoading}
+                aria-label={isPlaying ? "Pausar" : "Reproduzir"}
               >
                 {isLoading ? (
                   <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -211,7 +240,7 @@ export function AudioPlayer() {
               <Button
                 variant="ghost"
                 className="text-cyan-400 hover:text-white hover:bg-cyan-500/20"
-                onClick={() => seek(Math.min(duration, currentTime + 15))}
+                onClick={() => seek(currentTime + 15)}
               >
                 <span className="mr-2 font-mono text-sm">+15s</span>
                 <SkipForward className="w-6 h-6" />
@@ -239,7 +268,13 @@ export function AudioPlayer() {
 
             {/* Volume Control */}
             <div className="flex items-center justify-center gap-4">
-              <Button size="sm" variant="ghost" className="text-gray-400 hover:text-white" onClick={toggleMute}>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-gray-400 hover:text-white"
+                onClick={toggleMute}
+                aria-label={isMuted ? "Ativar som" : "Silenciar"}
+              >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
 
@@ -295,6 +330,7 @@ export function AudioPlayer() {
           </div>
         )}
       </div>
-    </div>
+    </section>
+    </>
   )
 }
