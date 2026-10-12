@@ -1,6 +1,6 @@
 ---
 name: code-simplifier
-description: Review CyberJust TypeScript/React code for idiomatic simplification. Detects over-engineering, unnecessary state, verbose patterns. Applies TS/React idioms without changing behavior.
+description: Review CyberJust TypeScript/Astro code for idiomatic simplification. Detects over-engineering, unnecessary JS, verbose patterns. Applies TS (strictest) and Astro idioms without changing behavior.
 triggers:
   - "simplify"
   - "too verbose"
@@ -13,105 +13,113 @@ allowed-tools:
   - Glob
   - Edit
 effort: low
-tags: [typescript, react, nextjs, simplify, refactor, idioms]
+tags: [typescript, astro, simplify, refactor, idioms]
 ---
 
 # CyberJust Code Simplifier
 
-Review and simplify TypeScript/React code in this repo (Next.js 16 App Router, TailwindCSS, shadcn/ui components) while respecting the project's constraints.
+Review and simplify the TypeScript and `.astro` code in this repo (Astro 7 static site, TypeScript 6 with `astro/tsconfigs/strictest`, plain CSS layers, one custom element for the player) while respecting the project's constraints.
 
 ## Constraints (never simplify away)
 
-- Client/server component boundaries — never merge a `"use client"` component into a server component just to cut a file
-- Error boundaries and loading states required by the App Router file conventions (`error.tsx`, `loading.tsx`)
-- Type narrowing on external/API data — don't replace explicit guards with `as` casts
-- Accessibility attributes (`aria-*`, semantic HTML) — never strip these for brevity
-- Existing `types/` contracts shared across components — don't inline a shared type just to shorten one file
+- Nothing inline in generated HTML: no `style=""`, no `<style>`, no inline `<script>` except `application/ld+json`. Style changes from JS go through `el.style.setProperty(...)`. The CSP has no `'unsafe-inline'`.
+- Document-level event delegation and the idempotent `connectedCallback` guard in `src/scripts/player.ts` (`if (this.#iniciado) return;`). Don't "simplify" into per-element or per-page listeners: with `<ClientRouter />` they would pile up.
+- The single shared `<audio>` and the play call made directly inside the click handler (iOS needs the user gesture).
+- `try/catch` around `localStorage` (`guardar` in `player.ts`) and around `navigator.mediaSession.setActionHandler`/`setPositionState`: they throw in some browsers.
+- Bracket access on `dataset` (`d['id']`): required by `noPropertyAccessFromIndexSignature` in the strictest tsconfig. Non-null `!` after an index access is there because of `noUncheckedIndexedAccess`; only remove it if the value is narrowed another way.
+- Accessibility attributes (`aria-*`, `aria-live`, `aria-valuetext`, semantic HTML, visible text alongside colors in `Selo.astro`) — never strip these for brevity.
+- The zod schema in `src/content.config.ts` — don't loosen validation to shorten it.
 
 ## Simplification Patterns
 
-### 1. Derive state instead of syncing it
+### 1. Derive in the component frontmatter instead of in client JS
 
-```tsx
-// ❌ Verbose — redundant state + effect to keep it in sync
-const [filtered, setFiltered] = useState<Episode[]>([]);
-useEffect(() => {
-  setFiltered(episodes.filter((e) => e.category === category));
-}, [episodes, category]);
+```astro
+---
+// ❌ Ships JS to compute something known at build time
+---
+<span data-segundos={audio.segundos} class="dur"></span>
+<script>/* format every .dur on load */</script>
 
-// ✅ Simple — derive during render
-const filtered = useMemo(
-  () => episodes.filter((e) => e.category === category),
-  [episodes, category]
-);
+---
+// ✅ Computed at build time, zero JS
+import { formatarTempo } from '../lib/tempo';
+---
+<span class="dur">{formatarTempo(audio.segundos)}</span>
 ```
 
 ### 2. Early returns over nested conditionals
 
-```tsx
+```ts
 // ❌ Verbose
-function Badge({ status }: { status: string }) {
-  if (status) {
-    if (status === "active") {
-      return <span className="text-green-500">Active</span>;
-    } else {
-      return <span className="text-gray-500">Inactive</span>;
-    }
+function formatarData(data: string): string {
+  const [a, m, d] = data.split('-');
+  if (m && d) {
+    return `${Number(d)} ${MESES[Number(m) - 1]} ${a}`;
+  } else {
+    return a ?? data;
   }
-  return null;
 }
 
-// ✅ Simple
-function Badge({ status }: { status?: string }) {
-  if (!status) return null;
-  return status === "active"
-    ? <span className="text-green-500">Active</span>
-    : <span className="text-gray-500">Inactive</span>;
+// ✅ Simple (as in src/lib/tempo.ts)
+function formatarData(data: string): string {
+  const [a, m, d] = data.split('-');
+  if (!m || !d) return a ?? data;
+  return `${Number(d)} ${MESES[Number(m) - 1]} ${a}`;
 }
 ```
 
 ### 3. Optional chaining / nullish coalescing over manual guards
 
-```tsx
+```ts
 // ❌ Verbose
-const name = user && user.profile && user.profile.name ? user.profile.name : "Unknown";
+const texto = botao.querySelector('[data-texto]') ? botao.querySelector('[data-texto]')!.textContent : 'Ouvir';
 
 // ✅ Simple
-const name = user?.profile?.name ?? "Unknown";
+const texto = botao.querySelector('[data-texto]')?.textContent ?? 'Ouvir';
 ```
 
-### 4. Array methods over manual loops
+### 4. Array methods over manual loops (and `.at(-1)`, `??=`)
 
-```tsx
+```ts
 // ❌ Verbose
-const ids: string[] = [];
-for (let i = 0; i < episodes.length; i++) {
-  if (episodes[i].published) {
-    ids.push(episodes[i].id);
-  }
+const comAudio: Episodio[] = [];
+for (let i = 0; i < episodios.length; i++) {
+  if (episodios[i]!.data.audio) comAudio.push(episodios[i]!);
 }
 
 // ✅ Simple
-const ids = episodes.filter((e) => e.published).map((e) => e.id);
+const comAudio = episodios.filter((e) => e.data.audio);
 ```
+
+### 5. CSS or HTML instead of JS
+
+A toggle, filter or responsive tweak that can be done with `<details>`, radio + `:has()`, `[hidden]`, a `data-*` attribute selector or a container query should not be a script. Removing JS is the best simplification this repo can get.
+
+### 6. Shared pure logic goes to `src/lib/`
+
+If a page and `player.ts` compute the same thing (time formatting, labels, URLs), use the helper in `src/lib/tempo.ts` or `src/lib/episodios.ts` instead of duplicating it, and add a case to `src/lib/tempo.test.ts` when it's new pure logic.
 
 ## When to Use
 
 - Manual invocation before opening a PR
 - After a feature is functionally done but reads verbose
-- When a component has grown unnecessary local state or duplicated logic
+- When a script grew listeners, state or DOM queries that the markup could express
 
 ## Detection Commands
 
 ```bash
-# useEffect that just mirrors props/state into local state (often removable)
-rg "useEffect\(\(\) => \{\s*set[A-Z]" --type ts --type tsx -A 2
-
 # Manual for-loops that could be array methods
-rg "for \(let i = 0" --type ts --type tsx
+rg -n "for \(let i = 0" src/
 
-# any casts hiding a real type issue
-rg "as any" --type ts --type tsx
+# Casts hiding a real type issue
+rg -n "as any|as unknown as" src/
+
+# Inline styles/scripts (forbidden by the CSP)
+rg -n 'style="|<style|is:inline' src/
+
+# Type check after simplifying (part of pnpm build)
+pnpm check
 ```
 
-Do not change behavior while simplifying — if a simplification changes what the component renders or how data flows, stop and flag it instead of applying it silently.
+Do not change behavior while simplifying — if a simplification changes the rendered HTML, the player's behavior or what the e2e suite asserts, stop and flag it instead of applying it silently.

@@ -1,84 +1,87 @@
 ---
-description: Build, type-check & push workflow for CyberJust - pre-release checklist for the Next.js/Vercel deploy
+description: Test, build, e2e & push workflow for CyberJust - pre-release checklist for the Astro static site deployed by Coolify (Docker + nginx)
 allowed-tools: Read Bash Grep Glob
 ---
 
 # Ship
 
-Release checklist for this repo: Next.js 16 app, deployed to Vercel from `main` at [cyberjus.org](https://cyberjus.org). CI (`.github/workflows/ci.yml`) runs `pnpm lint` + `pnpm type-check` + `pnpm test` + `pnpm build` on every PR and push to `main` — this skill mirrors those checks locally before you push, plus a few things CI doesn't cover.
+Release checklist for this repo: Astro 7 static site, built into a Docker image (`nginx-unprivileged`, port 8080) and deployed by Coolify (app `cyberjust-web`, VM 520) from `main`, behind Cloudflare Tunnel at [www.cyberjus.org](https://www.cyberjus.org). CI has two workflows on every PR and push to `main`: `ci.yml` (required check `build`: `pnpm test` + `pnpm build`, where build = `astro check` + `astro build`) and `e2e.yml` (builds the production image and runs Playwright in chromium/webkit/iphone/ipad/android). This skill mirrors those checks locally before you push, plus what CI can't see.
+
+There are no `lint` or `type-check` scripts: type checking is `astro check`, which runs inside `pnpm build` (or alone via `pnpm check`).
 
 ## When to Use
 
 - Manual invocation before merging a feature branch into `main`
-- Before triggering a Vercel deploy
+- Before publishing a new episode
 - Before bumping `package.json` version
 
 ## Pre-Ship Checklist
 
-### 1. Lint passes
-
-```bash
-pnpm lint
-```
-
-CI only fails on errors, not warnings — a few `react-hooks` warnings are expected (see CLAUDE.md). Check that your change didn't introduce a *new* one, not just that the count is nonzero.
-
-### 2. Type-check passes
-
-```bash
-pnpm type-check
-```
-
-### 3. Tests pass
+### 1. Unit tests pass
 
 ```bash
 pnpm test
 ```
 
-Coverage is still sparse (see `lib/utils.test.ts` and `app/actions/auth.test.ts` for the pattern) — this doesn't replace manually verifying the feature, but any test that does exist must pass.
+Vitest runs `src/**/*.test.ts` (today `src/lib/tempo.test.ts`). New pure logic in `src/lib/` should come with cases there.
 
-### 4. Production build succeeds
+### 2. Type check + production build
 
 ```bash
 pnpm build
 ```
 
-Read the output route table — flag any route with an unexpectedly large "First Load JS" vs. the last build (see the `performance` skill for the deeper check). Also flag a route that flipped from `○` (static) to `ƒ` (dynamic) unexpectedly — a nonce-based CSP or a new per-request read (cookies/headers) in a previously-static page is a common cause.
+Fails on type errors (TypeScript 6, `astro/tsconfigs/strictest`) and on content schema errors in `src/content/episodios/*.md`. Glance at `dist/_astro/*.js` sizes: the site ships ~26 KB of JS in total (see the `performance` skill).
 
-### 5. No stray debug code
+### 3. E2E against the production image
 
 ```bash
-rg "console\.log|debugger;" app/ components/ lib/ hooks/ services/
+docker build -t cyberjust .
+docker run --rm -d --name cyberjust-e2e -p 127.0.0.1:18080:8080 cyberjust
+BASE_URL=http://127.0.0.1:18080 pnpm test:e2e
+docker stop cyberjust-e2e
 ```
 
-### 6. Uncommitted/untracked check
+Always against the image, never `pnpm dev`: the suite checks the real nginx headers, CSP violations on every page, 301 redirects, audio Range/`ftyp`-`moov` order, no-JS behavior and the persistent player. CI runs it inside `mcr.microsoft.com/playwright:v1.63.0-noble`; locally the browsers must match `@playwright/test` 1.63.0.
+
+### 4. No stray debug code
+
+```bash
+rg -n "console\.log|debugger;" src/ e2e/
+```
+
+### 5. Uncommitted/untracked check
 
 ```bash
 git status
 ```
 
-Confirm nothing unintended is about to be committed (stray `node_modules`, `.env`, build artifacts — all should already be gitignored, but verify).
+Confirm nothing unintended is about to be committed (`node_modules`, `dist`, `.astro`, `test-results`, `playwright-report`, `.env*` are gitignored, but verify).
 
-### 7. Env vars
+### 6. CSP / headers
 
-If the change added a new `process.env.X` read, confirm:
-- It's documented somewhere (README, `.env.example`, or CLAUDE.md's Security posture) so whoever configures Vercel knows to set it
-- It is **not** prefixed `NEXT_PUBLIC_` unless it's genuinely safe to ship to the browser
-- If it's new and required (like `DASHBOARD_PASSWORD`/`DASHBOARD_SESSION_SECRET`), it needs setting in **every** Vercel environment that should work (Production and Preview, at minimum) — and any env var change needs a **redeploy** to take effect; saving it in the dashboard alone does nothing for the already-running deployment
+If the change adds an external resource, an inline style/script, or a new nginx `location`, it will break the CSP or drop headers. See the `security-guardian` skill, section 2. The e2e suite catches CSP violations only on the pages listed in `e2e/ajuda.ts` (`PAGINAS`); add new pages there.
 
-### 8. New external resource → CSP check
+### 7. Episodes, audio and URLs
 
-If the change adds a new image host, font CDN, analytics/embed script, or audio/video source, it needs an explicit entry in the CSP (`next.config.mjs` `headers()`) or it will silently fail in the browser — a CSP violation, not a network error you'd catch by checking a status code. See the `security-guardian` skill, section 3b.
+- New audio: AAC in MP4 with `-movflags +faststart`, **new file name** in `public/audio/` (immutable cache), `audio.segundos`/`audio.bytes` from `ffprobe` and `ls -l` (README "Publicar um episódio").
+- Changed or removed URL: add a 301 in `docker/nginx.conf` and a case in `e2e/servidor.spec.ts`.
+- New preview art: new file name (`og-v2.jpg`) and update `Base.astro`.
 
 ## Release Steps
 
 1. Run the checklist above
 2. Commit with a message following this repo's existing style (`fix:`, `feat:` prefixes — see `git log --oneline`)
 3. Push the branch and open a PR (`gh pr create`) rather than pushing directly to `main`, unless the user has said otherwise for this change
-4. Wait for CI (`lint` + `type-check` + `test` + `build`) to go green on the PR before merging
-5. After merge, Vercel auto-deploys from `main` — confirm the deploy succeeds and actually check the live site (`cyberjus.org`), don't assume from a green CI check alone. Vercel's Git integration can silently break (point at a stale/renamed repo) without any error surfaced in this repo's CI — if a merged PR's fix doesn't appear live, check Vercel → Settings → Git before re-debugging the code.
+4. Wait for `CI` (`build`) and `E2E` to go green on the PR before merging
+5. After merge, Coolify builds the `Dockerfile` from `main` and deploys `cyberjust-web` (healthcheck: `wget` on `/robots.txt` inside the container). Confirm the deploy finished in Coolify and check the live site — green CI is not a deploy:
+
+```bash
+curl -sI https://www.cyberjus.org/ | grep -iE "^HTTP|content-security-policy"
+curl -sI https://cyberjus.org/ | grep -iE "^HTTP|location"   # 301 to www
+```
 
 ## What This Skill Does Not Do
 
-- Test coverage is real but still sparse (`pnpm test` — see `lib/utils.test.ts`, `app/actions/auth.test.ts`). Passing tests narrows risk, it doesn't replace manually exercising a UI change in the browser.
-- This checklist doesn't catch CSP-blocked resources, stale Vercel env vars, or a disconnected Git integration — those need the specific checks called out above (items 7-8) and a live-site spot check after deploy, not just green CI.
+- Unit coverage is limited to pure helpers; the e2e suite is the main safety net. Passing it narrows risk, it doesn't replace opening the changed pages on a phone.
+- It doesn't check Cloudflare caching: HTML is `no-cache`, but a reused file name for audio or the OG image will stay stale at the edge and in social previews.

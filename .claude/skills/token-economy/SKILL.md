@@ -10,19 +10,19 @@ allowed-tools:
 
 # Token Economy
 
-CyberJust sessions tend to involve large diffs (many components, a few big context files) and verbose CLI output (`pnpm build`, `git status`, `gh` commands). Default to the cheapest command/tool that answers the actual question.
+CyberJust sessions tend to involve a few large files (`src/scripts/player.ts`, `src/styles/global.css`, `src/pages/index.astro`) and verbose CLI output (`pnpm build`, `pnpm test:e2e` across 5 browser projects, `docker build`, `gh` commands). Default to the cheapest command/tool that answers the actual question.
 
 ## Reading code
 
 - **Grep before Read.** If you need to know whether/where something exists (an import, a function definition, a pattern), `Grep` for it — don't `Read` the whole file to eyeball it.
-- **Read with `offset`/`limit`** when you already know roughly where the relevant section is (e.g., from a prior grep's line number), instead of reading a 400+ line file top to bottom. Files like `components/dashboard/ProjectModal.tsx`, `app/episodes/[id]/page.tsx`, and `components/audio/AudioPlayer.tsx` are large — never read them in full just to check one function.
+- **Read with `offset`/`limit`** when you already know roughly where the relevant section is (e.g., from a prior grep's line number), instead of reading a 400+ line file top to bottom. Files like `src/scripts/player.ts` (~440 lines) and `src/styles/global.css` (~435 lines) are large — never read them in full just to check one function or rule.
 - **Don't re-read a file you just edited.** `Edit`/`Write` fail loudly if the change didn't apply — the harness already tracks the resulting state. Re-reading to "confirm" wastes a full file's worth of tokens for no new information.
-- **Don't re-run a command whose result you already have.** If `pnpm type-check` just passed and you haven't touched any `.ts`/`.tsx` file since, it will still pass — don't run it again as a ritual before every commit.
+- **Don't re-run a command whose result you already have.** If `pnpm check` just passed and you haven't touched any `.ts`/`.astro` file since, it will still pass — don't run it again as a ritual before every commit.
 
 ## Running commands
 
 - **Batch git status/diff checks.** One `git status --short` at the start of a work session is enough context for several edits — don't call it after every single file change.
-- **`pnpm type-check` is cheap, `pnpm build` is not.** Use `type-check` as the fast feedback loop while iterating; reserve a full `pnpm build` for the final check before committing/pushing, not after every change.
+- **`pnpm test` and `pnpm check` are cheap; `pnpm build`, `docker build` and the e2e suite are not.** Use `pnpm check` (astro check) and `pnpm test` as the fast loop while iterating; reserve `pnpm build` and the Docker image + `pnpm test:e2e` for the final check before pushing. To iterate on one e2e case, filter it (`BASE_URL=http://127.0.0.1:18080 pnpm test:e2e --project=chromium -g "<name>"`) instead of rerunning all browsers.
 - **Prefer `gh api` with `--jq`/`-q` over piping full JSON through `cat`/`head`** when you only need a couple of fields (issue state, PR mergeability, etc.) — the filtered response is a fraction of the size.
 - **Cap `gh issue list`/`gh pr list` output** with `--json` + specific fields instead of the full default table when scripting against it.
 

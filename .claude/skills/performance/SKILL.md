@@ -1,85 +1,84 @@
 ---
-description: Next.js performance optimization for CyberJust - Core Web Vitals, bundle size, image/audio loading, hydration cost.
+description: Static-site performance for CyberJust (Astro) - Core Web Vitals, JS budget (~26 KB, no hydration), font preload, audio streaming by HTTP Range, images and caching.
 ---
 
 # Performance Optimization Skill
 
-Systematic performance analysis for this Next.js 16 app, focusing on **Core Web Vitals** (LCP, INP, CLS), **JS bundle size**, and **hydration cost** — the README advertises "Loading times < 1s", treat that as the target.
+Performance analysis for this Astro 7 static site served by nginx. The site ships about **26 KB of JavaScript in total** (README), has **no hydration** and no UI framework, and every page works without JS. Treat any change that grows the JS, adds a third-party request, or blocks first paint as a regression to justify.
 
 ## When to Use
 
-- **Manual invocation**: When a page feels slow, before a release, after adding a heavy dependency
-- **Proactive**: After adding client components, new npm packages, images, or the audio player features
-- **Automatically relevant**: Any change touching `app/`, `components/`, or `public/`
+- **Manual invocation**: When a page feels slow, before a release, after adding a dependency
+- **Proactive**: After adding a script in `src/scripts/`, a font, an image, an audio file, or a new nginx `location`
+- **Automatically relevant**: Any change touching `src/scripts/`, `src/layouts/Base.astro`, `src/styles/global.css`, `public/`, `docker/nginx.conf` or `astro.config.mjs`
 
 ## Performance Targets
 
 | Metric | Target | How to check |
 |--------|--------|---------------|
-| **LCP** (Largest Contentful Paint) | < 2.5s | Lighthouse / Chrome DevTools Performance panel |
-| **INP** (Interaction to Next Paint) | < 200ms | Lighthouse |
-| **CLS** (Cumulative Layout Shift) | < 0.1 | Lighthouse |
-| **JS bundle (First Load)** | keep growth flagged | `pnpm build` output per-route table |
-| **Images** | served via `next/image` | no raw `<img>` for content images |
+| **LCP** | < 2.5s | Lighthouse / DevTools Performance panel against the Docker image |
+| **INP** | < 200ms | Lighthouse |
+| **CLS** | < 0.1 | Lighthouse; the font preload in `Base.astro` exists to avoid a font-swap layout shift |
+| **Total JS** | ~26 KB, flag any growth | size of `dist/_astro/*.js` after `pnpm build` |
+| **Third-party requests** | zero | Network tab: everything from the same origin |
+| **No-JS** | pages and episode filter work | `e2e/site.spec.ts` ("com JavaScript desligado", "filtro ... sem JavaScript") |
 
 ## Analysis Workflow
 
 ### 1. Build output audit
 
 ```bash
-pnpm build
-# Read the route table: flag any route whose "First Load JS" jumped
-# noticeably vs. the previous build after your change.
+pnpm build                       # astro check + astro build into dist/
+ls -l dist/_astro/*.js dist/_astro/*.css
 ```
 
-### 2. Client/server boundary check
+Compare the JS/CSS sizes against the previous build. New JS must come from a module in `src/scripts/` imported via a component `<script>`; there are no `client:*` islands.
 
-Every `"use client"` component ships its JS to the browser. Before adding one, ask: does this need `useState`/`useEffect`/browser APIs, or can it stay a server component?
+### 2. JS budget: prefer HTML/CSS
 
-```bash
-rg -l '"use client"' components/ app/
+Before writing JS, check whether HTML or CSS already solves it (as with `<details>` for the menu, radio + `:has()` for the filter, container queries for the player layout, `animation-timeline: view()` for reveal effects gated by `prefers-reduced-motion`). Do not add a framework or a runtime dependency for UI; `package.json` dependencies today are Astro, the sitemap integration, Fontsource fonts and `sharp`.
+
+### 3. Fonts
+
+Fonts are self-hosted via `@fontsource-variable/*` (imported in `global.css`). `Base.astro` preloads the two main woff2 files using `?url` imports so the preload URL matches the hashed URL the CSS uses:
+
+```astro
+import fontDisplay from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
+<link rel="preload" href={fontDisplay} as="font" type="font/woff2" crossorigin />
 ```
 
-### 3. Heavy dependency check
+Adding a font or weight means more bytes; only preload what is used above the fold.
 
-This repo carries the Radix UI primitives actually used by `components/ui/` — a `components/ui/*.tsx` file that no other file imports is dead weight (never bundled, since Next only bundles what's imported, but still a maintenance/audit-surface cost and a red flag that its backing npm package is unused too). Before adding a chart/carousel/animation library, check whether one is already a dependency for something else and whether the file that used to justify it is still imported anywhere:
+### 4. Audio
 
-```bash
-# Is this ui/ component (and its backing package) actually imported anywhere?
-grep -rl "@/components/ui/<name>\"" app components contexts hooks lib services
-```
+- Files are AAC in MP4 with `moov` at the start (`ffmpeg ... -movflags +faststart`) in `public/audio/`. nginx serves `/audio/` with native Range (206), `Content-Type: audio/mp4` and `Cache-Control: public, max-age=31536000, immutable`. The browser starts with a few KB and seeks by Range.
+- `<audio preload="none">` in `Player.astro`: nothing is downloaded until the user taps play; `player.ts` then sets `preload = 'auto'` and `src`.
+- Dragging the seek bar only updates the time label; the seek happens on `change` to avoid dozens of Range requests. `timeupdate` redraws are throttled with `requestAnimationFrame`.
+- A published file is never overwritten (immutable cache): new or re-encoded audio = new file name.
+- `e2e/servidor.spec.ts` checks 206, content type, immutable cache and the `ftyp`/`moov` order. Keep it passing for any new file.
 
-### 4. Images and audio
+### 5. Images and caching
 
-- Use `next/image` for any content image (automatic sizing, lazy loading, format negotiation) — never a raw `<img>` for episode art, avatars, or backgrounds. Note `next.config.mjs` sets `images.unoptimized: true` (deliberately — `expert.avatar` is a free-text URL, incompatible with Next's `remotePatterns` allowlist), so `next/image` here still gets lazy-loading/sizing but not format conversion.
-- Episode audio is committed under `media/audio/*.m4a` and served through jsDelivr's GitHub CDN (`cdn.jsdelivr.net/gh/Samurai33/CyberJust@main/media/audio/...`), not through Next.js/Vercel — keeps large binaries out of the deployed function/build output while still getting free, unmetered bandwidth and a correct `Content-Type: audio/mp4`. Don't move this to GitHub Release assets (forces `Content-Type: application/octet-stream` + `Content-Disposition: attachment`, which browsers refuse to play inline) or Git LFS (10GB/month free bandwidth cap real traffic would exceed). `contexts/AudioContext.tsx` fetches the bytes and feeds them through MediaSource Extensions rather than a plain `audio.src = url` (the files are fragmented MP4/AAC-LC, which some browsers' progressive-src demuxer rejects despite `MediaSource.isTypeSupported` returning true for the same codec) — falls back to a plain `src` assignment only on browsers without MSE support. `AudioPlayer.tsx` (`components/audio/`) is mounted once in `app/layout.tsx` so it's global across routes; it lazily creates a `new Audio()` and doesn't fetch anything until `playEpisode()` is called. If you add a new audio host, it also needs `media-src` (and `connect-src` for the fetch) entries in the CSP (`next.config.mjs`) or playback silently fails with a CSP violation, not a network error. Known bug as of 2026-07-22: `components/sections/EpisodesSection.tsx` merges `DashboardContext` `localStorage` project data over static episode data, and a stale pre-migration entry there can reintroduce a broken `audioUrl` — see CLAUDE.md "Known issues".
-
-### 5. Memoization — only where it earns its cost
-
-```tsx
-// ❌ Premature: memoizing a cheap computation adds overhead for nothing
-const label = useMemo(() => `${count} items`, [count]);
-
-// ✅ Justified: expensive filter/sort over a large array, or a value passed
-// to a memoized child that would otherwise re-render every parent render
-const sorted = useMemo(() => episodes.toSorted(byDate), [episodes]);
-```
+- There are no content images in `src/` today; the link preview (`public/og-v1.jpg`) and icons are generated by `sh design/gerar-imagens.sh` and served with a 1-day cache. Changing the art means a new file name (`og-v2.jpg`) and updating `Base.astro`, because Cloudflare and social networks cache it.
+- Hashed assets in `/_astro/` get `max-age=31536000, immutable`; HTML gets `no-cache`. gzip is enabled in `docker/nginx.conf` for text types.
+- `vite.build.assetsInlineLimit: 0` means no `data:` inlining (CSP). Small assets still cost one request; keep their count low.
+- Navigation uses `<ClientRouter />` with hover prefetch (`prefetch.defaultStrategy: 'hover'`), not prefetch-all.
 
 ## Detection Commands
 
 ```bash
-# Raw <img> instead of next/image
-rg "<img " app/ components/
+# Hydration islands (should be none)
+rg -n 'client:(load|idle|visible|only|media)' src/
 
-# Large client components (candidates to split or demote)
-rg -l '"use client"' components/ app/ | xargs wc -l | sort -rn | head -10
+# Third-party URLs in markup/styles/scripts (should be none besides links)
+rg -n 'https?://' src/scripts src/styles src/layouts
 
-# useEffect with no dependency array (runs every render)
-rg "useEffect\(\(\) => \{[^}]*\}\)" --type tsx
+# Audio files: confirm faststart (moov before mdat)
+ffprobe -v trace public/audio/<file>.m4a 2>&1 | grep -m2 -E "type:'(moov|mdat)'"
 ```
 
 ## Regression Check Before Shipping
 
-1. `pnpm build` — compare First Load JS per route against the last known-good build
-2. Manually check the page(s) you touched in dev tools' Network tab (throttled to Fast 3G) for anything blocking first paint
-3. If you added a client component, confirm it doesn't force everything above it in the tree to also become client-rendered
+1. `pnpm build` and compare `dist/_astro/` JS/CSS sizes with the last known-good build
+2. Run the Docker image and `BASE_URL=http://127.0.0.1:18080 pnpm test:e2e` (Range, no-JS and CSP checks)
+3. Check the touched pages in DevTools (throttled network) against the image, not `pnpm dev`, so nginx caching/gzip are real
