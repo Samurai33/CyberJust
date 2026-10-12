@@ -1,18 +1,14 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AudioProvider } from "@/contexts/AudioContext"
-import { UIProvider } from "@/contexts/UIContext"
-import { BookmarkProvider } from "@/contexts/BookmarkContext"
-import { RatingProvider } from "@/contexts/RatingContext"
-import { DashboardProvider } from "@/contexts/DashboardContext"
-import { ExpertsProvider } from "@/contexts/ExpertsContext"
-import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { AudioPlayer } from "@/components/audio/AudioPlayer"
+import { Navigation } from "@/components/sections/Navigation"
+import { Footer } from "@/components/sections/Footer"
 import { SITE_URL } from "@/lib/constants"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"], display: "swap" })
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -30,7 +26,10 @@ const jsonLd = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
+  title: {
+    default: "CyberJustiça Brasil - Investigação de Crimes Cibernéticos",
+    template: "%s",
+  },
   description:
     "Plataforma dedicada à investigação e combate aos crimes cibernéticos no Brasil. Episódios, análises e recursos para proteção digital.",
   keywords: [
@@ -45,7 +44,8 @@ export const metadata: Metadata = {
   authors: [{ name: "CyberJustiça Brasil" }],
   creator: "CyberJustiça Brasil",
   publisher: "CyberJustiça Brasil",
-  robots: "index, follow",
+  robots: { index: true, follow: true },
+  alternates: { canonical: SITE_URL },
   openGraph: {
     type: "website",
     locale: "pt_BR",
@@ -63,6 +63,11 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  colorScheme: "dark",
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -70,25 +75,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen bg-black text-white antialiased`}>
+        <a
+          href="#conteudo"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-cyan-500 focus:text-black focus:px-4 focus:py-2 focus:rounded"
+        >
+          Pular para o conteúdo
+        </a>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <ErrorBoundary>
-          <ExpertsProvider>
-            <DashboardProvider>
-              <AudioProvider>
-                <UIProvider>
-                  <BookmarkProvider>
-                    <RatingProvider>{children}</RatingProvider>
-                  </BookmarkProvider>
-                </UIProvider>
-                <AudioPlayer />
-              </AudioProvider>
-            </DashboardProvider>
-          </ExpertsProvider>
-        </ErrorBoundary>
+        <AudioProvider>
+          <Navigation />
+          <main id="conteudo">{children}</main>
+          <Footer />
+          <AudioPlayer />
+        </AudioProvider>
       </body>
     </html>
   )

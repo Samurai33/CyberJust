@@ -20,45 +20,8 @@ export function getSeverityColor(severity: SeverityLevel): string {
 }
 
 export function formatTime(time: number): string {
+  if (!Number.isFinite(time) || time < 0) return "0:00"
   const minutes = Math.floor(time / 60)
   const seconds = Math.floor(time % 60)
   return `${minutes}:${seconds.toString().padStart(2, "0")}`
-}
-
-export function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("pt-BR")
-}
-
-export function generateId(prefix = ""): string {
-  return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-}
-
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
-}
-
-export function throttle<T extends (...args: any[]) => any>(func: T, limit: number): (...args: Parameters<T>) => void {
-  let inThrottle: boolean
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args)
-      inThrottle = true
-      setTimeout(() => (inThrottle = false), limit)
-    }
-  }
-}
-
-export function sanitizeHtml(html: string): string {
-  const div = document.createElement("div")
-  div.textContent = html
-  return div.innerHTML
-}
-
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text
-  return text.slice(0, maxLength).trim() + "..."
 }

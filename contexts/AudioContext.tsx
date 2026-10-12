@@ -15,7 +15,6 @@ type AudioAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_PLAYER_EXPANDED"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
-  | { type: "ADD_TO_HISTORY"; payload: Episode }
   | { type: "RESET_PLAYER" }
 
 const initialState: AudioState = {
@@ -28,7 +27,6 @@ const initialState: AudioState = {
   isLoading: false,
   isPlayerExpanded: false,
   error: null,
-  playbackHistory: [],
 }
 
 export function audioReducer(state: AudioState, action: AudioAction): AudioState {
@@ -41,6 +39,7 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         currentTime: 0,
         duration: 0,
         isPlaying: false,
+        isLoading: true,
       }
     case "SET_PLAYING":
       return { ...state, isPlaying: action.payload }
@@ -57,37 +56,20 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
     case "SET_PLAYER_EXPANDED":
       return { ...state, isPlayerExpanded: action.payload }
     case "SET_ERROR":
-      // Only a real error (non-null payload) should interrupt loading/playback.
-      // playEpisode() dispatches SET_ERROR(null) right after SET_LOADING(true)
-      // purely to clear a stale error from a previous episode - forcing
-      // isLoading/isPlaying false unconditionally here clobbered that same
-      // isLoading:true in the same batched update, so the loading state never
-      // had a chance to render before the plain-src/MSE load actually finished.
       return action.payload
         ? { ...state, error: action.payload, isLoading: false, isPlaying: false }
         : { ...state, error: null }
-    case "ADD_TO_HISTORY":
-      const newHistory = state.playbackHistory.filter((ep) => ep.id !== action.payload.id)
-      return {
-        ...state,
-        playbackHistory: [action.payload, ...newHistory].slice(0, 10),
-      }
     case "RESET_PLAYER":
-      return { ...initialState, volume: state.volume, playbackHistory: state.playbackHistory }
+      return { ...initialState, volume: state.volume, isMuted: state.isMuted }
     default:
       return state
   }
 }
 
 // Split into two contexts so components that only care about play/pause
-// state (the vast majority - play buttons throughout the app) don't
-// re-render on every `timeupdate` tick (several times/sec during playback).
-// Only the actual player bar and the bookmarks tab need live currentTime -
-// everything else only needs currentEpisode/isPlaying/etc., which change
-// far less often. Measured live: this was causing ~1.1-1.2s "poor" INP on
-// unrelated interactions (a tab switch, a star-rating click) while audio
-// played, because every useAudio() consumer on the page re-rendered on
-// every tick before this split.
+// state (play buttons throughout the app) don't re-render on every
+// `timeupdate` tick. Only the player bar and the bookmarks tab need live
+// currentTime.
 interface AudioControlsContextType {
   currentEpisode: Episode | null
   isPlaying: boolean
@@ -96,15 +78,12 @@ interface AudioControlsContextType {
   isLoading: boolean
   isPlayerExpanded: boolean
   error: string | null
-  playbackHistory: Episode[]
   playEpisode: (episode: Episode) => void
   togglePlayPause: () => void
   setVolume: (volume: number) => void
   toggleMute: () => void
   togglePlayerExpanded: () => void
-  clearError: () => void
   stopPlayback: () => void
-  isEpisodePlaying: (episodeId: string | number) => boolean
 }
 
 interface AudioTimeContextType {
@@ -117,284 +96,171 @@ interface AudioTimeContextType {
 const AudioContext = createContext<AudioControlsContextType | undefined>(undefined)
 const AudioTimeContext = createContext<AudioTimeContextType | undefined>(undefined)
 
-// Episode audio is a fragmented MP4 (AAC-LC) - fine for MediaSource Extensions,
-// but not reliably demuxed by every browser via plain `audio.src = url`
-// progressive loading (observed live: MEDIA_ERR_SRC_NOT_SUPPORTED / "Format
-// error" even though the same browser's own MediaSource.isTypeSupported for
-// this exact codec string returns true - it's a demuxer gap, not a missing
-// codec). Feed it through MSE instead; fall back to a plain .src assignment
-// on anything that lacks MediaSource support at all (e.g. very old browsers).
-const AAC_MIME = 'audio/mp4; codecs="mp4a.40.2"'
+const SKIP_SECONDS = 15
 
-function supportsMSEForAudio(): boolean {
-  return typeof window !== "undefined" && "MediaSource" in window && MediaSource.isTypeSupported(AAC_MIME)
-}
-
-async function loadViaMediaSource(audio: HTMLAudioElement, url: string): Promise<void> {
-  const mediaSource = new MediaSource()
-  const objectUrl = URL.createObjectURL(mediaSource)
-  audio.src = objectUrl
-
-  try {
-    await new Promise<void>((resolve, reject) => {
-      mediaSource.addEventListener(
-        "sourceopen",
-        () => {
-          ;(async () => {
-            try {
-              const sourceBuffer = mediaSource.addSourceBuffer(AAC_MIME)
-              const response = await fetch(url)
-              if (!response.ok) throw new Error(`HTTP ${response.status}`)
-              const buffer = await response.arrayBuffer()
-
-              await new Promise<void>((res, rej) => {
-                sourceBuffer.addEventListener("updateend", () => res(), { once: true })
-                sourceBuffer.addEventListener("error", () => rej(new Error("SourceBuffer append failed")), {
-                  once: true,
-                })
-                sourceBuffer.appendBuffer(buffer)
-              })
-
-              if (mediaSource.readyState === "open") mediaSource.endOfStream()
-              resolve()
-            } catch (err) {
-              reject(err instanceof Error ? err : new Error(String(err)))
-            }
-          })()
-        },
-        { once: true },
-      )
-    })
-  } finally {
-    // Revoked once the MediaSource has attached its data - the audio element
-    // keeps playing from its already-buffered SourceBuffer after this.
-    URL.revokeObjectURL(objectUrl)
-  }
-}
-
+/**
+ * Episode audio is plain (non-fragmented) AAC in an MP4 container with the
+ * `moov` atom up front (`ffmpeg -c copy -movflags +faststart`), so a single
+ * `<audio>` element streams it progressively over HTTP Range requests:
+ * playback starts after the first few hundred KB and seeking jumps straight
+ * to the byte offset. One element is reused for the whole session (iOS only
+ * lets an element that was started by a user gesture keep playing).
+ */
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(audioReducer, initialState)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const currentEpisodeIdRef = useRef<string | number | null>(null)
+  const episodeRef = useRef<Episode | null>(null)
 
-  const clearError = useCallback(() => {
-    dispatch({ type: "SET_ERROR", payload: null })
+  const getAudio = useCallback(() => {
+    if (audioRef.current) return audioRef.current
+
+    const audio = new Audio()
+    audio.preload = "metadata"
+    audioRef.current = audio
+
+    audio.addEventListener("loadedmetadata", () => dispatch({ type: "SET_DURATION", payload: audio.duration }))
+    audio.addEventListener("timeupdate", () => dispatch({ type: "SET_CURRENT_TIME", payload: audio.currentTime }))
+    audio.addEventListener("waiting", () => dispatch({ type: "SET_LOADING", payload: true }))
+    audio.addEventListener("canplay", () => dispatch({ type: "SET_LOADING", payload: false }))
+    audio.addEventListener("playing", () => {
+      dispatch({ type: "SET_LOADING", payload: false })
+      dispatch({ type: "SET_PLAYING", payload: true })
+    })
+    audio.addEventListener("pause", () => dispatch({ type: "SET_PLAYING", payload: false }))
+    audio.addEventListener("ended", () => {
+      dispatch({ type: "SET_PLAYING", payload: false })
+      dispatch({ type: "SET_CURRENT_TIME", payload: 0 })
+    })
+    audio.addEventListener("error", () => {
+      // Clearing src (stopPlayback) also fires "error" - ignore it.
+      if (!audio.getAttribute("src") || !episodeRef.current) return
+      dispatch({
+        type: "SET_ERROR",
+        payload: `Não foi possível carregar o áudio do episódio ${episodeRef.current.id}. Verifique sua conexão.`,
+      })
+    })
+
+    return audio
   }, [])
 
-  const stopPlayback = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.src = ""
-      audioRef.current = null
-    }
-    currentEpisodeIdRef.current = null
-    dispatch({ type: "RESET_PLAYER" })
+  const resume = useCallback((audio: HTMLAudioElement) => {
+    audio.play().catch((error: unknown) => {
+      // AbortError = a newer load()/pause() superseded this play() call.
+      if (error instanceof DOMException && error.name === "AbortError") return
+      dispatch({ type: "SET_ERROR", payload: "Não foi possível iniciar a reprodução. Tente novamente." })
+    })
   }, [])
-
-  const isEpisodePlaying = useCallback(
-    (episodeId: string | number) => {
-      return state.currentEpisode?.id === episodeId && state.isPlaying
-    },
-    [state.currentEpisode?.id, state.isPlaying],
-  )
 
   const playEpisode = useCallback(
     (episode: Episode) => {
-      if (currentEpisodeIdRef.current === episode.id && audioRef.current) {
-        if (state.isPlaying) {
-          audioRef.current.pause()
-          dispatch({ type: "SET_PLAYING", payload: false })
-        } else {
-          audioRef.current
-            .play()
-            .then(() => dispatch({ type: "SET_PLAYING", payload: true }))
-            .catch(() => dispatch({ type: "SET_ERROR", payload: "Não foi possível retomar a reprodução." }))
-        }
-        return
-      }
-
       if (!episode.audioUrl) {
         dispatch({ type: "SET_ERROR", payload: `Áudio não disponível para o episódio ${episode.id}.` })
         return
       }
-      const audioUrl = episode.audioUrl
 
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.src = ""
-        audioRef.current = null
+      const audio = getAudio()
+
+      if (episodeRef.current?.id === episode.id) {
+        if (audio.paused) resume(audio)
+        else audio.pause()
+        return
       }
 
+      episodeRef.current = episode
       dispatch({ type: "SET_EPISODE", payload: episode })
-      dispatch({ type: "SET_LOADING", payload: true })
-      dispatch({ type: "SET_ERROR", payload: null })
-      currentEpisodeIdRef.current = episode.id
-
-      try {
-        const audio = new Audio()
-        audioRef.current = audio
-        audio.volume = state.isMuted ? 0 : state.volume
-        audio.preload = "metadata"
-
-        const handleError = () => {
-          if (currentEpisodeIdRef.current !== episode.id) return
-          dispatch({
-            type: "SET_ERROR",
-            payload: `Não foi possível carregar o áudio do episódio ${episode.id}. Verifique sua conexão.`,
-          })
-          currentEpisodeIdRef.current = null
-        }
-
-        const handleLoadStart = () => dispatch({ type: "SET_LOADING", payload: true })
-        const handleCanPlay = () => dispatch({ type: "SET_LOADING", payload: false })
-        const handleLoadedMetadata = () => {
-          dispatch({ type: "SET_DURATION", payload: audio.duration })
-        }
-        const handleTimeUpdate = () => {
-          if (currentEpisodeIdRef.current === episode.id) {
-            dispatch({ type: "SET_CURRENT_TIME", payload: audio.currentTime })
-          }
-        }
-        const handleEnded = () => {
-          if (currentEpisodeIdRef.current === episode.id) {
-            dispatch({ type: "SET_PLAYING", payload: false })
-            dispatch({ type: "SET_CURRENT_TIME", payload: 0 })
-            dispatch({ type: "ADD_TO_HISTORY", payload: episode })
-          }
-        }
-
-        audio.addEventListener("error", handleError)
-        audio.addEventListener("loadstart", handleLoadStart)
-        audio.addEventListener("canplay", handleCanPlay)
-        audio.addEventListener("loadedmetadata", handleLoadedMetadata)
-        audio.addEventListener("timeupdate", handleTimeUpdate)
-        audio.addEventListener("ended", handleEnded)
-
-        const startPlayback = () => {
-          const playPromise = audio.play()
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                if (currentEpisodeIdRef.current === episode.id) {
-                  dispatch({ type: "SET_PLAYING", payload: true })
-                }
-              })
-              .catch((error) => {
-                console.error("Playback failed:", error)
-                if (currentEpisodeIdRef.current === episode.id) {
-                  dispatch({
-                    type: "SET_ERROR",
-                    payload: `Reprodução falhou para o episódio ${episode.id}. Tente novamente mais tarde.`,
-                  })
-                }
-              })
-          }
-        }
-
-        if (supportsMSEForAudio()) {
-          loadViaMediaSource(audio, audioUrl)
-            .then(startPlayback)
-            .catch((err) => {
-              // Some browsers advertise MSE + AAC support but still choke on
-              // this specific fragmented-MP4 layout - fall back to a plain
-              // progressive src assignment rather than erroring outright.
-              console.error("MSE load failed, falling back to direct src:", err)
-              if (currentEpisodeIdRef.current !== episode.id) return
-              audio.src = audioUrl
-              startPlayback()
-            })
-        } else {
-          audio.src = audioUrl
-          startPlayback()
-        }
-
-        setTimeout(() => {
-          if (state.isLoading && currentEpisodeIdRef.current === episode.id) {
-            dispatch({
-              type: "SET_ERROR",
-              payload: `Tempo limite excedido ao carregar o episódio ${episode.id}.`,
-            })
-          }
-        }, 10000)
-      } catch (error) {
-        console.error("Audio creation failed:", error)
-        dispatch({
-          type: "SET_ERROR",
-          payload: `Falha ao inicializar o reprodutor para o episódio ${episode.id}.`,
-        })
-        currentEpisodeIdRef.current = null
-      }
+      audio.src = episode.audioUrl
+      audio.load()
+      resume(audio)
     },
-    [state.volume, state.isMuted, state.isLoading, state.isPlaying],
+    [getAudio, resume],
   )
 
   const togglePlayPause = useCallback(() => {
-    if (!audioRef.current || !state.currentEpisode || currentEpisodeIdRef.current !== state.currentEpisode.id) {
-      return
+    const audio = audioRef.current
+    if (!audio || !episodeRef.current) return
+    if (audio.paused) resume(audio)
+    else audio.pause()
+  }, [resume])
+
+  const seek = useCallback((time: number) => {
+    const audio = audioRef.current
+    if (!audio || !Number.isFinite(time)) return
+    const max = Number.isFinite(audio.duration) ? audio.duration : time
+    audio.currentTime = Math.min(Math.max(0, time), max)
+    dispatch({ type: "SET_CURRENT_TIME", payload: audio.currentTime })
+  }, [])
+
+  const stopPlayback = useCallback(() => {
+    const audio = audioRef.current
+    episodeRef.current = null
+    if (audio) {
+      audio.pause()
+      audio.removeAttribute("src")
+      audio.load()
     }
+    dispatch({ type: "RESET_PLAYER" })
+  }, [])
 
-    if (state.isPlaying) {
-      audioRef.current.pause()
-      dispatch({ type: "SET_PLAYING", payload: false })
-    } else {
-      audioRef.current
-        .play()
-        .then(() => dispatch({ type: "SET_PLAYING", payload: true }))
-        .catch((error) => {
-          console.error("Failed to resume playback:", error)
-          dispatch({
-            type: "SET_ERROR",
-            payload: "Não foi possível retomar a reprodução.",
-          })
-        })
-    }
-  }, [state.isPlaying, state.currentEpisode])
-
-  const seek = useCallback(
-    (newTime: number) => {
-      if (audioRef.current && currentEpisodeIdRef.current === state.currentEpisode?.id) {
-        audioRef.current.currentTime = newTime
-        dispatch({ type: "SET_CURRENT_TIME", payload: newTime })
-      }
-    },
-    [state.currentEpisode?.id],
-  )
-
-  const setVolume = useCallback(
-    (volume: number) => {
-      dispatch({ type: "SET_VOLUME", payload: volume })
-      if (audioRef.current) {
-        audioRef.current.volume = state.isMuted ? 0 : volume
-      }
-    },
-    [state.isMuted],
-  )
+  const setVolume = useCallback((volume: number) => {
+    dispatch({ type: "SET_VOLUME", payload: volume })
+    if (volume > 0) dispatch({ type: "SET_MUTED", payload: false })
+  }, [])
 
   const toggleMute = useCallback(() => {
-    const newMutedState = !state.isMuted
-    dispatch({ type: "SET_MUTED", payload: newMutedState })
-    if (audioRef.current) {
-      audioRef.current.volume = newMutedState ? 0 : state.volume
-    }
-  }, [state.isMuted, state.volume])
+    dispatch({ type: "SET_MUTED", payload: !state.isMuted })
+  }, [state.isMuted])
 
   const togglePlayerExpanded = useCallback(() => {
     dispatch({ type: "SET_PLAYER_EXPANDED", payload: !state.isPlayerExpanded })
   }, [state.isPlayerExpanded])
 
+  // Volume/mute are the single source of truth in state; mirror onto the element.
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.volume = state.volume
+    audio.muted = state.isMuted
+  }, [state.volume, state.isMuted, state.currentEpisode])
+
+  // Lock-screen / headset / notification controls.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return
+    const episode = state.currentEpisode
+    const session = navigator.mediaSession
+    session.metadata = episode
+      ? new MediaMetadata({
+          title: episode.title,
+          artist: "CyberJustiça Brasil",
+          album: `Episódio ${episode.id}`,
+          artwork: [{ src: "/apple-icon", sizes: "180x180", type: "image/png" }],
+        })
+      : null
+    if (!episode) return
+
+    const audio = audioRef.current
+    const handlers: [MediaSessionAction, MediaSessionActionHandler][] = [
+      ["play", () => audio && resume(audio)],
+      ["pause", () => audio?.pause()],
+      ["seekbackward", () => audio && seek(audio.currentTime - SKIP_SECONDS)],
+      ["seekforward", () => audio && seek(audio.currentTime + SKIP_SECONDS)],
+      ["seekto", (details) => details.seekTime !== undefined && seek(details.seekTime)],
+    ]
+    for (const [action, handler] of handlers) {
+      try {
+        session.setActionHandler(action, handler)
+      } catch {
+        // Action not supported by this browser.
+      }
+    }
+  }, [state.currentEpisode, resume, seek])
+
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
-      currentEpisodeIdRef.current = null
+      audioRef.current?.pause()
+      audioRef.current = null
     }
   }, [])
 
-  // Memoized so this reference only changes when one of these specific
-  // fields does - NOT on every currentTime/duration update - so consumers
-  // that only need play/pause state don't re-render on every audio tick.
   const controlsValue = useMemo<AudioControlsContextType>(
     () => ({
       currentEpisode: state.currentEpisode,
@@ -404,15 +270,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       isLoading: state.isLoading,
       isPlayerExpanded: state.isPlayerExpanded,
       error: state.error,
-      playbackHistory: state.playbackHistory,
       playEpisode,
       togglePlayPause,
       setVolume,
       toggleMute,
       togglePlayerExpanded,
-      clearError,
       stopPlayback,
-      isEpisodePlaying,
     }),
     [
       state.currentEpisode,
@@ -422,25 +285,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       state.isLoading,
       state.isPlayerExpanded,
       state.error,
-      state.playbackHistory,
       playEpisode,
       togglePlayPause,
       setVolume,
       toggleMute,
       togglePlayerExpanded,
-      clearError,
       stopPlayback,
-      isEpisodePlaying,
     ],
   )
 
   const timeValue = useMemo<AudioTimeContextType>(
-    () => ({
-      currentTime: state.currentTime,
-      duration: state.duration,
-      seek,
-      formatTime,
-    }),
+    () => ({ currentTime: state.currentTime, duration: state.duration, seek, formatTime }),
     [state.currentTime, state.duration, seek],
   )
 
@@ -459,10 +314,8 @@ export function useAudio() {
   return context
 }
 
-// Live playback position (currentTime/duration) - only for components that
-// actually display or seek the timeline (the player bar, the bookmarks
-// tab). Kept separate from useAudio() so play/pause-only consumers don't
-// re-render on every timeupdate tick.
+// Live playback position - only for components that display or seek the
+// timeline (the player bar, the bookmarks tab).
 export function useAudioTime() {
   const context = useContext(AudioTimeContext)
   if (context === undefined) {

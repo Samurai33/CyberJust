@@ -1,32 +1,64 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useMemo, useSyncExternalStore } from "react"
 
-export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") {
-      return initialValue
-    }
-    try {
-      const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : initialValue
-    } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error)
-      return initialValue
-    }
-  })
+// Same-tab writes don't fire the "storage" event, so notify subscribers here.
+const listeners = new Set<() => void>()
 
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value
-      setStoredValue(valueToStore)
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore))
-      }
-    } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error)
-    }
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  window.addEventListener("storage", listener)
+  return () => {
+    listeners.delete(listener)
+    window.removeEventListener("storage", listener)
   }
+}
 
-  return [storedValue, setValue] as const
+function readRaw(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function parse<T>(raw: string | null, fallback: T): T {
+  if (raw === null) return fallback
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return fallback
+  }
+}
+
+/**
+ * localStorage-backed state. The server snapshot is always `initialValue`
+ * and the stored value is picked up during hydration, so there's no
+ * server/client markup mismatch. `initialValue` should be referentially
+ * stable (a module-level constant) when it's an object/array.
+ */
+export function useLocalStorage<T>(key: string, initialValue: T) {
+  const raw = useSyncExternalStore(
+    subscribe,
+    () => readRaw(key),
+    () => null,
+  )
+  const value = useMemo(() => parse(raw, initialValue), [raw, initialValue])
+
+  const setValue = useCallback(
+    (next: T | ((prev: T) => T)) => {
+      const prev = parse(readRaw(key), initialValue)
+      const resolved = next instanceof Function ? next(prev) : next
+      try {
+        window.localStorage.setItem(key, JSON.stringify(resolved))
+      } catch (error) {
+        console.error(`Error setting localStorage key "${key}":`, error)
+        return
+      }
+      listeners.forEach((listener) => listener())
+    },
+    [key, initialValue],
+  )
+
+  return [value, setValue] as const
 }

@@ -1,4 +1,3 @@
-import { Navigation } from "@/components/sections/Navigation"
 import { Background } from "@/components/sections/Background"
 import { HeroSection } from "@/components/sections/HeroSection"
 import { AboutSection } from "@/components/sections/AboutSection"
@@ -9,45 +8,21 @@ import { ProtectionSection } from "@/components/sections/ProtectionSection"
 import { StatsSection } from "@/components/sections/StatsSection"
 import { ContactSection } from "@/components/sections/ContactSection"
 import { TerminalSection } from "@/components/sections/TerminalSection"
-import { Footer } from "@/components/sections/Footer"
-import { SecurityModal } from "@/components/modals/SecurityModal"
-import { LuluModal } from "@/components/modals/LuluModal"
-import { DashboardAuthModal } from "@/components/dashboard/DashboardAuthModal"
-import { HomeGate } from "@/components/HomeGate"
-import { AuthProvider } from "@/contexts/AuthContext"
-import { checkDashboardSession } from "@/app/actions/auth"
 import { episodes } from "@/data/episodes"
 
-// The dashboard/marketing split depends on a per-request cookie check
-// (see checkDashboardSession) — this route can't be statically prerendered.
-export const dynamic = "force-dynamic"
-
-export default async function CyberJusticaBrasil() {
-  const initialAuthenticated = await checkDashboardSession()
-
+export default function HomePage() {
   return (
-    <AuthProvider initialAuthenticated={initialAuthenticated}>
-      <HomeGate>
-        <div className="min-h-screen bg-black text-white overflow-x-hidden">
-          <Background />
-          <Navigation episodes={episodes} />
-          <HeroSection episodes={episodes} />
-          <AboutSection />
-          <EpisodesSection episodes={episodes} />
-          <CrimeTypesSection />
-          <ExpertsSection />
-          <ProtectionSection />
-          <StatsSection />
-          <ContactSection />
-          <TerminalSection />
-          <Footer />
-
-          {/* Modals */}
-          <SecurityModal />
-          <LuluModal />
-          <DashboardAuthModal />
-        </div>
-      </HomeGate>
-    </AuthProvider>
+    <div className="overflow-x-hidden">
+      <Background />
+      <HeroSection />
+      <AboutSection />
+      <EpisodesSection episodes={episodes} />
+      <CrimeTypesSection />
+      <ExpertsSection />
+      <ProtectionSection />
+      <StatsSection />
+      <ContactSection />
+      <TerminalSection />
+    </div>
   )
 }

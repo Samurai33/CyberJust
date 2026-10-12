@@ -1,46 +1,26 @@
 import type { Metadata } from "next"
-import {
-  Calendar,
-  Clock,
-  Star,
-  Users,
-  TimerIcon as Timeline,
-  BookOpen,
-  ArrowLeft,
-  Bookmark,
-} from "lucide-react"
+import { Calendar, Clock, Star, Users, TimerIcon as Timeline, BookOpen, ArrowLeft, Bookmark, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SITE_URL } from "@/lib/constants"
+import { getSeverityColor } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { getEpisodeById } from "@/data/episodes"
+import { episodes, getEpisodeById } from "@/data/episodes"
 import { EpisodeBadge } from "@/components/ui/episode-badge"
 import { EpisodeBookmarks } from "@/components/episode/EpisodeBookmarks"
-import { EpisodeRating } from "@/components/episode/EpisodeRating"
 import { EpisodeRecommendations } from "@/components/episode/EpisodeRecommendations"
-import { EpisodePlayButton } from "@/components/episode/EpisodePlayButton"
-import { EpisodeResourceButton } from "@/components/episode/EpisodeResourceButton"
+import { EpisodeListenButton } from "@/components/episode/EpisodeListenButton"
 import { EpisodeShareButton } from "@/components/episode/EpisodeShareButton"
 import { EpisodeDownloadButton } from "@/components/episode/EpisodeDownloadButton"
 
-const getSeverityColor = (severity: string) => {
-  switch (severity) {
-    case "critical":
-      return "bg-red-500"
-    case "high":
-      return "bg-orange-500"
-    case "medium":
-      return "bg-yellow-500"
-    case "low":
-      return "bg-green-500"
-    default:
-      return "bg-gray-500"
-  }
+// Every episode page is prerendered at build time; unknown ids are a static 404.
+export const dynamicParams = false
+
+export function generateStaticParams() {
+  return episodes.map((episode) => ({ id: String(episode.id) }))
 }
 
 export async function generateMetadata({
@@ -76,7 +56,7 @@ function episodeJsonLd(episode: NonNullable<ReturnType<typeof getEpisodeById>>) 
     description: episode.fullDescription || episode.description,
     url: `${SITE_URL}/episodes/${episode.id}`,
     ...(episode.audioUrl && {
-      associatedMedia: { "@type": "MediaObject", contentUrl: episode.audioUrl },
+      associatedMedia: { "@type": "MediaObject", contentUrl: new URL(episode.audioUrl, SITE_URL).href },
     }),
     ...(episode.duration && { duration: `PT${episode.duration.replace(":", "M")}S` }),
     partOfSeries: {
@@ -105,12 +85,12 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
       <div className="container mx-auto px-6 py-12">
         {/* Back Navigation */}
         <div className="mb-8">
-          <Link href="/episodes">
-            <Button variant="ghost" className="text-cyan-400 hover:text-white hover:bg-cyan-500/20">
+          <Button asChild variant="ghost" className="text-cyan-400 hover:text-white hover:bg-cyan-500/20">
+            <Link href="/episodes">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar aos Episódios
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         {/* Header */}
@@ -161,8 +141,8 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-4">
-            <EpisodePlayButton episode={episode} />
+          <div className="flex flex-wrap items-start gap-4">
+            <EpisodeListenButton episode={episode} />
 
             <EpisodeShareButton
               episodeId={episode.id}
@@ -176,7 +156,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
 
         {/* Tabbed Content */}
         <Tabs defaultValue="transcript" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-gray-900 border-gray-700">
+          <TabsList className="flex w-full h-auto justify-start overflow-x-auto bg-gray-900 border-gray-700">
             <TabsTrigger value="transcript" className="data-[state=active]:bg-white data-[state=active]:text-black">
               <BookOpen className="w-4 h-4 mr-2" />
               TRANSCRIÇÃO
@@ -196,10 +176,6 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
             <TabsTrigger value="bookmarks" className="data-[state=active]:bg-white data-[state=active]:text-black">
               <Bookmark className="w-4 h-4 mr-2" />
               MARCADORES
-            </TabsTrigger>
-            <TabsTrigger value="rating" className="data-[state=active]:bg-white data-[state=active]:text-black">
-              <Star className="w-4 h-4 mr-2" />
-              AVALIAÇÃO
             </TabsTrigger>
           </TabsList>
 
@@ -239,15 +215,16 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
                   <Card key={expert.id} className="bg-gray-900 border-gray-700">
                     <CardHeader>
                       <div className="flex items-center gap-4">
-                        <Avatar className="w-16 h-16">
-                          <AvatarImage src={expert.avatar || "/placeholder.svg"} alt={expert.name} />
-                          <AvatarFallback className="bg-cyan-500 text-black">
-                            {expert.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div
+                          aria-hidden="true"
+                          className="w-16 h-16 shrink-0 rounded-full bg-cyan-500 text-black font-bold flex items-center justify-center"
+                        >
+                          {expert.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join("")}
+                        </div>
                         <div>
                           <CardTitle className="text-lg text-cyan-400">{expert.name}</CardTitle>
                           <CardDescription>{expert.role}</CardDescription>
@@ -306,8 +283,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
                               )}
                             </div>
                             <p className="text-gray-300">{event.description}</p>
-                            {event.completed && <Progress value={100} className="mt-2 h-1" />}
-                          </div>
+                                                      </div>
                         </div>
                       </div>
                     ))}
@@ -335,7 +311,12 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
                     </CardHeader>
                     <CardContent>
                       <p className="text-gray-300 mb-4">{resource.description}</p>
-                      <EpisodeResourceButton url={resource.url} />
+                      <Button size="sm" variant="outline" className="w-full" asChild>
+                        <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                          Acessar Recurso
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      </Button>
                     </CardContent>
                   </Card>
                 ))
@@ -346,10 +327,6 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
           </TabsContent>
           <TabsContent value="bookmarks" className="mt-6">
             <EpisodeBookmarks episodeId={episode.id} />
-          </TabsContent>
-
-          <TabsContent value="rating" className="mt-6">
-            <EpisodeRating episodeId={episode.id} />
           </TabsContent>
         </Tabs>
 
