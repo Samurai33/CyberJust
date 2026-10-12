@@ -26,7 +26,7 @@ Review and simplify the TypeScript and `.astro` code in this repo (Astro 7 stati
 - Document-level event delegation and the idempotent `connectedCallback` guard in `src/scripts/player.ts` (`if (this.#iniciado) return;`). Don't "simplify" into per-element or per-page listeners: with `<ClientRouter />` they would pile up.
 - The single shared `<audio>` and the play call made directly inside the click handler (iOS needs the user gesture).
 - `try/catch` around `localStorage` (`guardar` in `player.ts`) and around `navigator.mediaSession.setActionHandler`/`setPositionState`: they throw in some browsers.
-- Bracket access on `dataset` (`d['id']`): required by `noPropertyAccessFromIndexSignature` in the strictest tsconfig. Non-null `!` after an index access is there because of `noUncheckedIndexedAccess`; only remove it if the value is narrowed another way.
+- Bracket access on `dataset` (`d['id']`) is a house style, not a compiler requirement; keep it consistent. Non-null `!` after an index access is there because of `noUncheckedIndexedAccess`; only remove it if the value is narrowed another way.
 - Accessibility attributes (`aria-*`, `aria-live`, `aria-valuetext`, semantic HTML, visible text alongside colors in `Selo.astro`) — never strip these for brevity.
 - The zod schema in `src/content.config.ts` — don't loosen validation to shorten it.
 
