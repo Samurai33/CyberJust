@@ -1,15 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useDeferredValue, useState } from "react"
 import Link from "next/link"
-import { Play, Pause, Calendar, Clock, Search } from "lucide-react"
+import { Calendar, Clock, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EpisodeBadge } from "@/components/ui/episode-badge"
-import { useAudio } from "@/contexts/AudioContext"
-import { useDebounce } from "@/hooks/useDebounce"
+import { EpisodeListenButton } from "@/components/episode/EpisodeListenButton"
 import type { Episode } from "@/types"
 
 interface EpisodesFilterGridProps {
@@ -20,14 +19,11 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [threatFilter, setThreatFilter] = useState("all")
-  const { playEpisode, isEpisodePlaying } = useAudio()
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const query = useDeferredValue(searchTerm).trim().toLowerCase()
 
   const filteredEpisodes = episodes.filter((episode) => {
     const matchesSearch =
-      episode.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      episode.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      episode.title.toLowerCase().includes(query) || episode.description.toLowerCase().includes(query)
     const matchesStatus = statusFilter === "all" || episode.status === statusFilter
     const matchesThreat = threatFilter === "all" || episode.threat === threatFilter
 
@@ -42,6 +38,7 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Buscar episódios..."
+            aria-label="Buscar episódios"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 bg-gray-900 border-gray-700 text-white"
@@ -77,10 +74,7 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
 
       {/* Episodes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEpisodes.map((episode) => {
-          const isPlaying = isEpisodePlaying(episode.id)
-
-          return (
+        {filteredEpisodes.map((episode) => (
           <Card
             key={episode.id}
             className="bg-gray-900 border-gray-700 hover:border-cyan-500/50 transition-all duration-300 group"
@@ -91,11 +85,10 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
                 <EpisodeBadge variant="threat" threat={episode.threat} showIcon />
               </div>
 
-              <CardTitle
-                className="text-lg group-hover:text-cyan-400 transition-colors cursor-pointer"
-                onClick={() => (window.location.href = `/episodes/${episode.id}`)}
-              >
-                {episode.title}
+              <CardTitle className="text-lg group-hover:text-cyan-400 transition-colors">
+                <Link href={`/episodes/${episode.id}`} className="hover:underline">
+                  {episode.title}
+                </Link>
               </CardTitle>
 
               <CardDescription className="text-gray-400">
@@ -115,21 +108,8 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
             <CardContent>
               <p className="text-gray-300 mb-4 line-clamp-3">{episode.description}</p>
 
-              <div className="flex gap-2">
-                {episode.audioUrl && (
-                  <Button
-                    size="sm"
-                    onClick={() => playEpisode(episode)}
-                    className={
-                      isPlaying
-                        ? "bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-400 hover:to-cyan-500"
-                        : "bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500"
-                    }
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                    {isPlaying ? "Reproduzindo..." : "Ouvir"}
-                  </Button>
-                )}
+              <div className="flex flex-wrap items-start gap-2">
+                <EpisodeListenButton episode={episode} size="sm" />
 
                 <Button
                   size="sm"
@@ -142,8 +122,7 @@ export function EpisodesFilterGrid({ episodes }: EpisodesFilterGridProps) {
               </div>
             </CardContent>
           </Card>
-          )
-        })}
+        ))}
       </div>
 
       {filteredEpisodes.length === 0 && (

@@ -1,12 +1,10 @@
-"use client"
-
 import { MessageSquare, AlertTriangle, Radio } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 export function ContactSection() {
   return (
-    <section id="denúncias" className="py-20 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
+    <section id="denuncias" className="scroll-mt-4 py-20 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 font-mono">
@@ -50,13 +48,10 @@ export function ContactSection() {
                 Para denúncias de crimes cibernéticos, direcione-as aos canais oficiais: Delegacia Virtual, SaferNet ou
                 Ministério Público.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-red-500 text-red-400 hover:bg-red-500/10"
-                onClick={() => window.open("https://new.safernet.org.br/", "_blank", "noopener,noreferrer")}
-              >
-                CANAIS OFICIAIS
+              <Button asChild variant="outline" size="sm" className="border-red-500 text-red-400 hover:bg-red-500/10">
+                <a href="https://new.safernet.org.br/denuncie" target="_blank" rel="noopener noreferrer">
+                  CANAIS OFICIAIS
+                </a>
               </Button>
             </CardContent>
           </Card>

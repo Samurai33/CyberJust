@@ -1,17 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronDown, Play, Radio, Volume2, AlertTriangle } from "lucide-react"
+import Link from "next/link"
+import { ChevronDown, Play, Volume2, AlertTriangle, ListMusic } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useAudio } from "@/contexts/AudioContext"
-import type { Episode } from "@/types"
+import { episodes } from "@/data/episodes"
 
-interface HeroSectionProps {
-  episodes: Episode[]
-}
+const featuredEpisode = episodes.find((episode) => episode.audioUrl)
 
-export function HeroSection({ episodes }: HeroSectionProps) {
+export function HeroSection() {
   const [glitchText, setGlitchText] = useState("CYBERJUSTIÇA")
   const { playEpisode } = useAudio()
 
@@ -36,12 +35,6 @@ export function HeroSection({ episodes }: HeroSectionProps) {
     return () => clearInterval(glitchInterval)
   }, [])
 
-  const handlePlayLatest = () => {
-    if (episodes.length > 0) {
-      playEpisode(episodes[0])
-    }
-  }
-
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6">
       <div className="text-center max-w-5xl mx-auto">
@@ -53,7 +46,9 @@ export function HeroSection({ episodes }: HeroSectionProps) {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold mb-4 relative">
+          <span className="sr-only">CyberJustiça Brasil</span>
           <span
+            aria-hidden="true"
             className="bg-gradient-to-r from-cyan-400 via-red-500 to-purple-500 bg-clip-text text-transparent animate-pulse"
             style={{
               textShadow: "0 0 30px rgba(0, 255, 255, 0.5)",
@@ -62,9 +57,12 @@ export function HeroSection({ episodes }: HeroSectionProps) {
           >
             {glitchText}
           </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-red-500 bg-clip-text text-transparent opacity-30 blur-sm">
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-red-500 bg-clip-text text-transparent opacity-30 blur-sm"
+          >
             {glitchText}
-          </div>
+          </span>
         </h1>
 
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
@@ -81,29 +79,33 @@ export function HeroSection({ episodes }: HeroSectionProps) {
           <Button
             size="lg"
             className="bg-gradient-to-r from-red-500 to-cyan-600 hover:from-red-400 hover:to-cyan-500 shadow-lg shadow-red-500/25 group"
-            onClick={handlePlayLatest}
+            onClick={() => featuredEpisode && playEpisode(featuredEpisode)}
+            disabled={!featuredEpisode}
           >
             <Play className="w-5 h-5 mr-2 group-hover:animate-pulse" />
             OUÇA AGORA
             <Volume2 className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
           </Button>
           <Button
+            asChild
             size="lg"
             variant="outline"
             className="border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
           >
-            <Radio className="w-5 h-5 mr-2" />
-            INSCREVA-SE
+            <Link href="/episodes">
+              <ListMusic className="w-5 h-5 mr-2" />
+              TODOS OS EPISÓDIOS
+            </Link>
           </Button>
         </div>
 
-        <div className="animate-bounce">
+        <a href="#sobre" aria-label="Rolar para o conteúdo" className="inline-block animate-bounce">
           <ChevronDown className="w-8 h-8 text-cyan-400 mx-auto" />
-        </div>
+        </a>
       </div>
 
       {/* Animated Rings */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <div className="w-96 h-96 border border-cyan-500/30 rounded-full animate-spin-slow" />
           <div className="absolute inset-4 border border-red-500/30 rounded-full animate-spin-reverse" />

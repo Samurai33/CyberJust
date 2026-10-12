@@ -28,3 +28,29 @@ test("nonexistent episode id renders the custom 404 page", async ({ page }) => {
   const response = await page.goto("/episodes/does-not-exist-12345")
   expect(response?.status()).toBe(404)
 })
+
+test("header is present on inner pages and its section links lead back to the homepage", async ({ page }) => {
+  await page.goto("/episodes/7")
+  await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "ESPECIALISTAS" }).click()
+  await expect(page).toHaveURL(/\/#especialistas$/)
+  await expect(page.locator("#especialistas")).toBeVisible()
+})
+
+test("Portuguese route aliases redirect to the canonical routes", async ({ page }) => {
+  await page.goto("/episodios/7")
+  await expect(page).toHaveURL(/\/episodes\/7$/)
+})
+
+test("episode audio is served from this origin with byte-range support", async ({ request }) => {
+  const response = await request.get("/audio/bfraudes-digitais.m4a", { headers: { Range: "bytes=0-15" } })
+  expect(response.status()).toBe(206)
+  expect(response.headers()["content-type"]).toContain("audio/mp4")
+})
+
+// Only asserts the UI wiring: Playwright's bundled Chromium may lack the
+// proprietary AAC decoder, so actual decoding is verified in a real browser.
+test("clicking OUVIR opens the global player bar", async ({ page }) => {
+  await page.goto("/episodes/7")
+  await page.getByRole("button", { name: /OUVIR/ }).click()
+  await expect(page.getByRole("region", { name: "Player de áudio" })).toBeVisible()
+})

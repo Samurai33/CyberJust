@@ -32,12 +32,14 @@ export const SEVERITY_COLORS: Record<SeverityLevel, string> = {
   low: "bg-green-500",
 }
 
+// Section anchors are absolute ("/#...") so the header works from any route.
 export const NAVIGATION_ITEMS = [
-  { label: "CASOS", href: "#casos" },
-  { label: "PROTOCOLOS", href: "#protocolos" },
-  { label: "ESPECIALISTAS", href: "#especialistas" },
-  { label: "PROTEÇÃO", href: "#proteção" },
-  { label: "DENÚNCIAS", href: "#denúncias" },
+  { label: "EPISÓDIOS", href: "/episodes" },
+  { label: "CASOS", href: "/#casos" },
+  { label: "PROTOCOLOS", href: "/#protocolos" },
+  { label: "ESPECIALISTAS", href: "/#especialistas" },
+  { label: "PROTEÇÃO", href: "/#protecao" },
+  { label: "DENÚNCIAS", href: "/#denuncias" },
 ] as const
 
 export const CRIME_TYPES = [

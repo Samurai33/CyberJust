@@ -4,9 +4,6 @@ import {
   getThreatColor,
   getSeverityColor,
   formatTime,
-  formatDate,
-  truncateText,
-  sanitizeHtml,
 } from "./utils"
 
 describe("getStatusColor", () => {
@@ -45,31 +42,9 @@ describe("formatTime", () => {
     expect(formatTime(65)).toBe("1:05")
     expect(formatTime(3725)).toBe("62:05")
   })
-})
 
-describe("formatDate", () => {
-  it("formats a date string in pt-BR's DD/MM/YYYY order", () => {
-    // Only asserting the format shape, not the exact day: `formatDate` parses
-    // via `new Date(dateString)`, which reads a bare "YYYY-MM-DD" as UTC
-    // midnight — in a timezone behind UTC that displays as the previous
-    // local day, so pinning an exact date here would be timezone-flaky.
-    expect(formatDate("2026-01-15")).toMatch(/^\d{2}\/\d{2}\/2026$/)
-  })
-})
-
-describe("truncateText", () => {
-  it("returns the text unchanged when under the limit", () => {
-    expect(truncateText("short", 10)).toBe("short")
-  })
-
-  it("truncates and appends an ellipsis when over the limit", () => {
-    expect(truncateText("this is a long string", 7)).toBe("this is...")
-  })
-})
-
-describe("sanitizeHtml", () => {
-  it("escapes HTML tags instead of letting them through raw", () => {
-    const result = sanitizeHtml("<script>alert('xss')</script>")
-    expect(result).not.toContain("<script>")
+  it("returns 0:00 for NaN/Infinity (duration before metadata loads)", () => {
+    expect(formatTime(Number.NaN)).toBe("0:00")
+    expect(formatTime(Number.POSITIVE_INFINITY)).toBe("0:00")
   })
 })

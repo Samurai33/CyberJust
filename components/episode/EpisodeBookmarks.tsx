@@ -6,32 +6,51 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { useBookmarks } from "@/contexts/BookmarkContext"
-import { useAudioTime } from "@/contexts/AudioContext"
+import { useAudio, useAudioTime } from "@/contexts/AudioContext"
+import { useLocalStorage } from "@/hooks/useLocalStorage"
+import type { EpisodeBookmark } from "@/types"
+
+const NO_BOOKMARKS: EpisodeBookmark[] = []
+const DUPLICATE_TOLERANCE_SECONDS = 5
 
 interface EpisodeBookmarksProps {
   episodeId: string | number
 }
 
 export function EpisodeBookmarks({ episodeId }: EpisodeBookmarksProps) {
-  const { getEpisodeBookmarks, addBookmark, removeBookmark, updateBookmark, hasBookmarkAtTime } = useBookmarks()
+  const [allBookmarks, setAllBookmarks] = useLocalStorage("cyberjus-bookmarks", NO_BOOKMARKS)
+  const { currentEpisode } = useAudio()
   const { currentTime, seek, formatTime } = useAudioTime()
   const [newBookmarkNote, setNewBookmarkNote] = useState("")
   const [editingBookmark, setEditingBookmark] = useState<string | null>(null)
   const [editNote, setEditNote] = useState("")
 
-  const bookmarks = getEpisodeBookmarks(episodeId)
+  // Bookmarks only make sense against this episode's own playback position.
+  const isThisEpisodeLoaded = currentEpisode?.id === episodeId
+  const bookmarks = allBookmarks
+    .filter((b) => b.episodeId === episodeId)
+    .sort((a, b) => a.timestamp - b.timestamp)
+  const hasBookmarkHere = bookmarks.some((b) => Math.abs(b.timestamp - currentTime) <= DUPLICATE_TOLERANCE_SECONDS)
 
   const handleAddBookmark = () => {
-    if (!hasBookmarkAtTime(episodeId, currentTime)) {
-      addBookmark(episodeId, currentTime, newBookmarkNote || undefined)
-      setNewBookmarkNote("")
+    if (!isThisEpisodeLoaded || hasBookmarkHere) return
+    const bookmark: EpisodeBookmark = {
+      id: crypto.randomUUID(),
+      episodeId,
+      timestamp: currentTime,
+      note: newBookmarkNote || undefined,
+      createdAt: new Date().toISOString(),
     }
+    setAllBookmarks((prev) => [...prev, bookmark])
+    setNewBookmarkNote("")
+  }
+
+  const removeBookmark = (bookmarkId: string) => {
+    setAllBookmarks((prev) => prev.filter((b) => b.id !== bookmarkId))
   }
 
   const handleUpdateBookmark = (bookmarkId: string) => {
-    updateBookmark(bookmarkId, { note: editNote })
+    setAllBookmarks((prev) => prev.map((b) => (b.id === bookmarkId ? { ...b, note: editNote } : b)))
     setEditingBookmark(null)
     setEditNote("")
   }
@@ -56,16 +75,19 @@ export function EpisodeBookmarks({ episodeId }: EpisodeBookmarksProps) {
             <Button
               size="sm"
               onClick={handleAddBookmark}
-              disabled={hasBookmarkAtTime(episodeId, currentTime)}
+              disabled={!isThisEpisodeLoaded || hasBookmarkHere}
               className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
             >
               <BookmarkPlus className="w-4 h-4 mr-2" />
               Marcar Posição Atual
             </Button>
             <Badge variant="outline" className="font-mono">
-              {formatTime(currentTime)}
+              {isThisEpisodeLoaded ? formatTime(currentTime) : "--:--"}
             </Badge>
           </div>
+          {!isThisEpisodeLoaded && (
+            <p className="text-xs text-gray-500">Inicie este episódio para marcar uma posição.</p>
+          )}
           <Input
             placeholder="Adicionar nota (opcional)"
             value={newBookmarkNote}
@@ -89,6 +111,7 @@ export function EpisodeBookmarks({ episodeId }: EpisodeBookmarksProps) {
                           size="sm"
                           variant="ghost"
                           onClick={() => seek(bookmark.timestamp)}
+                          disabled={!isThisEpisodeLoaded}
                           className="text-cyan-400 hover:text-white hover:bg-cyan-500/20 p-1 h-auto"
                         >
                           <Clock className="w-4 h-4 mr-1" />
@@ -101,12 +124,11 @@ export function EpisodeBookmarks({ episodeId }: EpisodeBookmarksProps) {
 
                       {editingBookmark === bookmark.id ? (
                         <div className="space-y-2">
-                          <Textarea
+                          <Input
                             value={editNote}
                             onChange={(e) => setEditNote(e.target.value)}
                             placeholder="Adicionar nota..."
                             className="bg-gray-700 border-gray-600 text-sm"
-                            rows={2}
                           />
                           <div className="flex gap-2">
                             <Button
@@ -143,6 +165,7 @@ export function EpisodeBookmarks({ episodeId }: EpisodeBookmarksProps) {
                           size="sm"
                           variant="ghost"
                           onClick={() => startEditing(bookmark.id, bookmark.note || "")}
+                          aria-label="Editar nota"
                           className="text-gray-400 hover:text-white p-1 h-auto"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -151,6 +174,7 @@ export function EpisodeBookmarks({ episodeId }: EpisodeBookmarksProps) {
                           size="sm"
                           variant="ghost"
                           onClick={() => removeBookmark(bookmark.id)}
+                          aria-label="Remover marcador"
                           className="text-red-400 hover:text-red-300 p-1 h-auto"
                         >
                           <Trash2 className="w-4 h-4" />

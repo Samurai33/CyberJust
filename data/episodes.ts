@@ -11,7 +11,7 @@ export const episodes: Episode[] = [
       "Este episódio especial mergulha no mundo complexo das fraudes digitais que assolam o Brasil. Com a participação de especialistas renomados, exploramos desde os golpes mais simples até as operações criminosas mais sofisticadas que utilizam inteligência artificial, deepfakes e engenharia social avançada.",
     status: "ATIVO",
     threat: "CRÍTICO",
-    audioUrl: "https://cdn.jsdelivr.net/gh/Samurai33/CyberJust@main/media/audio/bfraudes-digitais.m4a",
+    audioUrl: "/audio/bfraudes-digitais.m4a",
     duration: "45:30",
     category: "Fraudes Digitais",
     tags: ["fraudes", "golpes", "segurança digital", "prevenção", "investigação"],
@@ -102,7 +102,7 @@ export const episodes: Episode[] = [
       "O aplicativo Lulu prometia ser uma plataforma onde mulheres poderiam avaliar homens anonimamente. No entanto, em 2023, uma falha de segurança expôs dados íntimos de milhões de usuários brasileiros.",
     status: "ARQUIVADO",
     threat: "CRÍTICO",
-    audioUrl: "https://cdn.jsdelivr.net/gh/Samurai33/CyberJust@main/media/audio/lulu.m4a",
+    audioUrl: "/audio/lulu.m4a",
     duration: "58:12",
     category: "Vazamento de Dados",
     tags: ["lulu", "aplicativo", "privacidade", "vazamento", "cyberbullying"],
@@ -161,7 +161,7 @@ export const episodes: Episode[] = [
       "A Operação NaMoral foi uma investigação complexa que revelou como redes de corrupção migraram para o ambiente digital, utilizando aplicativos criptografados e criptomoedas para ocultar transações ilícitas.",
     status: "RESOLVIDO",
     threat: "MÉDIO",
-    audioUrl: "https://cdn.jsdelivr.net/gh/Samurai33/CyberJust@main/media/audio/namoral.m4a",
+    audioUrl: "/audio/namoral.m4a",
     duration: "42:18",
     category: "Corrupção Digital",
     tags: ["corrupção", "operação", "investigação", "redes digitais"],
@@ -353,35 +353,12 @@ export function getEpisodeById(id: string | number): Episode | undefined {
   return episodes.find((episode) => episode.id.toString() === id.toString())
 }
 
-export function getEpisodesByCategory(category: string): Episode[] {
-  return episodes.filter((episode) => episode.category === category)
-}
-
-export function getEpisodesByStatus(status: string): Episode[] {
-  return episodes.filter((episode) => episode.status === status)
-}
-
-export function getEpisodesByThreat(threat: string): Episode[] {
-  return episodes.filter((episode) => episode.threat === threat)
-}
-
-export function searchEpisodes(query: string): Episode[] {
-  const lowercaseQuery = query.toLowerCase()
-  return episodes.filter(
-    (episode) =>
-      episode.title.toLowerCase().includes(lowercaseQuery) ||
-      episode.description.toLowerCase().includes(lowercaseQuery) ||
-      episode.tags?.some((tag) => tag.toLowerCase().includes(lowercaseQuery)) ||
-      episode.category?.toLowerCase().includes(lowercaseQuery),
-  )
-}
-
 export function getRecommendedEpisodes(currentEpisodeId: string | number, limit = 3): Episode[] {
   const currentEpisode = getEpisodeById(currentEpisodeId)
   if (!currentEpisode) return episodes.slice(0, limit)
 
   const recommended = episodes
-    .filter((ep) => ep.id !== currentEpisodeId)
+    .filter((ep) => String(ep.id) !== String(currentEpisodeId))
     .sort((a, b) => {
       let scoreA = 0
       let scoreB = 0
