@@ -1,0 +1,89 @@
+---
+import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Player from '../components/Player.astro';
+import { SITE } from '../data/site';
+// Preload das fontes principais (mesma URL com hash usada pelo CSS): evita salto de layout na troca de fonte.
+import fontDisplay from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
+import fontText from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+
+interface Props {
+  title: string;
+  description: string;
+  ogType?: 'website' | 'article';
+  jsonLd?: Record<string, unknown>;
+  noindex?: boolean;
+}
+const { title, description, ogType = 'website', jsonLd, noindex = false } = Astro.props;
+// Títulos até 60 caracteres (o Google corta por volta disso). Se a marca estourar, sai a marca, não o assunto.
+const comMarca = `${title} | ${SITE.curto}`;
+const fullTitle = title === SITE.nome ? `${SITE.nome} | Podcast sobre crimes cibernéticos` : comMarca.length <= 60 ? comMarca : title;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og-v1.jpg', Astro.site);
+
+const site = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${Astro.site}#site`,
+  name: SITE.nome,
+  url: Astro.site?.href,
+  inLanguage: 'pt-BR',
+};
+const ld = Astro.url.pathname === '/' ? [site, jsonLd].filter(Boolean) : jsonLd ? [jsonLd] : [];
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <link rel="preload" href={fontDisplay} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={fontText} as="font" type="font/woff2" crossorigin />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#05070c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content={SITE.nome} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:secure_url" content={ogImage} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="CyberJustiça Brasil: podcast sobre crimes cibernéticos no Brasil" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content="CyberJustiça Brasil: podcast sobre crimes cibernéticos no Brasil" />
+    {ld.length > 0 && <script type="application/ld+json" set:html={JSON.stringify(ld.length > 1 ? ld : ld[0])} />}
+    <!-- Navegação sem recarregar a página: é o que mantém o áudio tocando entre páginas. -->
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+    <Header />
+    <main id="conteudo">
+      <slot />
+    </main>
+    <Footer />
+    <Player />
+    <script>
+      import '../scripts/site';
+    </script>
+  </body>
+</html>

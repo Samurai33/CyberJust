@@ -33,7 +33,7 @@ git log --since="$SINCE" --oneline
 # CyberJust Recap — <date range>
 
 ## Commits (<N> since <date>)
-- <short summary of what changed, grouped by area: app/, components/, etc.>
+- <short summary of what changed, grouped by area: src/pages/, src/components/, src/scripts/, src/content/episodios/, docker/, e2e/, etc.>
 
 ## Open PRs (<N>)
 - [#<num>](link) <title> — <author>, opened <date>

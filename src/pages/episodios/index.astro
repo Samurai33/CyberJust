@@ -1,0 +1,41 @@
+---
+import Base from '../../layouts/Base.astro';
+import LinhaEpisodio from '../../components/LinhaEpisodio.astro';
+import { grupoDoEpisodio, listarEpisodios } from '../../lib/episodios';
+
+const episodios = await listarEpisodios();
+const conta = (g: string) => episodios.filter((e) => grupoDoEpisodio(e) === g).length;
+const filtros = [
+  { id: 'todos', rotulo: 'Todos', n: episodios.length },
+  { id: 'audio', rotulo: 'Com áudio', n: episodios.filter((e) => e.data.audio).length },
+  { id: 'fraude', rotulo: 'Fraudes', n: conta('fraude') },
+  { id: 'dados', rotulo: 'Dados pessoais', n: conta('dados') },
+  { id: 'corrupcao', rotulo: 'Corrupção', n: conta('corrupcao') },
+  { id: 'protecao', rotulo: 'Proteção infantil', n: conta('protecao') },
+].filter((f) => f.n > 0);
+---
+<Base title="Episódios" description="Todos os episódios do CyberJustiça Brasil: fraudes digitais, vazamento de dados, corrupção nas redes e proteção de crianças online.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="label"><b>{episodios.length}</b> / Episódios</p>
+      <h1>Todos os episódios</h1>
+      <p class="lede">Cada episódio traz o caso, quem investigou, as leis envolvidas e o que fazer para se proteger.</p>
+    </div>
+  </section>
+  <section class="section" aria-label="Lista de episódios">
+    <div class="wrap lista">
+      <fieldset class="filtro">
+        <legend class="label">Filtrar</legend>
+        {filtros.map((f, i) => (
+          <>
+            <input type="radio" name="filtro" id={`f-${f.id}`} checked={i === 0} />
+            <label for={`f-${f.id}`}>{f.rotulo} <span>{f.n}</span></label>
+          </>
+        ))}
+      </fieldset>
+      <div class="index">
+        {episodios.map((ep) => <LinhaEpisodio ep={ep} nivel="h2" />)}
+      </div>
+    </div>
+  </section>
+</Base>

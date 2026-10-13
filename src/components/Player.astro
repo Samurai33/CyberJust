@@ -1,0 +1,37 @@
+---
+// Player global. Fica fora do <main> e persiste entre páginas (transition:persist + <ClientRouter />),
+// então o áudio não para ao navegar. Toda a lógica está em src/scripts/player.ts (custom element).
+import Icon from './Icon.astro';
+---
+<cj-player transition:persist="player" hidden>
+  <section class="pl wrap" aria-label="Player de áudio" data-estado="parado">
+    <button class="pl-play" type="button" data-acao="tocar" aria-label="Tocar">
+      <Icon name="play" size={22} class="ico-play" />
+      <Icon name="pause" size={22} class="ico-pause" />
+      <Icon name="load" size={22} class="ico-load" />
+    </button>
+    <div class="pl-info">
+      <a class="pl-title" href="/episodios/" data-ref="titulo">Episódio</a>
+      <p class="pl-sub" data-ref="sub" aria-live="polite">CyberJustiça Brasil</p>
+    </div>
+    <div class="pl-ctrl">
+      <button class="pl-btn pl-back" type="button" data-acao="voltar" aria-label="Voltar 15 segundos"><Icon name="back15" size={22} /></button>
+      <button class="pl-btn pl-fwd" type="button" data-acao="avancar" aria-label="Avançar 30 segundos"><Icon name="fwd30" size={22} /></button>
+      <button class="pl-btn pl-rate" type="button" data-acao="velocidade" aria-label="Velocidade de reprodução: 1x">1x</button>
+      <div class="pl-vol" data-ref="vol">
+        <button class="pl-btn" type="button" data-acao="mudo" aria-label="Silenciar"><Icon name="vol" size={20} class="ico-vol" /><Icon name="mute" size={20} class="ico-mute" /></button>
+        <input type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume" data-ref="volume" />
+      </div>
+      <button class="pl-btn" type="button" data-acao="fechar" aria-label="Fechar player"><Icon name="close" size={20} /></button>
+    </div>
+    <div class="pl-bar">
+      <span data-ref="atual">0:00</span>
+      <input type="range" min="0" max="0" step="1" value="0" aria-label="Posição no episódio" data-ref="trilha" />
+      <span data-ref="total">0:00</span>
+    </div>
+  </section>
+  <audio preload="none" data-ref="audio"></audio>
+</cj-player>
+<script>
+  import '../scripts/player';
+</script>

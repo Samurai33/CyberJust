@@ -1,0 +1,126 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import BotaoOuvir from '../../components/BotaoOuvir.astro';
+import LinhaEpisodio from '../../components/LinhaEpisodio.astro';
+import Selo from '../../components/Selo.astro';
+import Icon from '../../components/Icon.astro';
+import { listarEpisodios, recomendados, rotuloEpisodio, urlEpisodio, type Episodio } from '../../lib/episodios';
+import { duracaoIso, formatarData, formatarTempo } from '../../lib/tempo';
+import { SITE } from '../../data/site';
+
+export async function getStaticPaths() {
+  const todos = await listarEpisodios();
+  return todos.map((ep) => ({ params: { id: ep.id }, props: { ep, todos } }));
+}
+interface Props { ep: Episodio; todos: Episodio[] }
+const { ep, todos } = Astro.props;
+const { Content } = await render(ep);
+const d = ep.data;
+const url = new URL(urlEpisodio(ep), Astro.site).href;
+const parecidos = recomendados(ep, todos);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'PodcastEpisode',
+  name: d.titulo,
+  description: d.resumo,
+  url,
+  inLanguage: 'pt-BR',
+  ...(d.numero && { episodeNumber: d.numero }),
+  ...(d.data.length === 10 && { datePublished: d.data }),
+  ...(d.audio && {
+    timeRequired: duracaoIso(d.audio.segundos),
+    associatedMedia: {
+      '@type': 'AudioObject',
+      contentUrl: new URL(d.audio.arquivo, Astro.site).href,
+      encodingFormat: 'audio/mp4',
+      duration: duracaoIso(d.audio.segundos),
+      contentSize: `${(d.audio.bytes / 1e6).toFixed(1)} MB`,
+    },
+  }),
+  partOfSeries: { '@type': 'PodcastSeries', name: SITE.nome, url: Astro.site?.href },
+};
+---
+<Base title={d.titulo} description={d.resumo} ogType="article" jsonLd={jsonLd}>
+  <section class="page-head ep-head">
+    <div class="wrap">
+      <a class="crumb" href="/episodios/"><Icon name="arrow" size={14} /> Episódios</a>
+      <div class="tags">
+        <Selo tipo="status" valor={d.status} />
+        <Selo tipo="ameaca" valor={d.ameaca} />
+        <span class="tag tag-plain">{d.categoria}</span>
+      </div>
+      <h1>{d.titulo}</h1>
+      <p class="meta">
+        <span class="mono">{rotuloEpisodio(ep)}</span>
+        <span><Icon name="calendar" size={14} /><time datetime={d.data}>{formatarData(d.data)}</time></span>
+        {d.audio && <span><Icon name="clock" size={14} />{formatarTempo(d.audio.segundos)}</span>}
+      </p>
+      <div class="actions">
+        <BotaoOuvir ep={ep} />
+        <button class="btn btn-line" type="button" data-compartilhar data-titulo={d.titulo} data-url={urlEpisodio(ep)}>
+          <Icon name="share" /> <span data-texto>Compartilhar</span>
+        </button>
+        {d.audio && (
+          <a class="btn btn-line" href={d.audio.arquivo} download>
+            <Icon name="download" /> Baixar <span class="muted">{(d.audio.bytes / 1e6).toFixed(0)} MB</span>
+          </a>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap grid-aside">
+      <div class="stack">
+        <h2 class="label">Sobre o episódio</h2>
+        <div class="prose lede"><Content /></div>
+        {d.pontos.length > 0 && (
+          <>
+            <h2 class="label mt-3">Pontos principais</h2>
+            <ul class="checks" role="list">
+              {d.pontos.map((p) => <li><Icon name="check" />{p}</li>)}
+            </ul>
+          </>
+        )}
+        {d.alertas.length > 0 && (
+          <>
+            <h2 class="label mt-3">Como se proteger</h2>
+            <ul class="checks alerta" role="list">
+              {d.alertas.map((p) => <li><Icon name="alert" />{p}</li>)}
+            </ul>
+          </>
+        )}
+      </div>
+      <aside class="ep-side" aria-label="Fontes e tags">
+        {d.recursos.length > 0 && (
+          <div class="surface">
+            <h2>Fontes oficiais</h2>
+            <div class="recursos">
+              {d.recursos.map((r) => (
+                <a href={r.url} rel="noopener noreferrer" target="_blank">
+                  <b>{r.titulo}</b>
+                  <span>{r.fonte} · {r.tipo}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+        {d.tags.length > 0 && (
+          <div class="surface">
+            <h2>Assuntos</h2>
+            <div class="tags">{d.tags.map((t) => <span class="tag tag-plain">{t}</span>)}</div>
+          </div>
+        )}
+      </aside>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="rel-t">
+    <div class="wrap">
+      <header class="sec-head"><p class="label">Continue ouvindo</p><h2 id="rel-t">Episódios relacionados</h2></header>
+      <div class="index">{parecidos.map((p) => <LinhaEpisodio ep={p} />)}</div>
+    </div>
+  </section>
+</Base>

@@ -7,6 +7,9 @@ updates:
       day: monday
       time: "09:00"
       timezone: America/Sao_Paulo
+    # Mesma regra do pnpm-workspace.yaml (minimumReleaseAge): só versões com 14+ dias.
+    cooldown:
+      default-days: 14
     open-pull-requests-limit: 5
     groups:
       production:
@@ -14,13 +17,20 @@ updates:
       development:
         dependency-type: development
     ignore:
-      # typescript-eslint has no TS 7 support yet (no stable programmatic API
-      # until TS 7.1 — https://typescript-eslint.io/users/dependency-versions/).
+      # @astrojs/check 0.9.x aceita só TypeScript 5/6.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
-      # eslint-plugin-import/react/react-hooks/jsx-a11y (pulled in via
-      # eslint-config-next) don't declare ESLint 10 support yet
-      # (vercel/next.js#91702). Revisit both together once typescript-eslint
-      # and the plugin ecosystem catch up (see issue #78).
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14

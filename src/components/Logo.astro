@@ -1,0 +1,9 @@
+---
+// Marca do CyberJustiça: escudo com balança (justiça), em traço, na cor de destaque.
+interface Props { size?: number }
+const { size = 26 } = Astro.props;
+---
+<svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+  <path d="M16 2.5 27 6.8v8.6c0 6.6-4.5 12-11 14.1C9.5 27.4 5 22 5 15.4V6.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  <path d="M16 9v13M11 22h10M10.5 11.5h11M10.5 11.5 8 17h5zM21.5 11.5 19 17h5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

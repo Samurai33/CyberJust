@@ -1,0 +1,30 @@
+---
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import { MENU, SITE } from '../data/site';
+
+const path = Astro.url.pathname;
+const atual = (href: string) => !href.includes('#') && path.startsWith(href);
+---
+<header class="site-header">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label={`${SITE.nome}, página inicial`}>
+      <Logo />
+      <span><strong>CyberJustiça</strong> Brasil</span>
+    </a>
+    <nav class="nav-desktop" aria-label="Principal">
+      <ul class="nav-list" role="list">
+        {MENU.map((m) => <li><a href={m.href} aria-current={atual(m.href) ? 'page' : undefined}>{m.label}</a></li>)}
+      </ul>
+    </nav>
+    <a class="btn header-cta" href="/episodios/">Ouvir episódios</a>
+    <details class="nav-toggle" data-menu>
+      <summary aria-label="Abrir menu"><Icon name="menu" size={20} /></summary>
+      <nav aria-label="Principal (celular)">
+        <ul class="nav-list" role="list">
+          {MENU.map((m) => <li><a href={m.href} aria-current={atual(m.href) ? 'page' : undefined}>{m.label}</a></li>)}
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>

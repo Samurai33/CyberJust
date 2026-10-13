@@ -1,0 +1,31 @@
+---
+// Botão que toca o episódio no player global (src/scripts/player.ts). Funciona em qualquer página.
+import Icon from './Icon.astro';
+import { formatarTempo } from '../lib/tempo';
+import { rotuloEpisodio, urlEpisodio, type Episodio } from '../lib/episodios';
+interface Props { ep: Episodio; variante?: 'principal' | 'linha' }
+const { ep, variante = 'principal' } = Astro.props;
+const audio = ep.data.audio;
+const cls = `btn play-btn ${variante === 'linha' ? 'btn-line' : ''}`;
+---
+{audio ? (
+  <button
+    class={cls}
+    type="button"
+    data-tocar
+    data-id={ep.id}
+    data-src={audio.arquivo}
+    data-titulo={ep.data.titulo}
+    data-url={urlEpisodio(ep)}
+    data-rotulo={rotuloEpisodio(ep)}
+    data-segundos={audio.segundos}
+    aria-label={`Ouvir: ${ep.data.titulo}`}
+  >
+    <Icon name="play" class="ico-play" />
+    <Icon name="pause" class="ico-pause" />
+    <span data-texto>Ouvir</span>
+    <span class="dur">{formatarTempo(audio.segundos)}</span>
+  </button>
+) : (
+  <button class={`${cls} btn-line`} type="button" disabled>Áudio em breve</button>
+)}
