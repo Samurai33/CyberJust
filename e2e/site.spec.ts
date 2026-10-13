@@ -76,7 +76,7 @@ test('especialista em destaque com foto carregada', async ({ page }) => {
   await page.goto('/#especialistas');
   const foto = page.locator('.host img');
   await foto.scrollIntoViewIfNeeded();
-  await expect(page.locator('.host h3')).toContainText('Thiago Rangel');
+  await expect(page.locator('.host h3')).toContainText('Samurai');
   await expect.poll(() => foto.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
 });
 
@@ -84,7 +84,7 @@ test('episódio tem trilha de navegação, autoria e anterior/próximo', async (
   await page.goto('/episodios/caso-lulu/');
   const trilha = page.getByRole('navigation', { name: 'Você está em' });
   await expect(trilha.getByRole('link', { name: 'Dados pessoais e privacidade' })).toHaveAttribute('href', '/temas/dados-pessoais/');
-  await expect(page.locator('.byline a[rel="author"]')).toHaveText('Thiago Rangel');
+  await expect(page.locator('.byline a[rel="author"]')).toHaveText('Samurai');
   await expect(page.locator('.vizinhos a[rel="next"], .vizinhos a[rel="prev"]').first()).toBeVisible();
   const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '');
   const tipos = ld['@graph'].map((n: { '@type': string }) => n['@type']);
