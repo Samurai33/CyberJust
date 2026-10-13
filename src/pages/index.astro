@@ -9,14 +9,13 @@ import { infoAudio, listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/
 import { formatarTempo } from '../lib/tempo';
 import { Image } from 'astro:assets';
 import retrato from '../assets/img/thiago-rangel.png';
-import { SITE, TIPOS_DE_CRIME, PROTECAO, APRESENTADOR, ESPECIALISTAS, CANAIS, LD } from '../data/site';
+import { SITE, TIPOS_DE_CRIME, PROTECAO, APRESENTADOR, CANAIS, LD } from '../data/site';
 
 const episodios = await listarEpisodios();
 const comAudio = episodios.filter((e) => e.data.audio);
 const destaque = comAudio[0]!;
 const recentes = episodios.slice(0, 4);
 const minutos = Math.round(comAudio.reduce((s, e) => s + (infoAudio(e)?.segundos ?? 0), 0) / 60);
-const iniciais = (nome: string) => nome.split(' ').filter((p) => p.length > 2).slice(0, 2).map((p) => p[0]).join('');
 
 const serie = {
   '@type': 'PodcastSeries',
@@ -140,17 +139,6 @@ const serie = {
           </p>
         </figcaption>
       </figure>
-      <h3 class="label mt-3">Convidados</h3>
-      <ul class="pessoas mt-2" role="list">
-        {ESPECIALISTAS.map((p) => (
-          <li class="surface pessoa">
-            <span class="avatar" aria-hidden="true">{iniciais(p.nome)}</span>
-            <h3>{p.nome}</h3>
-            <p class="cargo">{p.cargo}</p>
-            <p>{p.texto}</p>
-          </li>
-        ))}
-      </ul>
     </div>
   </section>
 

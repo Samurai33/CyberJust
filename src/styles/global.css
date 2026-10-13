@@ -263,15 +263,6 @@
   @media (max-width: 960px) { .pilares { grid-template-columns: 1fr 1fr; } .pilares li:nth-child(3) { border-inline-start: 0; padding-inline-start: 0; } .pilares li:nth-child(n + 3) { border-block-start: 1px solid var(--line); } }
   @media (max-width: 560px) { .pilares { grid-template-columns: 1fr; } .pilares li { border-inline-start: 0; padding-inline: 0; } .pilares li + li { border-block-start: 1px solid var(--line); } }
 
-  /* especialistas */
-  .pessoas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-  .pessoa { padding: 24px; display: grid; gap: 10px; align-content: start; }
-  .pessoa .avatar { inline-size: 48px; block-size: 48px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 600; color: var(--accent-ink); background: linear-gradient(140deg, var(--accent), var(--accent-2)); }
-  .pessoa h3 { font-size: var(--step-1); letter-spacing: -0.02em; }
-  .pessoa .cargo { font-family: var(--font-mono); font-size: var(--step--1); color: var(--accent); }
-  .pessoa p:last-child { font-size: 0.95rem; }
-  @media (max-width: 960px) { .pessoas { grid-template-columns: 1fr; } }
-
   /* especialista em destaque (apresentador) */
   .host { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: clamp(20px, 4vw, 40px); align-items: center; padding: clamp(20px, 3vw, 28px); margin: 0; background: linear-gradient(180deg, #0d1320, #0a0e17) padding-box, var(--edge-hi) border-box; }
   .host img { inline-size: 200px; block-size: 200px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong); }
