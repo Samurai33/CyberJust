@@ -5,27 +5,32 @@ import LinhaEpisodio from '../components/LinhaEpisodio.astro';
 import BotaoOuvir from '../components/BotaoOuvir.astro';
 import Selo from '../components/Selo.astro';
 import Icon from '../components/Icon.astro';
-import { listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/episodios';
+import { infoAudio, listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/episodios';
 import { formatarTempo } from '../lib/tempo';
-import { SITE, TIPOS_DE_CRIME, PROTECAO, ESPECIALISTAS, CANAIS } from '../data/site';
+import { Image } from 'astro:assets';
+import retrato from '../assets/img/thiago-rangel.png';
+import { SITE, TIPOS_DE_CRIME, PROTECAO, APRESENTADOR, ESPECIALISTAS, CANAIS, LD } from '../data/site';
 
 const episodios = await listarEpisodios();
 const comAudio = episodios.filter((e) => e.data.audio);
 const destaque = comAudio[0]!;
 const recentes = episodios.slice(0, 4);
-const minutos = Math.round(comAudio.reduce((s, e) => s + (e.data.audio?.segundos ?? 0), 0) / 60);
+const minutos = Math.round(comAudio.reduce((s, e) => s + (infoAudio(e)?.segundos ?? 0), 0) / 60);
 const iniciais = (nome: string) => nome.split(' ').filter((p) => p.length > 2).slice(0, 2).map((p) => p[0]).join('');
 
 const serie = {
-  '@context': 'https://schema.org',
   '@type': 'PodcastSeries',
+  '@id': LD.serie,
   name: SITE.nome,
   description: SITE.descricao,
   url: Astro.site?.href,
   inLanguage: 'pt-BR',
+  webFeed: new URL('/podcast.xml', Astro.site).href,
+  author: { '@id': LD.thiago },
+  publisher: { '@id': LD.n3xus },
 };
 ---
-<Base title={SITE.nome} description={SITE.descricao} jsonLd={serie}>
+<Base title={SITE.nome} description={SITE.descricao} jsonLd={[serie]}>
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
@@ -119,10 +124,24 @@ const serie = {
 
   <section class="section" id="especialistas" aria-labelledby="esp-t">
     <div class="wrap">
-      <SectionHead index="05" label="Especialistas" title="Quem investiga, explica" id="esp-t">
-        <p>Convidados que trabalham no combate ao crime digital no dia a dia.</p>
-      </SectionHead>
-      <ul class="pessoas" role="list">
+      <SectionHead index="05" label="Especialistas" title="Quem investiga, explica" id="esp-t" />
+      <figure class="surface host">
+        <Image src={retrato} alt="Retrato de Thiago Rangel em arte ASCII azul sobre fundo escuro" widths={[200, 400]} sizes="200px" loading="lazy" />
+        <figcaption>
+          <p class="label"><b>Especialista</b> / apresentador</p>
+          <h3>{APRESENTADOR.nome} <span>({APRESENTADOR.apelido})</span></h3>
+          <p class="cargo">{APRESENTADOR.cargo}</p>
+          <p>{APRESENTADOR.texto}</p>
+          <p class="actions">
+            <a class="link-arrow" href="/sobre/">Sobre o especialista <Icon name="arrow" /></a>
+            {APRESENTADOR.links.map((l) => (
+              <a class="link-arrow" href={l.href} rel="me noopener noreferrer" target="_blank">{l.label} <Icon name="external" size={12} /></a>
+            ))}
+          </p>
+        </figcaption>
+      </figure>
+      <h3 class="label mt-3">Convidados</h3>
+      <ul class="pessoas mt-2" role="list">
         {ESPECIALISTAS.map((p) => (
           <li class="surface pessoa">
             <span class="avatar" aria-hidden="true">{iniciais(p.nome)}</span>
@@ -139,6 +158,7 @@ const serie = {
     <div class="wrap">
       <SectionHead index="06" label="Denuncie" title="Foi vítima? Procure os canais oficiais" id="den-t">
         <p>Este site não recebe denúncias. Guarde provas (prints, links, comprovantes) e procure um destes canais.</p>
+        <p><a class="link-arrow" href="/fui-vitima/">Passo a passo: caí num golpe, e agora? <Icon name="arrow" /></a></p>
       </SectionHead>
       <ul class="canais" role="list">
         {CANAIS.map((c) => (
@@ -157,7 +177,7 @@ const serie = {
     <div class="wrap">
       <div class="cta-box">
         <p class="label"><span class="dot" aria-hidden="true"></span>Comece por aqui</p>
-        <h2>{formatarTempo(destaque.data.audio!.segundos)} para entender o golpe antes que ele chegue em você.</h2>
+        <h2>{formatarTempo(infoAudio(destaque)!.segundos)} para entender o golpe antes que ele chegue em você.</h2>
         <div class="actions">
           <BotaoOuvir ep={destaque} />
           <a class="btn btn-line" href="/episodios/">Ver episódios</a>

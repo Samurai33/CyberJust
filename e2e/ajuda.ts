@@ -1,6 +1,17 @@
 import { expect, type Page } from '@playwright/test';
 
-export const PAGINAS = ['/', '/episodios/', '/episodios/fraudes-digitais/', '/episodios/fraude-e-estelionato/', '/privacidade/'];
+export const PAGINAS = [
+  '/',
+  '/episodios/',
+  '/episodios/fraudes-digitais/',
+  '/episodios/protecao-de-criancas/',
+  '/temas/',
+  '/temas/fraudes/',
+  '/fui-vitima/',
+  '/sobre/',
+  '/acessibilidade/',
+  '/privacidade/',
+];
 
 /** Registra violações de CSP e erros de JavaScript da página (devem ser sempre zero). */
 export async function vigiar(page: Page): Promise<string[]> {

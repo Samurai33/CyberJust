@@ -1,0 +1,43 @@
+---
+import Base from '../../layouts/Base.astro';
+import Trilha from '../../components/Trilha.astro';
+import LinhaEpisodio from '../../components/LinhaEpisodio.astro';
+import { listarEpisodios, urlEpisodio, urlTema } from '../../lib/episodios';
+import { trilhaLd } from '../../lib/ld';
+import { TEMAS, type Tema } from '../../data/temas';
+
+export async function getStaticPaths() {
+  const eps = await listarEpisodios();
+  return (Object.keys(TEMAS) as Tema[])
+    .map((tema) => ({ params: { tema }, props: { tema, eps: eps.filter((e) => e.data.tema === tema) } }))
+    .filter((p) => p.props.eps.length > 0);
+}
+const { tema, eps } = Astro.props as { tema: Tema; eps: Awaited<ReturnType<typeof listarEpisodios>> };
+const t = TEMAS[tema];
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Temas', href: '/temas/' },
+  { nome: t.nome, href: urlTema(tema) },
+];
+const colecao = {
+  '@type': 'CollectionPage',
+  name: t.nome,
+  description: t.descricao,
+  url: new URL(urlTema(tema), Astro.site).href,
+  hasPart: eps.map((e) => ({ '@type': 'PodcastEpisode', name: e.data.titulo, url: new URL(urlEpisodio(e), Astro.site).href })),
+};
+---
+<Base title={`${t.nome}: episódios e casos`} description={t.descricao} jsonLd={[colecao, trilhaLd(Astro.site, trilha)]}>
+  <section class="page-head">
+    <div class="wrap">
+      <Trilha itens={trilha} />
+      <h1>{t.nome}</h1>
+      <p class="lede">{t.descricao}</p>
+    </div>
+  </section>
+  <section class="section section-tight">
+    <div class="wrap index">
+      {eps.map((ep) => <LinhaEpisodio ep={ep} nivel="h2" />)}
+    </div>
+  </section>
+</Base>

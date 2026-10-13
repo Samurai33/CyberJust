@@ -1,28 +1,43 @@
 ---
 import Base from '../../layouts/Base.astro';
 import LinhaEpisodio from '../../components/LinhaEpisodio.astro';
-import { grupoDoEpisodio, listarEpisodios } from '../../lib/episodios';
+import Trilha from '../../components/Trilha.astro';
+import { listarEpisodios, urlEpisodio } from '../../lib/episodios';
+import { trilhaLd } from '../../lib/ld';
+import { TEMAS, type Tema } from '../../data/temas';
+import { LD } from '../../data/site';
 
 const episodios = await listarEpisodios();
-const conta = (g: string) => episodios.filter((e) => grupoDoEpisodio(e) === g).length;
+const conta = (t: Tema) => episodios.filter((e) => e.data.tema === t).length;
 const filtros = [
   { id: 'todos', rotulo: 'Todos', n: episodios.length },
   { id: 'audio', rotulo: 'Com áudio', n: episodios.filter((e) => e.data.audio).length },
-  { id: 'fraude', rotulo: 'Fraudes', n: conta('fraude') },
-  { id: 'dados', rotulo: 'Dados pessoais', n: conta('dados') },
-  { id: 'corrupcao', rotulo: 'Corrupção', n: conta('corrupcao') },
-  { id: 'protecao', rotulo: 'Proteção infantil', n: conta('protecao') },
+  ...(Object.keys(TEMAS) as Tema[]).map((t) => ({ id: t, rotulo: TEMAS[t].curto, n: conta(t) })),
 ].filter((f) => f.n > 0);
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Episódios', href: '/episodios/' },
+];
+const lista = {
+  '@type': 'ItemList',
+  name: 'Episódios do CyberJustiça Brasil',
+  itemListElement: episodios.map((e, i) => ({ '@type': 'ListItem', position: i + 1, url: new URL(urlEpisodio(e), Astro.site).href })),
+  isPartOf: { '@id': LD.serie },
+};
 ---
-<Base title="Episódios" description="Todos os episódios do CyberJustiça Brasil: fraudes digitais, vazamento de dados, corrupção nas redes e proteção de crianças online.">
+<Base
+  title="Todos os episódios do podcast"
+  description="Todos os episódios do CyberJustiça Brasil: fraudes digitais, vazamento de dados, corrupção nas redes e proteção de crianças online."
+  jsonLd={[lista, trilhaLd(Astro.site, trilha)]}
+>
   <section class="page-head">
     <div class="wrap">
-      <p class="label"><b>{episodios.length}</b> / Episódios</p>
+      <Trilha itens={trilha} />
       <h1>Todos os episódios</h1>
       <p class="lede">Cada episódio traz o caso, quem investigou, as leis envolvidas e o que fazer para se proteger.</p>
     </div>
   </section>
-  <section class="section" aria-label="Lista de episódios">
+  <section class="section section-tight" aria-label="Lista de episódios">
     <div class="wrap lista">
       <fieldset class="filtro">
         <legend class="label">Filtrar</legend>

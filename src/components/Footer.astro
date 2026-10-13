@@ -1,7 +1,8 @@
 ---
+// Rodapé no padrão do n3xus.dev: marca, navegação, transparência/legal e contato; razão social e CNPJ embaixo.
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { MENU, SITE } from '../data/site';
+import { SITE, N3XUS } from '../data/site';
 ---
 <footer class="site-footer">
   <div class="wrap">
@@ -9,25 +10,43 @@ import { MENU, SITE } from '../data/site';
       <div class="foot-col foot-brand">
         <a class="logo" href="/"><Logo /><span><strong>CyberJustiça</strong> Brasil</span></a>
         <p class="muted">{SITE.descricao}</p>
+        <p class="muted">Um projeto <a href={N3XUS.site} rel="noopener">N3XUS</a>.</p>
       </div>
-      <nav class="foot-col" aria-label="Rodapé">
-        <h2>Site</h2>
+      <nav class="foot-col" aria-label="Podcast">
+        <h2>Podcast</h2>
         <ul role="list">
-          {MENU.map((m) => <li><a href={m.href}>{m.label}</a></li>)}
+          <li><a href="/episodios/">Episódios</a></li>
+          <li><a href="/temas/">Temas</a></li>
+          <li><a href="/#protecao">Como se proteger</a></li>
+          <li><a href="/sobre/">Sobre e especialista</a></li>
+          <li><a href="/podcast.xml" data-astro-reload>Feed RSS</a></li>
+        </ul>
+      </nav>
+      <nav class="foot-col" aria-label="Ajuda e transparência">
+        <h2>Ajuda e transparência</h2>
+        <ul role="list">
+          <li><a href="/fui-vitima/">Fui vítima de golpe</a></li>
+          <li><a href="/privacidade/">Privacidade</a></li>
+          <li><a href="/acessibilidade/"><Icon name="access" size={14} /> Acessibilidade</a></li>
+          <li><a href="/.well-known/security.txt" data-astro-reload>Segurança (security.txt)</a></li>
+          <li><a href={SITE.repo} rel="noopener noreferrer" target="_blank">Código aberto <Icon name="external" size={12} /></a></li>
         </ul>
       </nav>
       <div class="foot-col">
-        <h2>Transparência</h2>
-        <ul role="list">
-          <li><a href="/privacidade/">Privacidade</a></li>
-          <li><a href={SITE.repo} rel="noopener noreferrer" target="_blank">Código aberto <Icon name="external" size={12} /></a></li>
-          <li><a href="https://new.safernet.org.br/denuncie" rel="noopener noreferrer" target="_blank">SaferNet <Icon name="external" size={12} /></a></li>
-        </ul>
+        <h2>Contato</h2>
+        <address>
+          <ul role="list">
+            <li><a href={`mailto:${N3XUS.email}`}>{N3XUS.email}</a></li>
+            <li><a href={`mailto:${N3XUS.emailPrivacidade}`}>{N3XUS.emailPrivacidade}</a></li>
+            <li class="muted">{N3XUS.endereco}</li>
+          </ul>
+        </address>
       </div>
     </div>
     <div class="foot-legal">
-      <span>© {new Date().getFullYear()} {SITE.nome}</span>
-      <span>Conteúdo educativo. Não substitui orientação jurídica.</span>
+      <span>© {new Date().getFullYear()} {N3XUS.razao}</span>
+      <span>CNPJ {N3XUS.cnpj}</span>
+      <span>Conteúdo educativo: não substitui orientação jurídica.</span>
     </div>
   </div>
 </footer>

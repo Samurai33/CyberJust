@@ -4,7 +4,7 @@ import { ClientRouter } from 'astro:transitions';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Player from '../components/Player.astro';
-import { SITE } from '../data/site';
+import { SITE, LD } from '../data/site';
 // Preload das fontes principais (mesma URL com hash usada pelo CSS): evita salto de layout na troca de fonte.
 import fontDisplay from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
 import fontText from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
@@ -13,25 +13,33 @@ interface Props {
   title: string;
   description: string;
   ogType?: 'website' | 'article';
-  jsonLd?: Record<string, unknown>;
+  // Objetos JSON-LD da página (sem @context; vão juntos num @graph com o WebSite).
+  jsonLd?: Record<string, unknown>[];
   noindex?: boolean;
+  // Imagem de prévia (1200x630 JPEG). Padrão: a arte geral do site.
+  ogImage?: string;
+  ogImageAlt?: string;
 }
-const { title, description, ogType = 'website', jsonLd, noindex = false } = Astro.props;
+const {
+  title,
+  description,
+  ogType = 'website',
+  jsonLd = [],
+  noindex = false,
+  ogImage: ogPath = '/og-v1.jpg',
+  ogImageAlt = 'CyberJustiça Brasil: podcast sobre crimes cibernéticos no Brasil',
+} = Astro.props;
 // Títulos até 60 caracteres (o Google corta por volta disso). Se a marca estourar, sai a marca, não o assunto.
 const comMarca = `${title} | ${SITE.curto}`;
 const fullTitle = title === SITE.nome ? `${SITE.nome} | Podcast sobre crimes cibernéticos` : comMarca.length <= 60 ? comMarca : title;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL('/og-v1.jpg', Astro.site);
+const ogImage = new URL(ogPath, Astro.site);
 
-const site = {
+// Grafo JSON-LD: WebSite em todas as páginas (o Google usa para o nome do site), mais os da página.
+const ld = {
   '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  '@id': `${Astro.site}#site`,
-  name: SITE.nome,
-  url: Astro.site?.href,
-  inLanguage: 'pt-BR',
+  '@graph': [{ '@type': 'WebSite', '@id': LD.site, name: SITE.nome, url: Astro.site?.href, inLanguage: 'pt-BR' }, ...jsonLd],
 };
-const ld = Astro.url.pathname === '/' ? [site, jsonLd].filter(Boolean) : jsonLd ? [jsonLd] : [];
 ---
 <!doctype html>
 <html lang="pt-BR">
@@ -64,13 +72,14 @@ const ld = Astro.url.pathname === '/' ? [site, jsonLd].filter(Boolean) : jsonLd 
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="CyberJustiça Brasil: podcast sobre crimes cibernéticos no Brasil" />
+    <meta property="og:image:alt" content={ogImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
-    <meta name="twitter:image:alt" content="CyberJustiça Brasil: podcast sobre crimes cibernéticos no Brasil" />
-    {ld.length > 0 && <script type="application/ld+json" set:html={JSON.stringify(ld.length > 1 ? ld : ld[0])} />}
+    <meta name="twitter:image:alt" content={ogImageAlt} />
+    <link rel="alternate" type="application/rss+xml" title="CyberJustiça Brasil (podcast)" href="/podcast.xml" />
+    <script type="application/ld+json" set:html={JSON.stringify(ld)} />
     <!-- Navegação sem recarregar a página: é o que mantém o áudio tocando entre páginas. -->
     <ClientRouter />
   </head>

@@ -2,7 +2,7 @@
 // Ícones SVG inline (sem fonte de ícones, sem JS). Decorativos: aria-hidden.
 // "fill": glifos sólidos de interface. "line": ícones de traço.
 type Fill = 'arrow' | 'check' | 'menu' | 'external' | 'play' | 'pause' | 'back15' | 'fwd30' | 'close' | 'share' | 'download' | 'vol' | 'mute';
-type Line = 'shield' | 'lock' | 'alert' | 'flag' | 'clock' | 'calendar' | 'load';
+type Line = 'shield' | 'lock' | 'alert' | 'flag' | 'clock' | 'calendar' | 'load' | 'access' | 'rss' | 'list';
 interface Props { name: Fill | Line; size?: number; class?: string }
 const { name, size = 16, class: cls } = Astro.props;
 const fill: Record<Fill, string> = {
@@ -28,6 +28,10 @@ const line: Record<Line, string> = {
   clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
   calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
   load: 'M12 3a9 9 0 1 0 9 9',
+  // símbolo internacional de acessibilidade (pessoa em círculo), LBI art. 63 §1º
+  access: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.5h.01M7.5 10l4.5 1 4.5-1M12 11v3l-2 4M12 14l2 4',
+  rss: 'M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8M6 19h.01',
+  list: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
 };
 const isLine = name in line;
 ---

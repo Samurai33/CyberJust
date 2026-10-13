@@ -5,12 +5,9 @@ resumo: "A operação que desmantelou uma rede de corrupção que agia por plata
 data: "2023"
 status: RESOLVIDO
 ameaca: MÉDIO
-categoria: Corrupção digital
+tema: corrupcao
 tags: [corrupção, operação, investigação, redes digitais]
-audio:
-  arquivo: /audio/namoral.m4a
-  segundos: 444
-  bytes: 14285771
+audio: /audio/namoral.m4a
 recursos:
   - titulo: "Lei Anticorrupção (Lei 12.846/2013)"
     url: https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12846.htm
