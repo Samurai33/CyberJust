@@ -5,7 +5,7 @@ import Trilha from '../components/Trilha.astro';
 import Icon from '../components/Icon.astro';
 import retrato from '../assets/img/thiago-rangel.png';
 import { trilhaLd } from '../lib/ld';
-import { APRESENTADOR, ESPECIALISTAS, LD, N3XUS, SITE } from '../data/site';
+import { APRESENTADOR, LD, N3XUS, SITE } from '../data/site';
 
 const trilha = [
   { nome: 'Início', href: '/' },
@@ -64,7 +64,6 @@ const n3xus = { '@type': 'Organization', '@id': LD.n3xus, name: N3XUS.marca, leg
         <ul>
           <li><strong>Casos reais e fontes primárias.</strong> Cada episódio cita as leis e os canais oficiais envolvidos, com link para a fonte (Planalto, Banco Central, SaferNet, Polícia Federal).</li>
           <li><strong>Nada inventado.</strong> Números, nomes e datas só entram com fonte. Quando algo muda, a página do episódio mostra a data de revisão.</li>
-          <li><strong>Convidados identificados.</strong> Especialistas falam pelo cargo que ocupam; o site nunca publica contatos pessoais.</li>
           <li><strong>Uso de IA.</strong> Ferramentas de IA podem ajudar em transcrição e revisão de texto; o conteúdo é sempre conferido por uma pessoa antes de publicar.</li>
           <li><strong>Correções.</strong> Achou um erro? Escreva para <a href={`mailto:${N3XUS.email}`}>{N3XUS.email}</a>.</li>
         </ul>
@@ -73,18 +72,4 @@ const n3xus = { '@type': 'Organization', '@id': LD.n3xus, name: N3XUS.marca, leg
     </div>
   </section>
 
-  <section class="section" aria-labelledby="conv-t">
-    <div class="wrap">
-      <header class="sec-head"><p class="label">Convidados</p><h2 id="conv-t">Quem já participou</h2></header>
-      <ul class="pessoas" role="list">
-        {ESPECIALISTAS.map((p) => (
-          <li class="surface pessoa">
-            <h3>{p.nome}</h3>
-            <p class="cargo">{p.cargo}</p>
-            <p>{p.texto}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </section>
 </Base>

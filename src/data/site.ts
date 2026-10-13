@@ -80,25 +80,6 @@ export const APRESENTADOR = {
   ],
 } as const;
 
-// Convidados dos episódios.
-export const ESPECIALISTAS = [
-  {
-    nome: 'Diego Barbiero',
-    cargo: 'Coordenador do CyberGAECO',
-    texto: 'Experiência em investigações de crimes digitais organizados e casos emblemáticos que ajudou a solucionar.',
-  },
-  {
-    nome: 'Thiago Cardoso Silva',
-    cargo: 'Delegado do GAECO',
-    texto: 'Os desafios das investigações digitais e as novas técnicas usadas pelos criminosos.',
-  },
-  {
-    nome: 'Wilson Leite da Silva Filho',
-    cargo: 'Chefe da Divisão de Informática Forense',
-    texto: 'Como funciona a coleta de provas digitais e como a perícia evolui para combater o crime.',
-  },
-] as const;
-
 // Canais oficiais (links conferidos). O site não recebe denúncias.
 export const CANAIS = [
   {
