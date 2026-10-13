@@ -10,9 +10,13 @@ test('ouvir abre o player e ele continua o mesmo ao navegar entre páginas', asy
   const player = page.locator('cj-player');
   await expect(player).toBeHidden();
 
-  await page.locator('.hero [data-tocar]').click();
+  // O botão da home toca o episódio mais recente, que muda a cada publicação: o teste lê o que o botão anuncia.
+  const botao = page.locator('.hero [data-tocar]');
+  const [titulo, src] = await Promise.all([botao.getAttribute('data-titulo'), botao.getAttribute('data-src')]);
+  expect(titulo && src).toBeTruthy();
+  await botao.click();
   await expect(player).toBeVisible();
-  await expect(player.getByRole('link', { name: /fraudes digitais/i })).toBeVisible();
+  await expect(player.getByRole('link', { name: titulo! })).toBeVisible();
   await semRolagemLateral(page);
 
   // marca o <audio> atual: se a navegação recriasse o elemento, a marca sumiria
@@ -24,7 +28,7 @@ test('ouvir abre o player e ele continua o mesmo ao navegar entre páginas', asy
   await expect(player).toBeVisible();
   const marca = await page.evaluate(() => (document.querySelector('cj-player audio') as HTMLAudioElement & { marca?: string }).marca);
   expect(marca).toBe('mesmo');
-  await expect(page.locator('cj-player audio')).toHaveAttribute('src', '/audio/bfraudes-digitais.m4a');
+  await expect(page.locator('cj-player audio')).toHaveAttribute('src', src!);
 
   await player.getByRole('button', { name: 'Fechar player' }).click();
   await expect(player).toBeHidden();
