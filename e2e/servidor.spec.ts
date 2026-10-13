@@ -98,7 +98,9 @@ test('feed do podcast válido para Apple e Podcasting 2.0', async ({ request }) 
   expect(xml).toMatch(/<podcast:guid>[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}<\/podcast:guid>/);
   expect(xml).toContain('<itunes:email>contato@n3xus.dev</itunes:email>');
   const itens = [...xml.matchAll(/<enclosure url="([^"]+)" length="(\d+)" type="audio\/x-m4a" \/>/g)];
-  expect(itens.length).toBe(3);
+  // Todo <item> do feed tem áudio (podcast.xml.ts só publica episódio com áudio e data).
+  expect(itens.length).toBeGreaterThan(0);
+  expect(itens.length).toBe((xml.match(/<item>/g) ?? []).length);
   for (const [, url, tam] of itens) {
     const a = await request.head(url!.replace('https://www.cyberjus.org', ''));
     expect(a.status()).toBe(200);

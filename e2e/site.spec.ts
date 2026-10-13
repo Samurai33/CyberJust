@@ -52,8 +52,12 @@ test('filtro de episódios funciona sem JavaScript', async ({ browser }) => {
   await page.goto('/episodios/');
   const linhas = page.locator('.ep-row');
   const total = await linhas.count();
+  // Conta pelo atributo, não por número fixo: o pipeline publica episódios novos com áudio.
+  const comAudio = await page.locator('.ep-row[data-audio]').count();
+  expect(comAudio).toBeGreaterThan(0);
+  expect(comAudio).toBeLessThan(total);
   await page.locator('label[for="f-audio"]').click();
-  await expect(linhas.filter({ visible: true })).toHaveCount(3);
+  await expect(linhas.filter({ visible: true })).toHaveCount(comAudio);
   await page.locator('label[for="f-corrupcao"]').click();
   await expect(linhas.filter({ visible: true })).toHaveCount(2);
   await page.locator('label[for="f-todos"]').click();
