@@ -271,6 +271,16 @@
   .pessoa p:last-child { font-size: 0.95rem; }
   @media (max-width: 960px) { .pessoas { grid-template-columns: 1fr; } }
 
+  /* especialista em destaque (apresentador) */
+  .host { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: clamp(20px, 4vw, 40px); align-items: center; padding: clamp(20px, 3vw, 28px); margin: 0; background: linear-gradient(180deg, #0d1320, #0a0e17) padding-box, var(--edge-hi) border-box; }
+  .host img { inline-size: 200px; block-size: 200px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong); }
+  .host figcaption { display: grid; gap: 10px; }
+  .host h3 { font-size: var(--step-2); letter-spacing: -0.03em; }
+  .host h3 span { color: var(--fg-subtle); font-weight: 500; }
+  .host .cargo { font-family: var(--font-mono); font-size: var(--step--1); color: var(--accent); }
+  .host .actions { gap: 20px; margin-block-start: 4px; }
+  @media (max-width: 640px) { .host { grid-template-columns: 1fr; } .host img { inline-size: 140px; block-size: 140px; } }
+
   /* canais oficiais */
   .canais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
   .canal { padding: 24px; display: grid; gap: 10px; align-content: start; text-decoration: none; color: inherit; transition: background 0.2s ease; }

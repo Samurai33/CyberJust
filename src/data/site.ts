@@ -47,6 +47,20 @@ export const PROTECAO = [
   },
 ] as const;
 
+// Especialista e apresentador do podcast. Mesma foto e bio da página "Sobre" do n3xus.dev.
+export const APRESENTADOR = {
+  nome: 'Thiago Rangel',
+  apelido: 'Samurai',
+  cargo: 'Especialista em cibersegurança · fundador da N3XUS',
+  texto:
+    'Engenheiro de IA, cibersegurança e full-stack. Constrói sistemas seguros para aviação, testes de intrusão e infraestrutura crítica, e traz para o podcast o olhar técnico de quem defende sistemas reais.',
+  links: [
+    { href: 'https://n3xus.dev/sobre/', label: 'n3xus.dev' },
+    { href: 'https://github.com/Samurai33', label: 'GitHub @Samurai33' },
+  ],
+} as const;
+
+// Convidados dos episódios.
 export const ESPECIALISTAS = [
   {
     nome: 'Diego Barbiero',

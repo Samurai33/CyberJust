@@ -62,3 +62,11 @@ test('conteúdo e navegação funcionam com JavaScript desligado', async ({ brow
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Caso Lulu');
   await contexto.close();
 });
+
+test('especialista em destaque com foto carregada', async ({ page }) => {
+  await page.goto('/#especialistas');
+  const foto = page.locator('.host img');
+  await foto.scrollIntoViewIfNeeded();
+  await expect(page.locator('.host h3')).toContainText('Thiago Rangel');
+  await expect.poll(() => foto.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+});

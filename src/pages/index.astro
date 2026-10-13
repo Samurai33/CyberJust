@@ -7,7 +7,9 @@ import Selo from '../components/Selo.astro';
 import Icon from '../components/Icon.astro';
 import { listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/episodios';
 import { formatarTempo } from '../lib/tempo';
-import { SITE, TIPOS_DE_CRIME, PROTECAO, ESPECIALISTAS, CANAIS } from '../data/site';
+import { Image } from 'astro:assets';
+import retrato from '../assets/img/thiago-rangel.png';
+import { SITE, TIPOS_DE_CRIME, PROTECAO, APRESENTADOR, ESPECIALISTAS, CANAIS } from '../data/site';
 
 const episodios = await listarEpisodios();
 const comAudio = episodios.filter((e) => e.data.audio);
@@ -23,6 +25,13 @@ const serie = {
   description: SITE.descricao,
   url: Astro.site?.href,
   inLanguage: 'pt-BR',
+  author: {
+    '@type': 'Person',
+    name: APRESENTADOR.nome,
+    alternateName: APRESENTADOR.apelido,
+    jobTitle: 'Especialista em cibersegurança',
+    sameAs: APRESENTADOR.links.map((l) => l.href),
+  },
 };
 ---
 <Base title={SITE.nome} description={SITE.descricao} jsonLd={serie}>
@@ -119,10 +128,23 @@ const serie = {
 
   <section class="section" id="especialistas" aria-labelledby="esp-t">
     <div class="wrap">
-      <SectionHead index="05" label="Especialistas" title="Quem investiga, explica" id="esp-t">
-        <p>Convidados que trabalham no combate ao crime digital no dia a dia.</p>
-      </SectionHead>
-      <ul class="pessoas" role="list">
+      <SectionHead index="05" label="Especialistas" title="Quem investiga, explica" id="esp-t" />
+      <figure class="surface host">
+        <Image src={retrato} alt="Retrato de Thiago Rangel em arte ASCII azul sobre fundo escuro" widths={[200, 400]} sizes="200px" loading="lazy" />
+        <figcaption>
+          <p class="label"><b>Especialista</b> / apresentador</p>
+          <h3>{APRESENTADOR.nome} <span>({APRESENTADOR.apelido})</span></h3>
+          <p class="cargo">{APRESENTADOR.cargo}</p>
+          <p>{APRESENTADOR.texto}</p>
+          <p class="actions">
+            {APRESENTADOR.links.map((l) => (
+              <a class="link-arrow" href={l.href} rel="me noopener noreferrer" target="_blank">{l.label} <Icon name="external" size={12} /></a>
+            ))}
+          </p>
+        </figcaption>
+      </figure>
+      <h3 class="label mt-3">Convidados</h3>
+      <ul class="pessoas mt-2" role="list">
         {ESPECIALISTAS.map((p) => (
           <li class="surface pessoa">
             <span class="avatar" aria-hidden="true">{iniciais(p.nome)}</span>
