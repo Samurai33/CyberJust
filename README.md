@@ -58,19 +58,37 @@ BASE_URL=http://127.0.0.1:18080 pnpm test:e2e                # e2e contra a imag
 | `src/pages/` | Rotas: `/`, `/episodios/`, `/episodios/[id]/`, `/privacidade/`, `404`. |
 | `src/scripts/player.ts` | O player (`<cj-player>`). Qualquer botão com `data-tocar` controla o player. |
 | `src/styles/global.css` | Design system N3XUS em camadas CSS (tokens, base, layout, componentes). |
-| `src/data/site.ts` | Textos fixos: menu, tipos de crime, dicas, especialistas, canais oficiais. |
+| `src/data/site.ts`, `src/data/temas.ts` | Textos fixos (menu, especialista, canais oficiais, N3XUS) e os temas. |
+| `src/cms/config.ts`, `src/pages/dash-*/` | Painel de episódios (Sveltia CMS). |
+| `src/pages/podcast.xml.ts`, `src/pages/og/` | Feed do podcast e imagens de prévia por episódio, gerados no build. |
 | `docker/` | nginx: CSP e headers, redirects 301 das URLs antigas, cache. |
 | `design/` | Fontes da imagem de prévia e dos ícones (`sh design/gerar-imagens.sh`). |
 | `e2e/` | Playwright: páginas, CSP, player, headers, redirects e Range. |
 
-## Publicar um episódio
+## Publicar e gerenciar episódios
 
-1. Converta o áudio para AAC em MP4 com o índice no início. Sem isso o streaming não funciona:
-   `ffmpeg -i entrada.m4a -map 0:a -c copy -movflags +faststart public/audio/<nome-novo>.m4a`
-2. Use sempre um **nome novo** de arquivo: o áudio é servido com cache imutável.
-3. Crie `src/content/episodios/<slug>.md` com `audio.arquivo`, `audio.segundos` e `audio.bytes`
-   (valores do `ffprobe` e do `ls -l`). O build valida o esquema.
-4. Abra um PR. O CI roda os testes, o build e o e2e; depois do merge, o Coolify publica.
+**Pelo painel** (recomendado): três cliques no logo do site abrem `/dash-…/` (Sveltia CMS).
+1. O Cloudflare Access pede o login do dono.
+2. No painel, entre com um **token fine-grained do GitHub** com só *Contents: Read and write* no
+   repositório `Samurai33/CyberJust`, com validade curta. O OAuth do GitHub foi descartado de propósito,
+   porque exige acesso a todos os repositórios.
+3. Crie, edite ou remova episódios e envie o áudio `.m4a` e a transcrição `.vtt`. Cada "Salvar" vira
+   um commit na `main`, e o webhook publica no Coolify em 1 a 2 minutos.
+
+**Por Git:** crie `src/content/episodios/<slug>.md` seguindo o esquema de `src/content.config.ts` e abra um PR.
+
+Regras validadas pelo build (se algo quebrar, o deploy falha e o site anterior continua no ar):
+- **Áudio** em AAC/M4A com o índice no início:
+  `ffmpeg -i entrada -map 0:a -c copy -movflags +faststart public/audio/<nome-novo>.m4a`.
+  A duração e o tamanho são lidos do arquivo, então você não preenche nada à mão.
+  Use sempre um nome novo: o áudio tem cache imutável.
+- **Resumo** com 50 a 155 caracteres e **título** com 10 a 90 (`tituloSeo` com até 60 para a aba e as prévias).
+- **Fontes** só com `https://` oficiais. Nada de números, nomes ou contatos sem fonte.
+- **Slug:** o nome do arquivo é a URL e não deve mudar depois de publicado.
+  Se mudar, adicione um 301 em `docker/nginx.conf`.
+
+Cada episódio ganha sozinho uma página, uma imagem de prévia própria (`/og/<slug>-<hash>.jpg`), uma
+entrada no feed `/podcast.xml` (Apple Podcasts, Spotify e Podcasting 2.0), JSON-LD e `lastmod` no sitemap.
 
 ## Deploy
 

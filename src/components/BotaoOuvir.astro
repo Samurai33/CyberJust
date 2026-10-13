@@ -1,31 +1,39 @@
 ---
 // Botão que toca o episódio no player global (src/scripts/player.ts). Funciona em qualquer página.
+// Com `inicio` (segundos), vira o botão de um capítulo.
 import Icon from './Icon.astro';
 import { formatarTempo } from '../lib/tempo';
-import { rotuloEpisodio, urlEpisodio, type Episodio } from '../lib/episodios';
-interface Props { ep: Episodio; variante?: 'principal' | 'linha' }
-const { ep, variante = 'principal' } = Astro.props;
-const audio = ep.data.audio;
-const cls = `btn play-btn ${variante === 'linha' ? 'btn-line' : ''}`;
+import { infoAudio, rotuloEpisodio, urlEpisodio, type Episodio } from '../lib/episodios';
+interface Props { ep: Episodio; variante?: 'principal' | 'linha'; inicio?: number; rotulo?: string }
+const { ep, variante = 'principal', inicio, rotulo } = Astro.props;
+const audio = infoAudio(ep);
+const capitulo = inicio !== undefined;
+const cls = capitulo ? 'capitulo' : `btn play-btn ${variante === 'linha' ? 'btn-line' : ''}`;
+const dados = audio && {
+  'data-tocar': '',
+  'data-id': ep.id,
+  'data-src': ep.data.audio,
+  'data-titulo': ep.data.titulo,
+  'data-url': urlEpisodio(ep),
+  'data-rotulo': rotuloEpisodio(ep),
+  'data-segundos': audio.segundos,
+  ...(capitulo ? { 'data-inicio': inicio } : {}),
+};
 ---
-{audio ? (
-  <button
-    class={cls}
-    type="button"
-    data-tocar
-    data-id={ep.id}
-    data-src={audio.arquivo}
-    data-titulo={ep.data.titulo}
-    data-url={urlEpisodio(ep)}
-    data-rotulo={rotuloEpisodio(ep)}
-    data-segundos={audio.segundos}
-    aria-label={`Ouvir: ${ep.data.titulo}`}
-  >
+{audio && capitulo && (
+  <button class={cls} type="button" {...(dados || {})}>
+    <span class="mono">{formatarTempo(inicio ?? 0)}</span>
+    <span>{rotulo}</span>
+  </button>
+)}
+{audio && !capitulo && (
+  <button class={cls} type="button" {...(dados || {})}>
     <Icon name="play" class="ico-play" />
     <Icon name="pause" class="ico-pause" />
+    <!-- O nome acessível começa pelo texto visível (WCAG 2.5.3); o título só para leitores de tela. -->
     <span data-texto>Ouvir</span>
     <span class="dur">{formatarTempo(audio.segundos)}</span>
+    <span class="visually-hidden">: {ep.data.titulo}</span>
   </button>
-) : (
-  <button class={`${cls} btn-line`} type="button" disabled>Áudio em breve</button>
 )}
+{!audio && !capitulo && <button class={`${cls} btn-line`} type="button" disabled>Áudio em breve</button>}

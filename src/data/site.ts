@@ -10,11 +10,31 @@ export const SITE = {
 
 export const MENU = [
   { href: '/episodios/', label: 'Episódios' },
-  { href: '/#casos', label: 'Casos' },
+  { href: '/temas/', label: 'Temas' },
   { href: '/#protecao', label: 'Proteção' },
-  { href: '/#especialistas', label: 'Especialistas' },
-  { href: '/#denuncie', label: 'Denuncie' },
+  { href: '/fui-vitima/', label: 'Fui vítima' },
+  { href: '/sobre/', label: 'Sobre' },
 ] as const;
+
+// Responsável pelo site (controladora na LGPD). Mesmos dados do n3xus.dev (conferidos na Receita em 2026-10-05).
+export const N3XUS = {
+  marca: 'N3XUS',
+  razao: 'N3XUS TECNOLOGIA E AUDIO LTDA',
+  cnpj: '68.361.597/0001-33',
+  endereco: 'Av. Paulista, 726, sala 1202, Bela Vista, São Paulo/SP, CEP 01310-910',
+  site: 'https://n3xus.dev/',
+  email: 'contato@n3xus.dev',
+  emailPrivacidade: 'privacidade@n3xus.dev',
+  emailSeguranca: 'seguranca@n3xus.dev',
+} as const;
+
+// Identificadores estáveis do JSON-LD (o mesmo @id liga autor, apresentador e página de perfil).
+export const LD = {
+  site: 'https://www.cyberjus.org/#site',
+  serie: 'https://www.cyberjus.org/#podcast',
+  thiago: 'https://www.cyberjus.org/sobre/#thiago-rangel',
+  n3xus: 'https://n3xus.dev/#organization',
+} as const;
 
 export const TIPOS_DE_CRIME = [
   { titulo: 'Fraudes financeiras', texto: 'Golpes bancários, Pix e estelionato digital.', ameaca: 'CRÍTICO' },
@@ -47,23 +67,18 @@ export const PROTECAO = [
   },
 ] as const;
 
-export const ESPECIALISTAS = [
-  {
-    nome: 'Diego Barbiero',
-    cargo: 'Coordenador do CyberGAECO',
-    texto: 'Experiência em investigações de crimes digitais organizados e casos emblemáticos que ajudou a solucionar.',
-  },
-  {
-    nome: 'Thiago Cardoso Silva',
-    cargo: 'Delegado do GAECO',
-    texto: 'Os desafios das investigações digitais e as novas técnicas usadas pelos criminosos.',
-  },
-  {
-    nome: 'Wilson Leite da Silva Filho',
-    cargo: 'Chefe da Divisão de Informática Forense',
-    texto: 'Como funciona a coleta de provas digitais e como a perícia evolui para combater o crime.',
-  },
-] as const;
+// Especialista e apresentador do podcast. Mesma foto e bio da página "Sobre" do n3xus.dev.
+export const APRESENTADOR = {
+  nome: 'Thiago Rangel',
+  apelido: 'Samurai',
+  cargo: 'Especialista em cibersegurança · fundador da N3XUS',
+  texto:
+    'Engenheiro de IA, cibersegurança e full-stack. Constrói sistemas seguros para aviação, testes de intrusão e infraestrutura crítica, e traz para o podcast o olhar técnico de quem defende sistemas reais.',
+  links: [
+    { href: 'https://n3xus.dev/sobre/', label: 'n3xus.dev' },
+    { href: 'https://github.com/Samurai33', label: 'GitHub @Samurai33' },
+  ],
+} as const;
 
 // Canais oficiais (links conferidos). O site não recebe denúncias.
 export const CANAIS = [
