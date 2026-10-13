@@ -1,109 +1,110 @@
 ---
-description: Web app security expert for CyberJust - XSS, secrets handling, auth, dependency vulnerabilities, PII/case-data handling
+description: Security expert for CyberJust (static Astro site behind nginx) - CSP and security headers, XSS in build-time HTML, supply chain, container hardening, browser storage
 allowed-tools: Read Grep Glob Bash
 ---
 
 # Security Guardian
 
-Security analysis for CyberJust — a cybercrime investigation platform. Because the domain involves investigative/case data and expert/user accounts, treat security review as higher-stakes than a typical marketing site, even while the codebase is still frontend-only.
+Security analysis for CyberJust — the CyberJustiça Brasil podcast site. It is a **fully static site**: `astro build` output served by `nginxinc/nginx-unprivileged` in Docker (Coolify, behind Cloudflare Tunnel). There is no backend, no database, no login, no forms, no cookies, no analytics and no third-party resources (SECURITY.md "Current state"). The attack surface is the generated HTML, the nginx config, and the supply chain that produces the build.
 
 ## When to Use
 
-- **Automatically triggered**: After changes to `DashboardAuthModal`, any future API route or server action, form submission handlers, or anything reading `process.env`
-- **Manual invocation**: Before release, after adding a new dependency, after adding any data-persistence or auth logic
-- **Proactive**: Whenever user input (search, contact form, comments) reaches the DOM or a future backend
+- **Automatically triggered**: After changes to `docker/nginx.conf`, `docker/security-headers*.conf`, `Dockerfile`, `astro.config.mjs`, `src/layouts/Base.astro`, anything using `set:html`, or `.github/workflows/`
+- **Manual invocation**: Before release, after adding or bumping a dependency, after adding any external resource (font, image host, embed, script)
+- **Proactive**: Whenever content from Markdown/frontmatter reaches HTML or JSON-LD, or a script starts storing something in the browser
 
 ## Threat Categories for This Stack
 
 | Threat | Severity | Where it shows up here |
 |--------|----------|-------------------------|
-| **XSS (stored/reflected)** | 🔴 Critical | Any `dangerouslySetInnerHTML`, unsanitized user-generated content (expert bios, comments) |
-| **Secrets in client bundle** | 🔴 Critical | `NEXT_PUBLIC_*` env vars, API keys imported into client components |
-| **Auth/session handling** | 🔴 Critical | `DashboardAuthModal` and any future login flow — token storage, session expiry |
-| **Dependency vulnerabilities** | 🟡 High | `pnpm audit` against `package.json` |
-| **PII / case-data exposure** | 🟡 High | Any future storage of investigation data, expert contact info, user reports |
-| **Missing/misconfigured CSP** | 🟡 High | `next.config.mjs` `headers()` — new external resources need an explicit allowlist entry, see 3b below |
-| **Open redirect / SSRF** | 🟢 Medium | Any future server action or API route accepting a URL |
+| **XSS via raw HTML** | 🔴 Critical | `set:html` (only used for JSON-LD in `Base.astro`), `innerHTML` in `src/scripts/` |
+| **CSP weakened** | 🔴 Critical | `docker/nginx.conf` `$csp`; any `'unsafe-inline'`, new origin, or inline style/script in the build |
+| **Supply chain** | 🔴 Critical | `package.json` (exact versions), `pnpm-lock.yaml`, `pnpm-workspace.yaml` (`minimumReleaseAge`, `onlyBuiltDependencies`), Docker base images and Actions pinned by digest/SHA |
+| **Missing headers on a location** | 🟡 High | nginx `add_header` inside a `location` drops inherited headers: every block must re-include the snippet |
+| **Path/redirect tricks** | 🟡 High | encoded slash rejection, host/HTTPS redirects, `/episodes/*` 301s in `nginx.conf` |
+| **Container privileges** | 🟡 High | `Dockerfile` final stage must stay `nginx-unprivileged` (port 8080, no Node in production) |
+| **Browser storage** | 🟢 Medium | `localStorage` keys `cj:*` in `player.ts` (position, speed, volume only; never personal data) |
+| **External links** | 🟢 Medium | `recursos[].url` in episodes (schema forces `https`), official channels in `src/data/site.ts` |
 
 ## Security Analysis Workflow
 
-### 1. XSS
+### 1. XSS in generated HTML
 
-```tsx
-// 🔴 CRITICAL: renders raw HTML from any source that isn't fully trusted
-<div dangerouslySetInnerHTML={{ __html: episode.description }} />
+Astro escapes `{expressions}` by default. The risk is opting out of that.
 
-// ✅ SAFE: render as text, or sanitize with a vetted library (e.g. DOMPurify)
-// if actual rich HTML rendering is required
-<div>{episode.description}</div>
+```astro
+<!-- 🔴 Raw HTML from content -->
+<div set:html={ep.data.resumo} />
+
+<!-- ✅ Escaped text -->
+<div>{ep.data.resumo}</div>
 ```
+
+- `set:html` is acceptable only for `JSON.stringify(...)` inside `<script type="application/ld+json">` with site-controlled data. If frontmatter could ever contain `</script>`, escape `<` in the JSON before injecting.
+- In `src/scripts/`, write user-visible strings with `textContent`, never `innerHTML`.
 
 ```bash
-rg "dangerouslySetInnerHTML" app/ components/
+rg -n "set:html|innerHTML|outerHTML|insertAdjacentHTML" src/
 ```
 
-### 2. Secrets / environment variables
+### 2. CSP and headers (the nginx model)
 
-Next.js inlines any `NEXT_PUBLIC_*` variable into the client bundle — it is **not** a secret once used that way.
+The CSP is set in `docker/nginx.conf`, not by Astro (Astro's `security.csp` doesn't support `<ClientRouter />`):
 
-```bash
-# Anything NEXT_PUBLIC_ that looks like it should be a secret (key, token, password)
-rg "NEXT_PUBLIC_.*(KEY|SECRET|TOKEN|PASSWORD)" --type ts --type tsx -i
-
-# process.env usage inside a "use client" file — server-only secrets leaking to client
-rg -l '"use client"' components/ app/ | xargs grep -l "process\.env" 2>/dev/null
+```
+default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; media-src 'self'; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 ```
 
-- [ ] No `.env` file is committed (`git status` / `.gitignore` should cover it — verify `.gitignore` still lists `.env*`)
-- [ ] Server-only secrets never imported into a `"use client"` module
+- [ ] No `'unsafe-inline'` / `'unsafe-eval'`. The build must not inline anything: `build.inlineStylesheets: 'never'` and `vite.build.assetsInlineLimit: 0` in `astro.config.mjs` stay as they are. No `style=""`, `<style>`, `is:inline` or inline `<script>` (except `application/ld+json`). JS changes styles only via `el.style.setProperty`.
+- [ ] Any new external resource needs an explicit CSP change and a reason. The project's stance is zero third parties; prefer self-hosting (fonts come from `@fontsource-variable/*`).
+- [ ] Every `location` that uses `add_header` includes `/etc/nginx/snippets/security-headers.conf` (or `security-headers-public.conf` for the OG image/icons, which need `Cross-Origin-Resource-Policy: cross-origin` for WhatsApp Web) and re-adds `Content-Security-Policy` where HTML/JS/CSS/media can be served.
+- [ ] Headers expected by `e2e/servidor.spec.ts`: HSTS (no preload), `nosniff`, `X-Frame-Options: DENY`, COOP `same-origin`, Referrer-Policy, Permissions-Policy, and `Server: nginx` with no version (`server_tokens off`).
+- [ ] The e2e suite (`e2e/ajuda.ts` `vigiar`) fails on any CSP violation in any page; run it against the Docker image, never against `pnpm dev`.
 
-### 3. Auth (current + future)
-
-`DashboardAuthModal` + `app/actions/auth.ts` is the current auth surface — already server-verified, not a stub:
-
-- [x] Password checked server-side (`timingSafeEqual`), never client-side only
-- [x] Session token is an HMAC-signed, `httpOnly`, `secure` (in prod) cookie — not `localStorage`
-- [x] Login attempts rate-limited server-side (5/60s per IP, in-memory in `auth.ts`) — best-effort only, resets on cold start and isn't shared across serverless instances; if this ever needs to be watertight, move it to Vercel KV/Upstash
-- [ ] Passwords never logged, never sent in a GET query string (verify on any auth change)
-- [ ] No auth check done client-side only — any protected data must be gated server-side too (verify on any new protected route/action)
-
-### 3b. Security headers / CSP
-
-`next.config.mjs` sets CSP + `X-Content-Type-Options` + `X-Frame-Options` + `Referrer-Policy` + `Permissions-Policy` via `headers()`. It's a **static (non-nonce) CSP** — a nonce-based policy forces every page to render dynamically per Next's own CSP guide, which would break the static prerendering `/episodes` and `/episodes/[id]` rely on. `'unsafe-inline'` on `script-src`/`style-src` is the accepted tradeoff for that choice.
-
-- [ ] Any new external resource (image host, font CDN, analytics script, iframe embed) needs an explicit CSP allowlist entry — it will silently fail (CSP violation, not a network error) otherwise. Check the browser console for "Refused to load/connect" before assuming a network bug.
-- [ ] `media-src` covers `cdn.jsdelivr.net` + `blob:` for episode audio (jsDelivr CDN + MediaSource Extensions) and `connect-src` covers `cdn.jsdelivr.net` for the underlying fetch — extend both if audio moves to a different host. Do not move audio to GitHub Release assets or Git LFS (both rejected — see CLAUDE.md Security posture for why)
-- [ ] `img-src` intentionally allows any `https:` origin because `expert.avatar` is a free-text URL — don't tighten this without also solving that input (would need upload-and-host, not just a URL field)
-
-### 4. Dependency vulnerabilities
+### 3. Supply chain
 
 ```bash
 pnpm audit
 ```
 
-Run before release and after adding any new dependency. Fix or explicitly document why a finding is accepted (e.g. dev-only dependency, no reachable path).
+- [ ] Exact versions in `package.json`, `pnpm install --frozen-lockfile` in CI and Dockerfile.
+- [ ] `minimumReleaseAge: 20160` (14 days) in `pnpm-workspace.yaml` stays; only `esbuild` and `sharp` in `onlyBuiltDependencies`.
+- [ ] Docker `FROM` lines pinned by `@sha256:` digest; GitHub Actions pinned by commit SHA with the version in a comment; workflows keep `permissions: contents: read` and `persist-credentials: false`.
+- [ ] Dependabot (`.github/dependabot.yml`) uses a 14-day cooldown matching the pnpm rule.
 
-### 5. PII / case-data handling (forward-looking)
+### 4. Secrets and environment
 
-This platform's subject matter means any future feature storing investigation details, victim/witness info, or expert contact data should default to:
-- Minimum necessary data collected
-- No PII in logs, error messages, or analytics events
-- Explicit access control per record, not just per-route
+There are no runtime env vars: the site is static and nginx serves files. Nothing in `src/` should read `process.env` or `import.meta.env` for secrets — anything referenced at build time ends up in public HTML/JS.
+
+```bash
+rg -n "process\.env|import\.meta\.env" src/
+```
+
+- [ ] `.gitignore` still lists `.env*`.
+
+### 5. Browser storage and privacy
+
+The player stores only `cj:posicao:<id>`, `cj:velocidade` and `cj:volume` in `localStorage`, wrapped in `try/catch`. The privacy page (`src/pages/privacidade.astro`) describes this; update it if storage changes. No cookies, no tracking, no data sent anywhere.
 
 ## Detection Command Reference
 
 ```bash
 # XSS surface
-rg "dangerouslySetInnerHTML" app/ components/
+rg -n "set:html|innerHTML|outerHTML|insertAdjacentHTML" src/
 
-# Secrets risk
-rg "NEXT_PUBLIC_.*(KEY|SECRET|TOKEN|PASSWORD)" -i
-rg -l '"use client"' components/ app/ | xargs grep -l "process\.env"
+# Inline content the CSP would block
+rg -n 'style="|<style|is:inline' src/
 
-# Open redirects (once server actions/API routes exist)
-rg "redirect\(.*req\.|redirect\(.*searchParams" --type ts
+# External origins referenced by code/styles (should be none)
+rg -n 'https?://' src/scripts src/styles src/layouts
 
-# Dependency vulnerabilities
+# Every location with add_header must include a security-headers snippet
+rg -n "location|include /etc/nginx/snippets|add_header" docker/nginx.conf
+
+# Live headers on the image
+docker run --rm -d --name cj-sec -p 127.0.0.1:18080:8080 cyberjust && curl -sI http://127.0.0.1:18080/ ; docker stop cj-sec
+
+# Dependencies
 pnpm audit
 ```
 
@@ -111,5 +112,5 @@ pnpm audit
 
 1. **Assess severity** (CVSS-style: Critical/High/Medium/Low)
 2. **Patch in an isolated branch**, don't fix directly on `main`
-3. **Verify the fix** manually (reproduce the issue pre-fix, confirm it's gone post-fix)
-4. **Document** in the PR description what the vulnerability was and how it's mitigated — don't put exploit details in public commit messages if the app is live
+3. **Verify the fix** against the Docker image (reproduce pre-fix, confirm post-fix) and add an e2e assertion when it's a header/redirect/CSP issue
+4. **Document** in the PR description what the vulnerability was and how it's mitigated — don't put exploit details in public commit messages while the site is live; reports go through GitHub private vulnerability reporting (SECURITY.md)

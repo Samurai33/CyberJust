@@ -1,27 +1,24 @@
-import { defineConfig, devices } from "@playwright/test"
+import { defineConfig, devices } from '@playwright/test';
 
-// Deliberately scoped small (#133): one browser, a handful of golden-path
-// smoke tests - not a full cross-browser/visual-regression suite. The repo
-// had zero browser-level test coverage before this; the goal here is a
-// baseline that catches "the site doesn't load" / "core navigation is
-// broken" regressions (exactly the class of bug #111/#112 fixed), not to
-// replace manual verification for every UI change.
+// Os testes rodam contra a imagem Docker de produção (nginx + headers + CSP), não contra o `astro dev`:
+//   docker build -t cyberjust . && docker run -d -p 127.0.0.1:18080:8080 cyberjust
+//   BASE_URL=http://127.0.0.1:18080 pnpm test:e2e
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: './e2e',
   fullyParallel: true,
-  retries: process.env.CI ? 1 : 0,
-  reporter: "list",
+  forbidOnly: !!process.env['CI'],
+  retries: process.env['CI'] ? 1 : 0,
+  reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: process.env.E2E_BASE_URL || "http://localhost:3000",
-    trace: "on-first-retry",
+    baseURL: process.env['BASE_URL'] ?? 'http://127.0.0.1:18080',
+    trace: 'retain-on-failure',
+    locale: 'pt-BR',
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: process.env.E2E_BASE_URL
-    ? undefined
-    : {
-        command: "pnpm build && pnpm start",
-        url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI,
-        timeout: 180_000,
-      },
-})
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'iphone', use: { ...devices['iPhone 15'] } },
+    { name: 'ipad', use: { ...devices['iPad Pro 11'] } },
+    { name: 'android', use: { ...devices['Pixel 7'] } },
+  ],
+});

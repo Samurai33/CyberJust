@@ -28,15 +28,13 @@ Closes #
 
 ## Checklist
 
-- [ ] `pnpm lint` passes
-- [ ] `pnpm type-check` passes
 - [ ] `pnpm test` passes
-- [ ] `pnpm build` passes
-- [ ] I verified the change in the browser (for user-facing changes)
-- [ ] Docs updated if behavior or APIs changed
+- [ ] `pnpm build` passes (`astro check` + build)
+- [ ] e2e passes against the Docker image (`BASE_URL=http://127.0.0.1:18080 pnpm test:e2e`)
+- [ ] I checked the change in a real browser, on a phone too for user-facing changes
+- [ ] Docs updated if behavior changed
 
 <!--
-  CI runs lint → type-check → test → build on every PR, and the `build`
-  check is required by branch protection before merge. Running these
-  locally first avoids a red CI.
+  CI runs vitest → astro check → build (required check `build`) and the
+  Playwright e2e suite against the production image on every PR.
 -->

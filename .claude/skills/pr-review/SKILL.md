@@ -36,7 +36,7 @@ gh pr diff <num> --repo Samurai33/CyberJust
 
 - If `mergeable == CONFLICTING`: post a comment noting the conflict, skip the code review, move on.
 - Otherwise read the full diff in context (open the touched files if the diff alone isn't enough to judge correctness).
-- Check for: correctness bugs, missing edge cases, XSS/secrets issues (see the `security-guardian` skill), unnecessary complexity (see `code-simplifier`), and whether it matches this repo's Next.js/TypeScript conventions.
+- Check for: correctness bugs, missing edge cases, XSS/secrets issues (see the `security-guardian` skill), unnecessary complexity (see `code-simplifier`), and whether it matches this repo's Astro/TypeScript conventions (see `design-patterns`; CLAUDE.md lists the rules that can't break: no inline styles/scripts under the CSP, `BotaoOuvir.astro` for play buttons, audio files never overwritten).
 
 ### 3. Present a summary, then stop
 

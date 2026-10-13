@@ -1,0 +1,12 @@
+---
+// Selo de status do caso ou de nível de ameaça. A cor é reforço visual; o texto sempre diz o nível.
+import type { AMEACA, STATUS } from '../content.config';
+type Props = { tipo: 'ameaca'; valor: (typeof AMEACA)[number] } | { tipo: 'status'; valor: (typeof STATUS)[number] };
+const { tipo, valor } = Astro.props;
+const semAcento = valor.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+const cls = `tag ${tipo === 'ameaca' ? 't' : 's'}-${semAcento}`;
+// "Ameaça" é feminino: CRÍTICO → "ameaça crítica".
+const FEMININO: Record<string, string> = { CRÍTICO: 'crítica', ALTO: 'alta', MÉDIO: 'média', BAIXO: 'baixa' };
+const texto = tipo === 'ameaca' ? `Ameaça ${FEMININO[valor]}` : valor.toLowerCase();
+---
+<span class={cls}>{texto}</span>

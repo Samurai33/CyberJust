@@ -17,15 +17,15 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 1. Fork the repo and create your branch from `main`
 2. If you've added code that should be tested, add tests (there's a minimal Vitest setup — see `pnpm test`; test coverage is still sparse, adding to it is welcome)
 3. If you've changed APIs, update the documentation
-4. Run `pnpm lint`, `pnpm type-check`, `pnpm test`, and `pnpm build` — all four must pass (this is exactly what CI runs, in this order, and the `build` check is required by branch protection before merge)
+4. Run `pnpm test` and `pnpm build` (which runs `astro check`), then the e2e suite against the Docker image (see README). CI runs the same steps, and the `build` check is required by branch protection before merge
 5. Issue that pull request!
 
 ## 📋 Contribution Guidelines
 
 ### Prerequisites
 
-- Node.js >= 22.15.0
-- pnpm >= 10.12.4
+- Node.js >= 22.12.0
+- pnpm 10 (`corepack enable` picks the version from `package.json`)
 - Git >= 2.34.0
 
 ### Setup Development Environment
@@ -108,39 +108,31 @@ fix: resolve audio player synchronization issue
 docs: update API documentation
 style: format code with prettier
 refactor: extract audio processing logic
-test: add unit tests for dashboard components
+test: add unit tests for the player time helpers
 chore: update dependencies
 ```
 
 ## 🎨 Coding Standards
 
-### TypeScript/JavaScript
-- Use TypeScript for all new code, `strict: true` is enabled — don't add `any`/`as` escape hatches to work around a real type error
-- ESLint is configured (`eslint.config.mjs`); `pnpm lint`, `pnpm type-check`, and `pnpm test` are all enforced by CI
-- Use meaningful variable and function names
+### TypeScript
+- `astro/tsconfigs/strictest` is on. Don't add `any`/`as` escape hatches to work around a real type error.
+- `pnpm build` runs `astro check`, and CI enforces it.
 
-### React Components
-- Use functional components with hooks
-- Follow React best practices
-- Use TypeScript interfaces for props
-- Implement proper error boundaries
-
-### CSS/Styling
-- Use TailwindCSS utility classes
-- Follow mobile-first responsive design
-- Use semantic HTML elements
-- Ensure accessibility standards (WCAG 2.1)
+### Astro, HTML and CSS
+- Pages and components are `.astro` and render to static HTML. Client JS only where it's needed, as a small TypeScript module or custom element in `src/scripts/`.
+- **No inline styles or scripts.** The CSP has no `'unsafe-inline'`. Styles go in `src/styles/global.css` (N3XUS design-system layers and tokens).
+- Mobile-first, semantic HTML, WCAG 2.2 AA, touch targets of at least 44px. Respect `prefers-reduced-motion`.
 
 ### File Structure
 ```
-components/
-├── ui/           # Reusable UI components
-├── forms/        # Form-specific components
-└── sections/     # Page section components
-
-hooks/            # Custom React hooks
-lib/              # Utility functions
-types/            # TypeScript type definitions
+src/content/episodios/   # one Markdown file per episode (schema: src/content.config.ts)
+src/pages/               # routes
+src/components/          # .astro components
+src/scripts/             # client-side TypeScript (player, site behaviour)
+src/lib/                 # pure helpers (unit tested)
+src/styles/global.css    # design system
+docker/                  # nginx config and security headers
+e2e/                     # Playwright suite
 ```
 
 ## 🐛 Bug Reports

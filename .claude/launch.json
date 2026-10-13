@@ -5,7 +5,7 @@
       "name": "cyberjust-dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev"],
-      "port": 3000
+      "port": 4321
     }
   ]
 }

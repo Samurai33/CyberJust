@@ -45,7 +45,7 @@ Flag issues that already have an open or merged PR addressing them.
 
 ### 4. Risk assessment (for bugs)
 
-Rate each bug issue: does it affect the audio player, dashboard, forms, or is it cosmetic? Prioritize anything touching data integrity or the auth modal over cosmetic/CSS issues.
+Rate each bug issue: does it affect the audio player (playback, persistence across pages, iOS/Android, Media Session), security headers/CSP, redirects of old URLs, episode content accuracy, or is it cosmetic? Prioritize playback, security and factual-content issues over cosmetic/CSS issues.
 
 ### 5. Output
 

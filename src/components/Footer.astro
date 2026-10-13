@@ -1,0 +1,33 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { MENU, SITE } from '../data/site';
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col foot-brand">
+        <a class="logo" href="/"><Logo /><span><strong>CyberJustiça</strong> Brasil</span></a>
+        <p class="muted">{SITE.descricao}</p>
+      </div>
+      <nav class="foot-col" aria-label="Rodapé">
+        <h2>Site</h2>
+        <ul role="list">
+          {MENU.map((m) => <li><a href={m.href}>{m.label}</a></li>)}
+        </ul>
+      </nav>
+      <div class="foot-col">
+        <h2>Transparência</h2>
+        <ul role="list">
+          <li><a href="/privacidade/">Privacidade</a></li>
+          <li><a href={SITE.repo} rel="noopener noreferrer" target="_blank">Código aberto <Icon name="external" size={12} /></a></li>
+          <li><a href="https://new.safernet.org.br/denuncie" rel="noopener noreferrer" target="_blank">SaferNet <Icon name="external" size={12} /></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© {new Date().getFullYear()} {SITE.nome}</span>
+      <span>Conteúdo educativo. Não substitui orientação jurídica.</span>
+    </div>
+  </div>
+</footer>

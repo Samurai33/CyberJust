@@ -1,0 +1,168 @@
+---
+import Base from '../layouts/Base.astro';
+import SectionHead from '../components/SectionHead.astro';
+import LinhaEpisodio from '../components/LinhaEpisodio.astro';
+import BotaoOuvir from '../components/BotaoOuvir.astro';
+import Selo from '../components/Selo.astro';
+import Icon from '../components/Icon.astro';
+import { listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/episodios';
+import { formatarTempo } from '../lib/tempo';
+import { SITE, TIPOS_DE_CRIME, PROTECAO, ESPECIALISTAS, CANAIS } from '../data/site';
+
+const episodios = await listarEpisodios();
+const comAudio = episodios.filter((e) => e.data.audio);
+const destaque = comAudio[0]!;
+const recentes = episodios.slice(0, 4);
+const minutos = Math.round(comAudio.reduce((s, e) => s + (e.data.audio?.segundos ?? 0), 0) / 60);
+const iniciais = (nome: string) => nome.split(' ').filter((p) => p.length > 2).slice(0, 2).map((p) => p[0]).join('');
+
+const serie = {
+  '@context': 'https://schema.org',
+  '@type': 'PodcastSeries',
+  name: SITE.nome,
+  description: SITE.descricao,
+  url: Astro.site?.href,
+  inLanguage: 'pt-BR',
+};
+---
+<Base title={SITE.nome} description={SITE.descricao} jsonLd={serie}>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="kicker"><span class="dot" aria-hidden="true"></span>Podcast · crimes cibernéticos no Brasil</p>
+        <h1>Histórias reais do crime digital <span>e como se proteger.</span></h1>
+        <p class="lede">
+          Casos que abalaram o país, contados com investigadores, promotores e peritos: como os golpes
+          funcionam, como os criminosos foram pegos e o que fazer para não ser a próxima vítima.
+        </p>
+        <div class="actions">
+          <BotaoOuvir ep={destaque} />
+          <a class="btn btn-line" href="/episodios/">Todos os episódios <Icon name="arrow" class="ico-arrow" /></a>
+        </div>
+      </div>
+      <article class="surface feature" aria-labelledby="destaque-titulo">
+        <div class="feature-top">
+          <p class="label"><b>{rotuloEpisodio(destaque)}</b> · episódio em destaque</p>
+          <Selo tipo="ameaca" valor={destaque.data.ameaca} />
+        </div>
+        <h2 id="destaque-titulo"><a href={urlEpisodio(destaque)}>{destaque.data.titulo}</a></h2>
+        <p>{destaque.data.resumo}</p>
+        <a class="link-arrow" href={urlEpisodio(destaque)}>Ver episódio <Icon name="arrow" /></a>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="sobre" aria-labelledby="sobre-t">
+    <div class="wrap grid-2">
+      <SectionHead index="01" label="Sobre" title="Investigação, não sensacionalismo." id="sobre-t">
+        <p>
+          O CyberJustiça Brasil analisa casos reais de crimes cibernéticos com quem investigou: autoridades,
+          especialistas em segurança digital e peritos. A proposta é entender o método dos criminosos e
+          transformar cada caso em proteção prática para quem ouve.
+        </p>
+      </SectionHead>
+      <figure class="term reveal" aria-label="Resumo do podcast em formato de terminal">
+        <div class="term-bar"><i></i><i></i><i></i><span>cyberjus.org</span></div>
+        <pre><span class="p">$</span> <span class="c">cyberjus status</span>
+<span class="k">episódios</span>   {episodios.length} publicados · {comAudio.length} com áudio
+<span class="k">duração</span>     {minutos} min de investigação
+<span class="k">fontes</span>      leis e canais oficiais em cada episódio
+<span class="ok">[ok]</span> sem rastreadores, sem cookies
+<span class="ok">[ok]</span> áudio servido daqui, sem terceiros
+<span class="w">[!!]</span> desconfie de urgência e de links por mensagem
+<span class="p">$</span> <span class="c">_</span></pre>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="episodios" aria-labelledby="ep-t">
+    <div class="wrap">
+      <SectionHead index="02" label="Episódios" title="Os casos mais recentes" id="ep-t" />
+      <div class="index">
+        {recentes.map((ep) => <LinhaEpisodio ep={ep} />)}
+      </div>
+      <p class="mt-2"><a class="link-arrow" href="/episodios/">Ver todos os {episodios.length} episódios <Icon name="arrow" /></a></p>
+    </div>
+  </section>
+
+  <section class="section" id="casos" aria-labelledby="casos-t">
+    <div class="wrap">
+      <SectionHead index="03" label="Casos" title="Os crimes que investigamos" id="casos-t">
+        <p>Os tipos de crime digital mais frequentes nos casos do podcast, com o nível de ameaça para quem é alvo.</p>
+      </SectionHead>
+      <ul class="crimes" role="list">
+        {TIPOS_DE_CRIME.map((c) => (
+          <li>
+            <h3>{c.titulo}</h3>
+            <p>{c.texto}</p>
+            <Selo tipo="ameaca" valor={c.ameaca} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="protecao" aria-labelledby="protecao-t">
+    <div class="wrap">
+      <SectionHead index="04" label="Proteção" title="Quatro hábitos que evitam a maioria dos golpes" id="protecao-t" />
+      <ul class="pilares" role="list">
+        {PROTECAO.map((p) => (
+          <li>
+            <Icon name={p.icone} size={24} />
+            <h3>{p.titulo}</h3>
+            <p>{p.texto}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="especialistas" aria-labelledby="esp-t">
+    <div class="wrap">
+      <SectionHead index="05" label="Especialistas" title="Quem investiga, explica" id="esp-t">
+        <p>Convidados que trabalham no combate ao crime digital no dia a dia.</p>
+      </SectionHead>
+      <ul class="pessoas" role="list">
+        {ESPECIALISTAS.map((p) => (
+          <li class="surface pessoa">
+            <span class="avatar" aria-hidden="true">{iniciais(p.nome)}</span>
+            <h3>{p.nome}</h3>
+            <p class="cargo">{p.cargo}</p>
+            <p>{p.texto}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="denuncie" aria-labelledby="den-t">
+    <div class="wrap">
+      <SectionHead index="06" label="Denuncie" title="Foi vítima? Procure os canais oficiais" id="den-t">
+        <p>Este site não recebe denúncias. Guarde provas (prints, links, comprovantes) e procure um destes canais.</p>
+      </SectionHead>
+      <ul class="canais" role="list">
+        {CANAIS.map((c) => (
+          <li>
+            <a class="surface canal" href={c.url} rel="noopener noreferrer" target="_blank">
+              <h3>{c.titulo} <Icon name="external" size={14} /></h3>
+              <p>{c.texto}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="cta-box">
+        <p class="label"><span class="dot" aria-hidden="true"></span>Comece por aqui</p>
+        <h2>{formatarTempo(destaque.data.audio!.segundos)} para entender o golpe antes que ele chegue em você.</h2>
+        <div class="actions">
+          <BotaoOuvir ep={destaque} />
+          <a class="btn btn-line" href="/episodios/">Ver episódios</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Imagem de prévia de link (1200x630). Gerada por design/gerar-imagens.sh. -->
+<html lang="pt-BR"><head><meta charset="utf-8"><style>
+@font-face{font-family:SG;src:url(../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2);font-weight:300 700}
+@font-face{font-family:IN;src:url(../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2);font-weight:100 900}
+@font-face{font-family:JB;src:url(../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2);font-weight:100 800}
+*{margin:0;box-sizing:border-box}
+body{width:1200px;height:630px;overflow:hidden;background:#05070c;color:#f3f6fb;font-family:IN;position:relative}
+body::before{content:'';position:absolute;inset:0;background:radial-gradient(45% 55% at 82% 45%,rgb(92 200 255/.16),transparent 70%),radial-gradient(35% 40% at 5% 0%,rgb(139 124 255/.14),transparent 70%),radial-gradient(30% 35% at 95% 100%,rgb(255 107 129/.08),transparent 70%)}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgb(148 163 184/.06) 1px,transparent 1px),linear-gradient(90deg,rgb(148 163 184/.06) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(70% 70% at 70% 50%,#000,transparent)}
+.c{position:absolute;left:80px;top:72px;right:80px;bottom:64px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:14px;font-family:SG;font-weight:600;font-size:30px;letter-spacing:-.03em}
+.brand span{color:#8492a8;font-weight:500}
+.k{margin-top:64px;display:inline-flex;align-items:center;gap:12px;align-self:flex-start;padding:8px 16px;border-radius:999px;border:1px solid rgb(148 163 184/.25);font-family:JB;font-size:20px;color:#a3afc2}
+.k i{width:10px;height:10px;border-radius:50%;background:#ff6b81;box-shadow:0 0 0 4px rgb(255 107 129/.15)}
+h1{margin-top:28px;font-family:SG;font-weight:600;font-size:76px;line-height:1;letter-spacing:-.05em;max-width:740px}
+h1 span{color:#8492a8}
+.f{margin-top:auto;display:flex;gap:36px;font-family:JB;font-size:20px;color:#8492a8}
+.f b{color:#5cc8ff;font-weight:500}
+.wave{position:absolute;right:72px;top:160px;width:220px;height:280px;display:flex;align-items:center;gap:8px}
+.wave i{flex:1;border-radius:99px;background:linear-gradient(#5cc8ff,#8b7cff)}
+</style></head><body><div class="grid"></div>
+<div class="wave" aria-hidden="true"></div>
+<div class="c">
+  <div class="brand"><svg width="40" height="40" viewBox="0 0 32 32" fill="none" stroke="#5cc8ff" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2.5 27 6.8v8.6c0 6.6-4.5 12-11 14.1C9.5 27.4 5 22 5 15.4V6.8z" stroke-width="2"/><path d="M16 9v13M11 22h10M10.5 11.5h11M10.5 11.5 8 17h5zM21.5 11.5 19 17h5z" stroke-width="1.6"/></svg><div>CyberJustiça <span>Brasil</span></div></div>
+  <p class="k"><i></i>Podcast · crimes cibernéticos</p>
+  <h1>Histórias reais do crime digital <span>e como se proteger.</span></h1>
+  <div class="f"><div><b>›</b> casos reais</div><div><b>›</b> investigadores e peritos</div><div><b>›</b> cyberjus.org</div></div>
+</div>
+<script>
+// barras de onda sonora determinísticas (mesma imagem a cada geração)
+const w=document.querySelector('.wave');const h=[.35,.6,.45,.9,.7,1,.55,.8,.4,.65,.3,.5,.25];
+w.innerHTML=h.map(v=>`<i style="height:${v*100}%;opacity:${.35+v*.65}"></i>`).join('');
+</script></body></html>

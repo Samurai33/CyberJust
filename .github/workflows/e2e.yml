@@ -10,26 +10,32 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+# Testa a imagem Docker de produção (nginx, headers, CSP, redirects, Range) em Chromium, WebKit
+# (Safari), iPhone, iPad e Android, com o mesmo contêiner do Playwright usado localmente.
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    # Not a required status check (see branch protection) - this is a new,
-    # deliberately small smoke suite (#133). Keeping it informational avoids
-    # blocking merges on flaky-browser-install infrastructure while it proves
-    # itself out; promote to required once it's been stable for a while.
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          version: 10.12.4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
-      - uses: actions/upload-artifact@v4
+          persist-credentials: false
+      - name: Build da imagem de produção
+        run: docker build -t cyberjust .
+      - name: Sobe o site
+        run: |
+          docker run -d --name site -p 127.0.0.1:18080:8080 cyberjust
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:18080/robots.txt >/dev/null && break; sleep 1; done
+      - name: Playwright
+        run: |
+          docker run --rm --network host --ipc=host -v "$PWD":/app -w /app -e CI=1 -e BASE_URL=http://127.0.0.1:18080 \
+            mcr.microsoft.com/playwright:v1.63.0-noble \
+            sh -c "corepack enable && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile && pnpm test:e2e"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: playwright-report
