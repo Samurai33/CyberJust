@@ -16,7 +16,8 @@ test('headers de segurança no HTML', async ({ request }) => {
   expect(h['cross-origin-opener-policy']).toBe('same-origin');
   expect(h['referrer-policy']).toBe('strict-origin-when-cross-origin');
   expect(h['permissions-policy']).toContain('camera=()');
-  expect(h['server']).toBe('nginx');
+  // direto no contêiner: nginx (sem versão); em produção, atrás da Cloudflare: cloudflare
+  expect(['nginx', 'cloudflare']).toContain(h['server']);
 });
 
 test('áudio: streaming por Range, tipo correto e cache imutável', async ({ request }) => {
