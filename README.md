@@ -58,7 +58,7 @@ BASE_URL=http://127.0.0.1:18080 pnpm test:e2e                # e2e contra a imag
 | `src/pages/` | Rotas: `/`, `/episodios/`, `/episodios/[id]/`, `/privacidade/`, `404`. |
 | `src/scripts/player.ts` | O player (`<cj-player>`). Qualquer botão com `data-tocar` controla o player. |
 | `src/styles/global.css` | Design system N3XUS em camadas CSS (tokens, base, layout, componentes). |
-| `src/data/site.ts`, `src/data/temas.ts` | Textos fixos (menu, especialista, convidados, canais oficiais, N3XUS) e os temas. |
+| `src/data/site.ts`, `src/data/temas.ts` | Textos fixos (menu, especialista, canais oficiais, N3XUS) e os temas. |
 | `src/cms/config.ts`, `src/pages/dash-*/` | Painel de episódios (Sveltia CMS). |
 | `src/pages/podcast.xml.ts`, `src/pages/og/` | Feed do podcast e imagens de prévia por episódio, gerados no build. |
 | `docker/` | nginx: CSP e headers, redirects 301 das URLs antigas, cache. |
