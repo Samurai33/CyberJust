@@ -1,33 +1,46 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { TEMAS } from './data/temas';
 
-export const STATUS = ['ATIVO', 'ARQUIVADO', 'RESOLVIDO', 'AGENDADO'] as const;
+export const STATUS = ['ATIVO', 'ARQUIVADO', 'RESOLVIDO'] as const;
 export const AMEACA = ['CRÍTICO', 'ALTO', 'MÉDIO', 'BAIXO'] as const;
 
-// Um arquivo Markdown por episódio em src/content/episodios/. O nome do arquivo vira a URL
-// (/episodios/<nome>/). O corpo do Markdown é a descrição completa.
+const dataIso = z.string().regex(/^\d{4}(-\d{2}-\d{2})?$/, 'use AAAA-MM-DD (ou só AAAA quando o dia não é conhecido)');
+const tempo = z.string().regex(/^(\d{1,2}:)?\d{1,2}:\d{2}$/, 'use mm:ss ou h:mm:ss');
+
+// Um arquivo Markdown por episódio em src/content/episodios/ (também editável pelo painel /dash).
+// O nome do arquivo vira a URL (/episodios/<nome>/). O corpo do Markdown é a descrição completa.
 const episodios = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/episodios' }),
   schema: z.object({
     numero: z.number().int().positive().optional(),
     titulo: z.string().min(10).max(90),
-    resumo: z.string().min(40).max(260),
-    // Data de publicação. Só o ano quando o dia exato não é conhecido.
-    data: z.string().regex(/^\d{4}(-\d{2}-\d{2})?$/),
-    status: z.enum(STATUS),
+    // Título para a aba e as prévias, quando o título passa de 60 caracteres com a marca.
+    tituloSeo: z.string().min(20).max(60).optional(),
+    resumo: z.string().min(50).max(155),
+    // Data de publicação do episódio. Sem data = "Em produção".
+    data: dataIso.optional(),
+    atualizado: dataIso.optional(),
+    // Quando o caso aconteceu (ex.: "2013–2015"). Diferente da data do episódio.
+    periodo: z.string().max(40).optional(),
+    tema: z.enum(Object.keys(TEMAS) as [keyof typeof TEMAS, ...(keyof typeof TEMAS)[]]),
+    // Situação do caso. Omitir quando não se aplica (ex.: episódio temático).
+    status: z.enum(STATUS).optional(),
     ameaca: z.enum(AMEACA),
-    categoria: z.string(),
     tags: z.array(z.string()).default([]),
+    // Arquivo em public/audio/. AAC em MP4 com o índice (moov) no início: duração e tamanho são lidos
+    // do arquivo no build (src/lib/mp4.ts), que falha se o arquivo não servir para streaming.
     audio: z
-      .object({
-        // Arquivo em public/audio/ (AAC em MP4 com moov no início; ver README).
-        arquivo: z.string().regex(/^\/audio\/[a-z0-9-]+\.m4a$/),
-        // Duração real em segundos (ffprobe), usada no player antes de carregar o áudio e no JSON-LD.
-        segundos: z.number().positive(),
-        bytes: z.number().int().positive(),
-      })
+      .string()
+      .regex(/^\/audio\/[a-z0-9-]+\.m4a$/, 'áudio em /audio/<nome-em-minusculas>.m4a')
       .optional(),
+    // Transcrição em WebVTT em public/transcricoes/ (mostrada na página e publicada no feed).
+    transcricao: z
+      .string()
+      .regex(/^\/transcricoes\/[a-z0-9-]+\.vtt$/)
+      .optional(),
+    capitulos: z.array(z.object({ inicio: tempo, titulo: z.string().min(2).max(80) })).default([]),
     pontos: z.array(z.string()).default([]),
     alertas: z.array(z.string()).default([]),
     recursos: z
@@ -36,7 +49,7 @@ const episodios = defineCollection({
           titulo: z.string(),
           url: z.url({ protocol: /^https$/ }),
           fonte: z.string(),
-          tipo: z.enum(['lei', 'guia', 'canal']),
+          tipo: z.enum(['lei', 'guia', 'canal', 'notícia', 'pesquisa']),
         }),
       )
       .default([]),

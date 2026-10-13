@@ -5,12 +5,9 @@ resumo: "As fraudes digitais mais sofisticadas que atingem o Brasil, as técnica
 data: "2024-01-15"
 status: ATIVO
 ameaca: CRÍTICO
-categoria: Fraudes digitais
+tema: fraudes
 tags: [fraudes, golpes, segurança digital, prevenção, investigação]
-audio:
-  arquivo: /audio/bfraudes-digitais.m4a
-  segundos: 389.6
-  bytes: 12535498
+audio: /audio/bfraudes-digitais.m4a
 pontos:
   - Fraudes digitais sofisticadas no Brasil
   - Técnicas avançadas de engenharia social

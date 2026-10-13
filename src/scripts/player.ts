@@ -118,24 +118,31 @@ class CjPlayer extends HTMLElement {
     return !this.#audio.paused && !this.#audio.ended;
   }
 
-  /** Toca a faixa; se já é a atual, alterna tocar/pausar. Chamado direto do clique (exigência do iOS). */
-  tocar(faixa: Faixa): void {
+  /**
+   * Toca a faixa; se já é a atual, alterna tocar/pausar. Com `inicio` (capítulo), toca a partir dali.
+   * Chamado direto do clique (exigência do iOS).
+   */
+  tocar(faixa: Faixa, inicio?: number): void {
     if (this.#faixa?.id === faixa.id) {
-      this.alternar();
+      if (inicio === undefined) return this.alternar();
+      this.#irPara(inicio);
+      if (this.#audio.paused) this.#retomar();
       return;
     }
     this.#salvarPosicao(true);
     this.#faixa = faixa;
     this.#erro(null);
 
-    this.#pendente = posicaoParaRetomar(Number(guardar.ler(chavePosicao(faixa.id))), faixa.segundos);
+    this.#pendente = inicio ?? posicaoParaRetomar(Number(guardar.ler(chavePosicao(faixa.id))), faixa.segundos);
     this.#audio.preload = 'auto';
     this.#audio.src = faixa.src;
     this.#audio.playbackRate = Number(guardar.ler('cj:velocidade')) || 1;
 
     this.#titulo.textContent = faixa.titulo;
     this.#titulo.href = faixa.url;
-    this.#sub.textContent = this.#pendente ? `${faixa.rotulo} · continuando de ${formatarTempo(this.#pendente)}` : faixa.rotulo;
+    this.#sub.textContent = this.#pendente
+      ? `${faixa.rotulo} · ${inicio === undefined ? 'continuando de' : 'a partir de'} ${formatarTempo(this.#pendente)}`
+      : faixa.rotulo;
     this.#desenharTempo(this.#pendente, faixa.segundos);
     this.#trilha.max = String(Math.round(faixa.segundos));
     this.hidden = false;
@@ -408,7 +415,7 @@ class CjPlayer extends HTMLElement {
 function sincronizarBotoes(player: CjPlayer): void {
   const id = player.faixaAtual?.id;
   const tocando = player.tocando;
-  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-tocar]')) {
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-tocar]:not([data-inicio])')) {
     const ativo = b.dataset['id'] === id && tocando;
     b.toggleAttribute('data-tocando', ativo);
     const texto = b.querySelector('[data-texto]');
@@ -426,7 +433,8 @@ document.addEventListener('click', (ev) => {
   if (!botao) return;
   const faixa = faixaDoBotao(botao);
   const player = obterPlayer();
-  if (faixa && player) player.tocar(faixa);
+  const inicio = botao.dataset['inicio'];
+  if (faixa && player) player.tocar(faixa, inicio === undefined ? undefined : Number(inicio));
 });
 
 // A cada navegação, os botões da página nova mostram o estado do player.

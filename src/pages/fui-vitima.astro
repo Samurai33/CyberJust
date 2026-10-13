@@ -1,0 +1,105 @@
+---
+import Base from '../layouts/Base.astro';
+import Trilha from '../components/Trilha.astro';
+import Icon from '../components/Icon.astro';
+import { trilhaLd } from '../lib/ld';
+import { LD } from '../data/site';
+
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Fui vítima', href: '/fui-vitima/' },
+];
+const passos = [
+  {
+    titulo: 'Pare e guarde provas',
+    texto:
+      'Não apague nada. Tire prints das conversas, perfis, links, números de telefone, comprovantes de Pix ou boletos e anote datas e horários.',
+  },
+  {
+    titulo: 'Avise o banco imediatamente',
+    texto:
+      'Use o número oficial do cartão ou o app do banco. Peça o bloqueio de cartões e acessos e, se pagou por Pix, peça a devolução por fraude pelo Mecanismo Especial de Devolução (MED).',
+  },
+  {
+    titulo: 'Registre o boletim de ocorrência',
+    texto:
+      'Procure a delegacia ou a delegacia eletrônica do seu estado. Golpe com informações obtidas por redes sociais, telefone ou e-mail é fraude eletrônica (art. 171, § 2º-A, do Código Penal).',
+  },
+  {
+    titulo: 'Proteja suas contas',
+    texto:
+      'Troque senhas, ative a verificação em duas etapas e encerre sessões desconhecidas. Avise seus contatos se o golpista usou seu nome ou seu WhatsApp.',
+  },
+];
+const casos = [
+  {
+    titulo: 'Pix para golpista',
+    texto:
+      'Peça ao seu banco a contestação pelo MED o quanto antes, pelo app ou pelo telefone oficial, e guarde o protocolo. O pedido tem prazo (o guia do Banco Central fala em até 80 dias) e a devolução depende de haver saldo na conta de quem recebeu.',
+    link: { href: 'https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Guia_MED.pdf', rotulo: 'Guia do MED (Banco Central)' },
+  },
+  {
+    titulo: 'WhatsApp clonado ou invadido',
+    texto: 'Siga o passo a passo oficial para recuperar a conta e avise seus contatos para não fazerem pagamentos em seu nome.',
+    link: { href: 'https://faq.whatsapp.com/1131652977717250', rotulo: 'Central de Ajuda do WhatsApp' },
+  },
+  {
+    titulo: 'Contas ou empréstimos abertos no seu nome',
+    texto: 'Consulte no Registrato, do Banco Central, quais contas, chaves Pix e empréstimos existem no seu CPF.',
+    link: { href: 'https://www.bcb.gov.br/cidadaniafinanceira/registrato', rotulo: 'Registrato (Banco Central)' },
+  },
+  {
+    titulo: 'Exposição íntima, ódio ou abuso infantil na internet',
+    texto: 'Denuncie de forma anônima à SaferNet. Para conversar com especialistas (inclusive para pais e educadores), use o Canal de Ajuda.',
+    link: { href: 'https://new.safernet.org.br/denuncie', rotulo: 'Denúncia anônima na SaferNet' },
+  },
+  {
+    titulo: 'Compra em site ou loja que não entregou',
+    texto: 'Registre a reclamação contra a empresa (quando ela existe e é identificável) na plataforma oficial do governo.',
+    link: { href: 'https://www.consumidor.gov.br/', rotulo: 'consumidor.gov.br' },
+  },
+];
+const howTo = {
+  '@type': 'HowTo',
+  name: 'O que fazer se você caiu em um golpe digital',
+  inLanguage: 'pt-BR',
+  author: { '@id': LD.thiago },
+  step: passos.map((p, i) => ({ '@type': 'HowToStep', position: i + 1, name: p.titulo, text: p.texto })),
+};
+---
+<Base title="Caí num golpe, e agora? Passo a passo" description="O que fazer depois de um golpe digital: provas, banco e MED do Pix, boletim de ocorrência, WhatsApp clonado e canais oficiais de denúncia." jsonLd={[howTo, trilhaLd(Astro.site, trilha)]}>
+  <section class="page-head">
+    <div class="wrap">
+      <Trilha itens={trilha} />
+      <h1>Caí num golpe, e agora?</h1>
+      <p class="lede">Agir rápido aumenta a chance de recuperar dinheiro e evita novas vítimas. Siga os quatro passos e depois o que vale para o seu caso.</p>
+    </div>
+  </section>
+  <section class="section section-tight" aria-labelledby="passos-t">
+    <div class="wrap">
+      <h2 class="label" id="passos-t">Primeiros passos</h2>
+      <ol class="passos" role="list">
+        {passos.map((p) => <li><h3>{p.titulo}</h3><p>{p.texto}</p></li>)}
+      </ol>
+    </div>
+  </section>
+  <section class="section" aria-labelledby="casos-t">
+    <div class="wrap">
+      <header class="sec-head"><p class="label">Por tipo de golpe</p><h2 id="casos-t">O que fazer no seu caso</h2></header>
+      <ul class="canais" role="list">
+        {casos.map((c) => (
+          <li class="surface canal">
+            <h3>{c.titulo}</h3>
+            <p>{c.texto}</p>
+            <a class="link-arrow" href={c.link.href} rel="noopener noreferrer" target="_blank">{c.link.rotulo} <Icon name="external" size={12} /></a>
+          </li>
+        ))}
+      </ul>
+      <p class="muted mt-3">
+        Base legal: fraude eletrônica, art. 171, § 2º-A, do Código Penal, incluído pela
+        <a href="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14155.htm" rel="noopener noreferrer" target="_blank">Lei 14.155/2021</a>.
+        Este guia é informativo e não substitui a orientação de um advogado ou da Defensoria Pública.
+      </p>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import Trilha from '../../components/Trilha.astro';
+import Icon from '../../components/Icon.astro';
+import { listarEpisodios, urlTema } from '../../lib/episodios';
+import { trilhaLd } from '../../lib/ld';
+import { TEMAS, type Tema } from '../../data/temas';
+
+const episodios = await listarEpisodios();
+const temas = (Object.keys(TEMAS) as Tema[]).map((t) => ({ t, ...TEMAS[t], n: episodios.filter((e) => e.data.tema === t).length }));
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Temas', href: '/temas/' },
+];
+---
+<Base title="Temas: crimes cibernéticos por assunto" description="Os episódios do CyberJustiça Brasil organizados por tema: fraudes, dados pessoais, corrupção digital e proteção de crianças online." jsonLd={[trilhaLd(Astro.site, trilha)]}>
+  <section class="page-head">
+    <div class="wrap">
+      <Trilha itens={trilha} />
+      <h1>Temas</h1>
+      <p class="lede">Os casos do podcast organizados por tipo de crime, cada um com os episódios e as fontes oficiais.</p>
+    </div>
+  </section>
+  <section class="section section-tight">
+    <ul class="wrap canais" role="list">
+      {temas.map((t) => (
+        <li>
+          <a class="surface canal" href={urlTema(t.t)}>
+            <h2>{t.nome} <Icon name="arrow" size={14} /></h2>
+            <p>{t.descricao}</p>
+            <p class="label"><b>{t.n}</b> {t.n === 1 ? 'episódio' : 'episódios'}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>

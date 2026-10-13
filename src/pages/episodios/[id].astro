@@ -1,13 +1,30 @@
 ---
 import { render } from 'astro:content';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import Base from '../../layouts/Base.astro';
 import BotaoOuvir from '../../components/BotaoOuvir.astro';
 import LinhaEpisodio from '../../components/LinhaEpisodio.astro';
 import Selo from '../../components/Selo.astro';
 import Icon from '../../components/Icon.astro';
-import { listarEpisodios, recomendados, rotuloEpisodio, urlEpisodio, type Episodio } from '../../lib/episodios';
-import { duracaoIso, formatarData, formatarTempo } from '../../lib/tempo';
-import { SITE } from '../../data/site';
+import Trilha from '../../components/Trilha.astro';
+import {
+  dataCompleta,
+  infoAudio,
+  listarEpisodios,
+  nomeTema,
+  recomendados,
+  rotuloEpisodio,
+  urlEpisodio,
+  urlTema,
+  vizinhos,
+  type Episodio,
+} from '../../lib/episodios';
+import { duracaoIso, formatarData, formatarTempo, paraSegundos } from '../../lib/tempo';
+import { lerVtt } from '../../lib/vtt';
+import { trilhaLd } from '../../lib/ld';
+import { urlOg } from '../../lib/og';
+import { APRESENTADOR, LD } from '../../data/site';
 
 export async function getStaticPaths() {
   const todos = await listarEpisodios();
@@ -17,54 +34,84 @@ interface Props { ep: Episodio; todos: Episodio[] }
 const { ep, todos } = Astro.props;
 const { Content } = await render(ep);
 const d = ep.data;
+const audio = infoAudio(ep);
 const url = new URL(urlEpisodio(ep), Astro.site).href;
 const parecidos = recomendados(ep, todos);
+const { anterior, proximo } = vizinhos(ep, todos);
+const falas = d.transcricao ? lerVtt(readFileSync(join(process.cwd(), 'public', d.transcricao), 'utf8')) : [];
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Episódios', href: '/episodios/' },
+  { nome: nomeTema(d.tema), href: urlTema(d.tema) },
+  { nome: d.titulo, href: urlEpisodio(ep) },
+];
 
-const jsonLd = {
-  '@context': 'https://schema.org',
+const episodioLd = {
   '@type': 'PodcastEpisode',
+  '@id': `${url}#episodio`,
   name: d.titulo,
   description: d.resumo,
   url,
   inLanguage: 'pt-BR',
+  isAccessibleForFree: true,
   ...(d.numero && { episodeNumber: d.numero }),
-  ...(d.data.length === 10 && { datePublished: d.data }),
-  ...(d.audio && {
-    timeRequired: duracaoIso(d.audio.segundos),
+  ...(dataCompleta(d.data) && { datePublished: dataCompleta(d.data) }),
+  ...(dataCompleta(d.atualizado) && { dateModified: dataCompleta(d.atualizado) }),
+  about: nomeTema(d.tema),
+  keywords: d.tags.join(', '),
+  image: new URL(urlOg(ep), Astro.site).href,
+  author: { '@id': LD.thiago },
+  publisher: { '@id': LD.n3xus },
+  partOfSeries: { '@id': LD.serie },
+  ...(audio && {
+    timeRequired: duracaoIso(audio.segundos),
     associatedMedia: {
       '@type': 'AudioObject',
-      contentUrl: new URL(d.audio.arquivo, Astro.site).href,
+      contentUrl: new URL(d.audio!, Astro.site).href,
       encodingFormat: 'audio/mp4',
-      duration: duracaoIso(d.audio.segundos),
-      contentSize: `${(d.audio.bytes / 1e6).toFixed(1)} MB`,
+      duration: duracaoIso(audio.segundos),
+      contentSize: `${(audio.bytes / 1e6).toFixed(1)} MB`,
+      ...(d.transcricao && { transcript: falas.map((f) => f.texto).join(' ') }),
     },
   }),
-  partOfSeries: { '@type': 'PodcastSeries', name: SITE.nome, url: Astro.site?.href },
+  ...(d.recursos.length && { citation: d.recursos.map((r) => r.url) }),
 };
 ---
-<Base title={d.titulo} description={d.resumo} ogType="article" jsonLd={jsonLd}>
+<Base
+  title={d.tituloSeo ?? d.titulo}
+  description={d.resumo}
+  ogType="article"
+  ogImage={urlOg(ep)}
+  ogImageAlt={`${rotuloEpisodio(ep)}: ${d.titulo}`}
+  jsonLd={[episodioLd, trilhaLd(Astro.site, trilha)]}
+>
   <section class="page-head ep-head">
     <div class="wrap">
-      <a class="crumb" href="/episodios/"><Icon name="arrow" size={14} /> Episódios</a>
+      <Trilha itens={trilha} />
       <div class="tags">
-        <Selo tipo="status" valor={d.status} />
+        {d.status && <Selo tipo="status" valor={d.status} />}
         <Selo tipo="ameaca" valor={d.ameaca} />
-        <span class="tag tag-plain">{d.categoria}</span>
+        <a class="tag tag-plain tag-link" href={urlTema(d.tema)}>{nomeTema(d.tema)}</a>
       </div>
       <h1>{d.titulo}</h1>
       <p class="meta">
         <span class="mono">{rotuloEpisodio(ep)}</span>
-        <span><Icon name="calendar" size={14} /><time datetime={d.data}>{formatarData(d.data)}</time></span>
-        {d.audio && <span><Icon name="clock" size={14} />{formatarTempo(d.audio.segundos)}</span>}
+        <span><Icon name="calendar" size={14} />{d.data ? <time datetime={d.data}>{formatarData(d.data)}</time> : 'Em produção'}</span>
+        {audio && <span><Icon name="clock" size={14} />{formatarTempo(audio.segundos)}</span>}
+        {d.periodo && <span>Caso de {d.periodo}</span>}
+      </p>
+      <p class="byline">
+        Apresentação e análise: <a href="/sobre/" rel="author">{APRESENTADOR.nome}</a>
+        {d.atualizado && <> · revisado em <time datetime={d.atualizado}>{formatarData(d.atualizado)}</time></>}
       </p>
       <div class="actions">
         <BotaoOuvir ep={ep} />
         <button class="btn btn-line" type="button" data-compartilhar data-titulo={d.titulo} data-url={urlEpisodio(ep)}>
           <Icon name="share" /> <span data-texto>Compartilhar</span>
         </button>
-        {d.audio && (
-          <a class="btn btn-line" href={d.audio.arquivo} download>
-            <Icon name="download" /> Baixar <span class="muted">{(d.audio.bytes / 1e6).toFixed(0)} MB</span>
+        {audio && (
+          <a class="btn btn-line" href={d.audio} download data-astro-reload>
+            <Icon name="download" /> Baixar <span class="muted">{(audio.bytes / 1e6).toFixed(0)} MB</span>
           </a>
         )}
       </div>
@@ -76,6 +123,14 @@ const jsonLd = {
       <div class="stack">
         <h2 class="label">Sobre o episódio</h2>
         <div class="prose lede"><Content /></div>
+        {d.capitulos.length > 0 && (
+          <>
+            <h2 class="label mt-3">Capítulos</h2>
+            <ol class="capitulos" role="list">
+              {d.capitulos.map((c) => <li><BotaoOuvir ep={ep} inicio={paraSegundos(c.inicio)} rotulo={c.titulo} /></li>)}
+            </ol>
+          </>
+        )}
         {d.pontos.length > 0 && (
           <>
             <h2 class="label mt-3">Pontos principais</h2>
@@ -92,11 +147,24 @@ const jsonLd = {
             </ul>
           </>
         )}
+        {falas.length > 0 && (
+          <details class="transcricao mt-3">
+            <summary><Icon name="list" /> Transcrição completa</summary>
+            <div class="falas">
+              {falas.map((f) => (
+                <p>
+                  <span class="mono">{f.inicio}</span>
+                  {f.locutor && <b>{f.locutor}:</b>} {f.texto}
+                </p>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
-      <aside class="ep-side" aria-label="Fontes e tags">
+      <aside class="ep-side" aria-label="Fontes e assuntos">
         {d.recursos.length > 0 && (
           <div class="surface">
-            <h2>Fontes oficiais</h2>
+            <h2>Fontes</h2>
             <div class="recursos">
               {d.recursos.map((r) => (
                 <a href={r.url} rel="noopener noreferrer" target="_blank">
@@ -113,9 +181,21 @@ const jsonLd = {
             <div class="tags">{d.tags.map((t) => <span class="tag tag-plain">{t}</span>)}</div>
           </div>
         )}
+        <div class="surface">
+          <h2>Foi vítima?</h2>
+          <p>Veja o passo a passo e os canais oficiais de denúncia.</p>
+          <a class="link-arrow mt-1" href="/fui-vitima/">Caí num golpe, e agora? <Icon name="arrow" /></a>
+        </div>
       </aside>
     </div>
   </section>
+
+  {(anterior || proximo) && (
+    <nav class="wrap vizinhos" aria-label="Episódios anterior e próximo">
+      {anterior ? <a class="surface" href={urlEpisodio(anterior)} rel="prev"><span class="label">Anterior</span>{anterior.data.titulo}</a> : <span />}
+      {proximo && <a class="surface proximo" href={urlEpisodio(proximo)} rel="next"><span class="label">Próximo</span>{proximo.data.titulo}</a>}
+    </nav>
+  )}
 
   <section class="section" aria-labelledby="rel-t">
     <div class="wrap">

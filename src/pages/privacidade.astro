@@ -1,37 +1,60 @@
 ---
 import Base from '../layouts/Base.astro';
-import { SITE } from '../data/site';
+import Trilha from '../components/Trilha.astro';
+import { trilhaLd } from '../lib/ld';
+import { N3XUS, SITE } from '../data/site';
+
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Privacidade', href: '/privacidade/' },
+];
+const VIGENCIA = '13 de outubro de 2026';
 ---
-<Base title="Privacidade" description="O que o site do CyberJustiça Brasil guarda (quase nada): sem cookies, sem rastreadores, sem contas.">
+<Base title="Política de privacidade (LGPD)" description="Como o CyberJustiça Brasil trata dados pessoais: sem cookies, rastreadores ou contas. Controladora, dados de acesso e seus direitos pela LGPD." jsonLd={[trilhaLd(Astro.site, trilha)]}>
   <section class="page-head">
     <div class="wrap">
-      <p class="label">Transparência</p>
-      <h1>Privacidade</h1>
+      <Trilha itens={trilha} />
+      <h1>Política de privacidade</h1>
       <p class="lede">Resumo: este site não usa cookies, não tem rastreadores nem anúncios e não pede nenhum dado seu.</p>
+      <p class="meta">Vigente desde {VIGENCIA}</p>
     </div>
   </section>
-  <section class="section">
+  <section class="section section-tight">
     <div class="wrap prose">
+      <h2>Quem é a controladora</h2>
+      <p>
+        {N3XUS.razao}, CNPJ {N3XUS.cnpj}, {N3XUS.endereco}. Canal de privacidade e encarregado:
+        <a href={`mailto:${N3XUS.emailPrivacidade}`}>{N3XUS.emailPrivacidade}</a>.
+      </p>
       <h2>O que fica no seu aparelho</h2>
       <p>
         Para você continuar um episódio de onde parou, o player guarda no próprio navegador (armazenamento
-        local) a posição de cada episódio, a velocidade e o volume escolhidos. Esses dados nunca saem do seu
-        aparelho e você pode apagá-los limpando os dados do site no navegador.
+        local) a posição de cada episódio, a velocidade e o volume. Esses dados nunca são enviados ao servidor;
+        você pode apagá-los limpando os dados do site no navegador.
       </p>
       <h2>O que chega ao servidor</h2>
       <p>
-        Como em qualquer site, o servidor e a rede de entrega (Cloudflare) recebem os dados técnicos de cada
-        acesso, como endereço IP e navegador, usados só para entregar as páginas e proteger o site contra
-        ataques. Não há analytics, pixels de redes sociais nem conteúdo de terceiros: fontes, imagens e áudios
-        são servidos deste domínio.
+        Como em qualquer site, cada acesso gera dados técnicos: endereço IP, data e hora, página pedida e
+        navegador. Eles são usados só para entregar as páginas, manter o site no ar e protegê-lo contra
+        ataques (base legal: legítimo interesse, art. 7º, IX, da LGPD), não são usados para perfil nem
+        publicidade e não são vendidos ou compartilhados para outras finalidades. Participam como operadores
+        a Cloudflare (rede de entrega e proteção) e a infraestrutura própria da N3XUS (servidor do site).
+        Registros de acesso podem ser guardados pelo prazo exigido pelo Marco Civil da Internet (art. 15, seis meses).
       </p>
-      <h2>Links externos</h2>
+      <h2>O que não fazemos</h2>
       <p>
-        Os links para leis e canais oficiais (Planalto, SaferNet, Polícia Federal, Banco Central) abrem os sites
-        desses órgãos, que têm as próprias políticas de privacidade.
+        Não há cookies, analytics, pixels de redes sociais, formulários nem contas. Fontes, imagens e áudios
+        são servidos deste domínio, sem chamadas a terceiros. Links para órgãos oficiais (Planalto, Banco
+        Central, SaferNet, Polícia Federal) abrem os sites deles, que têm políticas próprias.
+      </p>
+      <h2>Seus direitos</h2>
+      <p>
+        Pela LGPD (art. 18) você pode pedir confirmação de tratamento, acesso, correção, eliminação e
+        informações sobre compartilhamento, pelo e-mail <a href={`mailto:${N3XUS.emailPrivacidade}`}>{N3XUS.emailPrivacidade}</a>.
+        Também pode reclamar à <a href="https://www.gov.br/anpd/pt-br" rel="noopener noreferrer">Autoridade Nacional de Proteção de Dados (ANPD)</a>.
       </p>
       <h2>Código aberto</h2>
-      <p>O código do site é público e pode ser auditado em <a href={SITE.repo} rel="noopener noreferrer">GitHub</a>.</p>
+      <p>O código do site é público e pode ser auditado no <a href={SITE.repo} rel="noopener noreferrer">GitHub</a>.</p>
     </div>
   </section>
 </Base>

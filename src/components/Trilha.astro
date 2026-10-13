@@ -1,0 +1,12 @@
+---
+// Trilha de navegação (breadcrumb) visível + BreadcrumbList no JSON-LD (gerado por quem usa).
+interface Props { itens: { nome: string; href: string }[] }
+const { itens } = Astro.props;
+---
+<nav class="trilha" aria-label="Você está em">
+  <ol role="list">
+    {itens.map((i, n) => (
+      <li>{n === itens.length - 1 ? <span aria-current="page">{i.nome}</span> : <a href={i.href}>{i.nome}</a>}</li>
+    ))}
+  </ol>
+</nav>
