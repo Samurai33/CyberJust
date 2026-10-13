@@ -32,7 +32,7 @@ export const N3XUS = {
 export const LD = {
   site: 'https://www.cyberjus.org/#site',
   serie: 'https://www.cyberjus.org/#podcast',
-  thiago: 'https://www.cyberjus.org/sobre/#thiago-rangel',
+  samurai: 'https://www.cyberjus.org/sobre/#samurai',
   n3xus: 'https://n3xus.dev/#organization',
 } as const;
 
@@ -69,8 +69,7 @@ export const PROTECAO = [
 
 // Especialista e apresentador do podcast. Mesma foto e bio da página "Sobre" do n3xus.dev.
 export const APRESENTADOR = {
-  nome: 'Thiago Rangel',
-  apelido: 'Samurai',
+  nome: 'Samurai',
   cargo: 'Especialista em cibersegurança · fundador da N3XUS',
   texto:
     'Engenheiro de IA, cibersegurança e full-stack. Constrói sistemas seguros para aviação, testes de intrusão e infraestrutura crítica, e traz para o podcast o olhar técnico de quem defende sistemas reais.',
@@ -79,25 +78,6 @@ export const APRESENTADOR = {
     { href: 'https://github.com/Samurai33', label: 'GitHub @Samurai33' },
   ],
 } as const;
-
-// Convidados dos episódios.
-export const ESPECIALISTAS = [
-  {
-    nome: 'Diego Barbiero',
-    cargo: 'Coordenador do CyberGAECO',
-    texto: 'Experiência em investigações de crimes digitais organizados e casos emblemáticos que ajudou a solucionar.',
-  },
-  {
-    nome: 'Thiago Cardoso Silva',
-    cargo: 'Delegado do GAECO',
-    texto: 'Os desafios das investigações digitais e as novas técnicas usadas pelos criminosos.',
-  },
-  {
-    nome: 'Wilson Leite da Silva Filho',
-    cargo: 'Chefe da Divisão de Informática Forense',
-    texto: 'Como funciona a coleta de provas digitais e como a perícia evolui para combater o crime.',
-  },
-] as const;
 
 // Canais oficiais (links conferidos). O site não recebe denúncias.
 export const CANAIS = [

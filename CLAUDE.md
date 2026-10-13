@@ -31,7 +31,7 @@ CI: `ci.yml` (check obrigatório `build`: vitest + astro check + build) e `e2e.y
 - `src/lib/mp4.ts` lê duração e tamanho do áudio no build e **falha** se o MP4 não tiver faststart.
 - Feed: `src/pages/podcast.xml.ts` (RSS + itunes + podcast namespace; `podcast:guid` é um UUIDv5 da URL do feed e não pode mudar). A capa de 3000 px vem de `design/capa.html`.
 - Prévia por episódio: `src/pages/og/[arquivo].ts` (satori + resvg + sharp, fontes `@fontsource/*` em WOFF, porque o satori não lê WOFF2). O nome leva um hash do conteúdo da arte.
-- JSON-LD: um `@graph` por página (`Base.astro`). `@id`s fixos em `src/data/site.ts#LD`. Episódio = `PodcastEpisode` + `BreadcrumbList`; `/sobre/` = `ProfilePage` do Thiago.
+- JSON-LD: um `@graph` por página (`Base.astro`). `@id`s fixos em `src/data/site.ts#LD`. Episódio = `PodcastEpisode` + `BreadcrumbList`; `/sobre/` = `ProfilePage` do Samurai.
 - Áudio, transcrições, capítulos, feed, capa e prévias usam CORP `cross-origin` (apps de podcast e WhatsApp Web); o HTML usa `same-origin`.
 
 ## Deploy

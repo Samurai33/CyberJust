@@ -3,9 +3,9 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Trilha from '../components/Trilha.astro';
 import Icon from '../components/Icon.astro';
-import retrato from '../assets/img/thiago-rangel.png';
+import retrato from '../assets/img/samurai.png';
 import { trilhaLd } from '../lib/ld';
-import { APRESENTADOR, ESPECIALISTAS, LD, N3XUS, SITE } from '../data/site';
+import { APRESENTADOR, LD, N3XUS, SITE } from '../data/site';
 
 const trilha = [
   { nome: 'Início', href: '/' },
@@ -16,9 +16,8 @@ const perfil = {
   url: new URL('/sobre/', Astro.site).href,
   mainEntity: {
     '@type': 'Person',
-    '@id': LD.thiago,
+    '@id': LD.samurai,
     name: APRESENTADOR.nome,
-    alternateName: APRESENTADOR.apelido,
     jobTitle: 'Especialista em cibersegurança',
     description: APRESENTADOR.texto,
     image: new URL('/icon-512.png', Astro.site).href,
@@ -29,7 +28,7 @@ const perfil = {
 };
 const n3xus = { '@type': 'Organization', '@id': LD.n3xus, name: N3XUS.marca, legalName: N3XUS.razao, taxID: N3XUS.cnpj, url: N3XUS.site, email: N3XUS.email };
 ---
-<Base title="Sobre o podcast e o especialista" description="Quem faz o CyberJustiça Brasil, quem é o especialista Thiago Rangel (Samurai) e como o conteúdo é produzido e verificado." jsonLd={[perfil, n3xus, trilhaLd(Astro.site, trilha)]}>
+<Base title="Sobre o podcast e o especialista" description="Quem faz o CyberJustiça Brasil, quem é o especialista Samurai e como o conteúdo é produzido e verificado." jsonLd={[perfil, n3xus, trilhaLd(Astro.site, trilha)]}>
   <section class="page-head">
     <div class="wrap">
       <Trilha itens={trilha} />
@@ -41,10 +40,10 @@ const n3xus = { '@type': 'Organization', '@id': LD.n3xus, name: N3XUS.marca, leg
   <section class="section section-tight" aria-labelledby="esp-t">
     <div class="wrap">
       <figure class="surface host">
-        <Image src={retrato} alt="Retrato de Thiago Rangel em arte ASCII azul sobre fundo escuro" widths={[200, 400]} sizes="200px" loading="eager" />
+        <Image src={retrato} alt="Retrato do Samurai em arte ASCII azul sobre fundo escuro" widths={[200, 400]} sizes="200px" loading="eager" />
         <figcaption>
           <p class="label"><b>Especialista</b> / apresentador</p>
-          <h2 id="esp-t">{APRESENTADOR.nome} <span>({APRESENTADOR.apelido})</span></h2>
+          <h2 id="esp-t">{APRESENTADOR.nome}</h2>
           <p class="cargo">{APRESENTADOR.cargo}</p>
           <p>{APRESENTADOR.texto}</p>
           <p class="actions">
@@ -64,7 +63,6 @@ const n3xus = { '@type': 'Organization', '@id': LD.n3xus, name: N3XUS.marca, leg
         <ul>
           <li><strong>Casos reais e fontes primárias.</strong> Cada episódio cita as leis e os canais oficiais envolvidos, com link para a fonte (Planalto, Banco Central, SaferNet, Polícia Federal).</li>
           <li><strong>Nada inventado.</strong> Números, nomes e datas só entram com fonte. Quando algo muda, a página do episódio mostra a data de revisão.</li>
-          <li><strong>Convidados identificados.</strong> Especialistas falam pelo cargo que ocupam; o site nunca publica contatos pessoais.</li>
           <li><strong>Uso de IA.</strong> Ferramentas de IA podem ajudar em transcrição e revisão de texto; o conteúdo é sempre conferido por uma pessoa antes de publicar.</li>
           <li><strong>Correções.</strong> Achou um erro? Escreva para <a href={`mailto:${N3XUS.email}`}>{N3XUS.email}</a>.</li>
         </ul>
@@ -73,18 +71,4 @@ const n3xus = { '@type': 'Organization', '@id': LD.n3xus, name: N3XUS.marca, leg
     </div>
   </section>
 
-  <section class="section" aria-labelledby="conv-t">
-    <div class="wrap">
-      <header class="sec-head"><p class="label">Convidados</p><h2 id="conv-t">Quem já participou</h2></header>
-      <ul class="pessoas" role="list">
-        {ESPECIALISTAS.map((p) => (
-          <li class="surface pessoa">
-            <h3>{p.nome}</h3>
-            <p class="cargo">{p.cargo}</p>
-            <p>{p.texto}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </section>
 </Base>
