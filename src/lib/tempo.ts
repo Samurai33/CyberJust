@@ -59,3 +59,8 @@ export function formatarData(data: string): string {
   if (!m || !d) return a ?? data;
   return `${Number(d)} ${MESES[Number(m) - 1]} ${a}`;
 }
+
+/** "1:02:05" → 3725; "6:29" → 389. */
+export function paraSegundos(tempo: string): number {
+  return tempo.split(':').reduce((total, parte) => total * 60 + Number(parte), 0);
+}

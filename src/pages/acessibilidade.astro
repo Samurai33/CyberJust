@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import Trilha from '../components/Trilha.astro';
+import Icon from '../components/Icon.astro';
+import { trilhaLd } from '../lib/ld';
+import { N3XUS, SITE } from '../data/site';
+
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Acessibilidade', href: '/acessibilidade/' },
+];
+---
+<Base title="Declaração de acessibilidade" description="Compromisso de acessibilidade do CyberJustiça Brasil: WCAG 2.2 nível AA, recursos do player, como testamos e como relatar barreiras." jsonLd={[trilhaLd(Astro.site, trilha)]}>
+  <section class="page-head">
+    <div class="wrap">
+      <Trilha itens={trilha} />
+      <p class="label"><Icon name="access" size={18} /> Acessibilidade</p>
+      <h1>Declaração de acessibilidade</h1>
+      <p class="lede">Buscamos atender às Diretrizes de Acessibilidade para Conteúdo Web (WCAG) 2.2, nível AA, como pede a Lei Brasileira de Inclusão (Lei 13.146/2015, art. 63).</p>
+    </div>
+  </section>
+  <section class="section section-tight">
+    <div class="wrap prose">
+      <h2>O que já fazemos</h2>
+      <ul>
+        <li>Navegação completa por teclado, com foco sempre visível e link para pular direto ao conteúdo.</li>
+        <li>Player de áudio com botões nomeados para leitores de tela, posição anunciada por extenso e atalhos (K, J e L).</li>
+        <li>Alvos de toque de pelo menos 44 px, textos que crescem com o zoom e nenhuma rolagem lateral em telas pequenas.</li>
+        <li>Respeito à preferência do sistema por menos movimento.</li>
+        <li>Páginas que funcionam sem JavaScript, com estrutura de títulos, listas e regiões marcadas.</li>
+        <li>Transcrição em texto nos episódios que já têm transcrição publicada.</li>
+      </ul>
+      <h2>Como testamos</h2>
+      <p>
+        A cada mudança, testes automáticos rodam em Chrome, Safari, iPhone, iPad e Android, conferindo nomes
+        acessíveis, tamanho de alvos e ausência de rolagem lateral, e o Lighthouse avalia acessibilidade nas
+        páginas principais.
+      </p>
+      <h2>Limitações conhecidas</h2>
+      <p>Alguns episódios ainda não têm transcrição. Estamos publicando conforme as transcrições são revisadas.</p>
+      <h2>Encontrou uma barreira?</h2>
+      <p>
+        Escreva para <a href={`mailto:${N3XUS.email}`}>{N3XUS.email}</a> ou abra uma issue no
+        <a href={`${SITE.repo}/issues`} rel="noopener noreferrer">GitHub</a>. Respondemos e corrigimos o quanto antes.
+      </p>
+      <p class="muted">Declaração revisada em 13 de outubro de 2026.</p>
+    </div>
+  </section>
+</Base>

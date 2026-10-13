@@ -1,0 +1,35 @@
+---
+// Painel de episódios (Sveltia CMS), empacotado no build: nenhum script de CDN.
+// Acesso: 3 cliques no logo (src/scripts/logo-atalho.ts) → Cloudflare Access neste caminho (só o dono)
+// → login no GitHub com token fine-grained só deste repositório. Fora dos buscadores (meta + X-Robots-Tag
+// no nginx) e do sitemap. A CSP deste caminho fica em docker/nginx.conf.
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Painel | CyberJustiça</title>
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
+  </head>
+  <body>
+    <style is:global>
+      /* Login só por token fine-grained: o OAuth do GitHub exigiria escopo "repo" (todos os repositórios).
+         Esconde "Entrar com GitHub" e "Trabalhar com Repositório Local" (seletores pelo data-label do Sveltia). */
+      .inner > .buttons > button[data-label*='GitHub'],
+      .inner > .buttons > button[data-label*='Local'],
+      .inner > .buttons > button[data-label*='Local'] + div[role='none'],
+      .inner > .buttons > button[data-label*='Local'] + div[role='none'] + .spacer {
+        display: none !important;
+      }
+    </style>
+    <script>
+      import { init } from '@sveltia/cms';
+      import { cmsConfig } from '../../cms/config';
+
+      init({ config: cmsConfig });
+    </script>
+  </body>
+</html>

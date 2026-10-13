@@ -5,7 +5,7 @@ resumo: "Esquemas de corrupção que migraram para o ambiente digital, com cript
 data: "2020-06-12"
 status: RESOLVIDO
 ameaca: ALTO
-categoria: Corrupção digital
+tema: corrupcao
 tags: [corrupção, criptomoedas, lava jato, blockchain, investigação]
 recursos:
   - titulo: "Lei de Lavagem de Dinheiro (Lei 9.613/1998)"

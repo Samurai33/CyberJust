@@ -25,6 +25,15 @@ CI: `ci.yml` (check obrigatório `build`: vitest + astro check + build) e `e2e.y
 - Dependências: pnpm 10 com `minimumReleaseAge` de 14 dias (`pnpm-workspace.yaml`); versões exatas no `package.json`; imagens Docker e actions fixadas por digest/SHA.
 - TypeScript 6 (o `@astrojs/check` 0.9 não aceita o 7), tsconfig `astro/tsconfigs/strictest`.
 
+## Painel, feed e SEO
+
+- Painel: Sveltia CMS em `src/pages/dash-*/` (caminho em `src/data/dash.ts`, aberto com 3 cliques no logo por `src/scripts/logo-atalho.ts`). O Cloudflare Access protege esse caminho. O painel é noindex (meta e `X-Robots-Tag`), fica fora do sitemap e tem CSP própria em `docker/nginx.conf`. Login só com token fine-grained. Mudou um campo do esquema? Atualize `src/cms/config.ts` também.
+- `src/lib/mp4.ts` lê duração e tamanho do áudio no build e **falha** se o MP4 não tiver faststart.
+- Feed: `src/pages/podcast.xml.ts` (RSS + itunes + podcast namespace; `podcast:guid` é um UUIDv5 da URL do feed e não pode mudar). A capa de 3000 px vem de `design/capa.html`.
+- Prévia por episódio: `src/pages/og/[arquivo].ts` (satori + resvg + sharp, fontes `@fontsource/*` em WOFF, porque o satori não lê WOFF2). O nome leva um hash do conteúdo da arte.
+- JSON-LD: um `@graph` por página (`Base.astro`). `@id`s fixos em `src/data/site.ts#LD`. Episódio = `PodcastEpisode` + `BreadcrumbList`; `/sobre/` = `ProfilePage` do Thiago.
+- Áudio, transcrições, capítulos, feed, capa e prévias usam CORP `cross-origin` (apps de podcast e WhatsApp Web); o HTML usa `same-origin`.
+
 ## Deploy
 
-O app do Coolify é `cyberjust-web` (uuid `3xuywg7do0sgc8q7kzrclikz`), porta **8080**, healthcheck do Dockerfile. Depois do merge, confira se o deploy terminou e teste o site no ar: CI verde não é deploy.
+O app do Coolify é `cyberjust-web` (uuid `3xuywg7do0sgc8q7kzrclikz`), porta **8080**, healthcheck do Dockerfile. Um webhook do GitHub (push) publica cada commit na `main`, inclusive os do painel. Depois do merge, confira se o deploy terminou e teste o site no ar: CI verde não é deploy.

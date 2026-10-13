@@ -2,20 +2,21 @@
 import BotaoOuvir from './BotaoOuvir.astro';
 import Selo from './Selo.astro';
 import { formatarData } from '../lib/tempo';
-import { grupoDoEpisodio, rotuloEpisodio, urlEpisodio, type Episodio } from '../lib/episodios';
+import { nomeTema, rotuloEpisodio, urlEpisodio, type Episodio } from '../lib/episodios';
 interface Props { ep: Episodio; nivel?: 'h2' | 'h3' }
 const { ep, nivel = 'h3' } = Astro.props;
 const H = nivel;
+const d = ep.data;
 ---
-<article class="ep-row" data-grupo={grupoDoEpisodio(ep)} data-audio={ep.data.audio ? '' : undefined}>
+<article class="ep-row" data-tema={d.tema} data-audio={d.audio ? '' : undefined}>
   <span class="n">{rotuloEpisodio(ep)}</span>
   <div class="ep-body">
-    <H><a href={urlEpisodio(ep)}>{ep.data.titulo}</a></H>
-    <p>{ep.data.resumo}</p>
+    <H><a href={urlEpisodio(ep)}>{d.titulo}</a></H>
+    <p>{d.resumo}</p>
     <div class="tags">
-      <Selo tipo="ameaca" valor={ep.data.ameaca} />
-      <span class="tag tag-plain">{ep.data.categoria}</span>
-      <span class="tag tag-plain"><time datetime={ep.data.data}>{formatarData(ep.data.data)}</time></span>
+      <Selo tipo="ameaca" valor={d.ameaca} />
+      <span class="tag tag-plain">{nomeTema(d.tema)}</span>
+      <span class="tag tag-plain">{d.data ? <time datetime={d.data}>{formatarData(d.data)}</time> : 'Em produção'}</span>
     </div>
   </div>
   <BotaoOuvir ep={ep} variante="linha" />

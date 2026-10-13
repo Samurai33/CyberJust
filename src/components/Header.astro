@@ -23,8 +23,12 @@ const atual = (href: string) => !href.includes('#') && path.startsWith(href);
       <nav aria-label="Principal (celular)">
         <ul class="nav-list" role="list">
           {MENU.map((m) => <li><a href={m.href} aria-current={atual(m.href) ? 'page' : undefined}>{m.label}</a></li>)}
+          <li><a href="/episodios/">Ouvir episódios</a></li>
         </ul>
       </nav>
     </details>
   </div>
 </header>
+<script>
+  import '../scripts/logo-atalho';
+</script>

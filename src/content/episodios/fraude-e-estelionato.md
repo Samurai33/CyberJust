@@ -5,7 +5,7 @@ resumo: "Como quadrilhas brasileiras usam tecnologia para aplicar golpes finance
 data: "2024-05-15"
 status: ATIVO
 ameaca: ALTO
-categoria: Fraudes financeiras
+tema: fraudes
 tags: [crimes cibernéticos, fraude, estelionato, tecnologia]
 recursos:
   - titulo: Prevenção a fraudes
