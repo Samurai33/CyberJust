@@ -9,7 +9,7 @@ COPY . .
 RUN pnpm build
 
 # nginx oficial sem root (usuário nginx, porta 8080). Só arquivos estáticos: nada de Node em produção.
-FROM nginxinc/nginx-unprivileged:1.30.5-alpine@sha256:15c994d10d6d78658721c3bcafff14cb281fba2a4bdf9d5ba92c416a472516e3
+FROM nginxinc/nginx-unprivileged:1.31.5-alpine@sha256:19c132c9ab02d3b783f478743dafc7a7f42e27aa7d2bdcbec1bb1128ca8f2a07
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY docker/security-headers-public.conf /etc/nginx/snippets/security-headers-public.conf
