@@ -32,7 +32,7 @@ export const N3XUS = {
 export const LD = {
   site: 'https://www.cyberjus.org/#site',
   serie: 'https://www.cyberjus.org/#podcast',
-  thiago: 'https://www.cyberjus.org/sobre/#thiago-rangel',
+  samurai: 'https://www.cyberjus.org/sobre/#samurai',
   n3xus: 'https://n3xus.dev/#organization',
 } as const;
 
@@ -69,8 +69,7 @@ export const PROTECAO = [
 
 // Especialista e apresentador do podcast. Mesma foto e bio da página "Sobre" do n3xus.dev.
 export const APRESENTADOR = {
-  nome: 'Thiago Rangel',
-  apelido: 'Samurai',
+  nome: 'Samurai',
   cargo: 'Especialista em cibersegurança · fundador da N3XUS',
   texto:
     'Engenheiro de IA, cibersegurança e full-stack. Constrói sistemas seguros para aviação, testes de intrusão e infraestrutura crítica, e traz para o podcast o olhar técnico de quem defende sistemas reais.',

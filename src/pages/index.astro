@@ -8,7 +8,7 @@ import Icon from '../components/Icon.astro';
 import { infoAudio, listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/episodios';
 import { formatarTempo } from '../lib/tempo';
 import { Image } from 'astro:assets';
-import retrato from '../assets/img/thiago-rangel.png';
+import retrato from '../assets/img/samurai.png';
 import { SITE, TIPOS_DE_CRIME, PROTECAO, APRESENTADOR, CANAIS, LD } from '../data/site';
 
 const episodios = await listarEpisodios();
@@ -25,7 +25,7 @@ const serie = {
   url: Astro.site?.href,
   inLanguage: 'pt-BR',
   webFeed: new URL('/podcast.xml', Astro.site).href,
-  author: { '@id': LD.thiago },
+  author: { '@id': LD.samurai },
   publisher: { '@id': LD.n3xus },
 };
 ---
@@ -125,10 +125,10 @@ const serie = {
     <div class="wrap">
       <SectionHead index="05" label="Especialistas" title="Quem investiga, explica" id="esp-t" />
       <figure class="surface host">
-        <Image src={retrato} alt="Retrato de Thiago Rangel em arte ASCII azul sobre fundo escuro" widths={[200, 400]} sizes="200px" loading="lazy" />
+        <Image src={retrato} alt="Retrato do Samurai em arte ASCII azul sobre fundo escuro" widths={[200, 400]} sizes="200px" loading="lazy" />
         <figcaption>
           <p class="label"><b>Especialista</b> / apresentador</p>
-          <h3>{APRESENTADOR.nome} <span>({APRESENTADOR.apelido})</span></h3>
+          <h3>{APRESENTADOR.nome}</h3>
           <p class="cargo">{APRESENTADOR.cargo}</p>
           <p>{APRESENTADOR.texto}</p>
           <p class="actions">

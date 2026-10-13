@@ -60,7 +60,7 @@ const episodioLd = {
   about: nomeTema(d.tema),
   keywords: d.tags.join(', '),
   image: new URL(urlOg(ep), Astro.site).href,
-  author: { '@id': LD.thiago },
+  author: { '@id': LD.samurai },
   publisher: { '@id': LD.n3xus },
   partOfSeries: { '@id': LD.serie },
   ...(audio && {
