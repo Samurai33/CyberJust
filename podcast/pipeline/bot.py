@@ -4,6 +4,10 @@ Uso: python -m pipeline.bot      (contêiner sempre ligado; ver podcast/compose.
 Ambiente: TELEGRAM_TOKEN (bot só do podcast), TELEGRAM_CHAT (o único chat que o bot obedece), PAUTAS_DIAS (dias da
 semana das sugestões, 0 = segunda; padrão "0,2,4"), PAUTAS_HORA (padrão 9, horário de Brasília) e as variáveis das
 outras etapas. Long polling: não abre porta nem depende do túnel.
+
+Abas: com o Threaded Mode do bot ligado (@BotFather › Bot Settings › Threads Settings, só pelo mini app), o chat
+privado ganha tópicos e cada assunto vai para o seu (ABAS). Os ids ficam em topicos.json; aba apagada é recriada.
+Sem Threaded Mode, tudo continua no chat normal.
 """
 import datetime as dt
 import hashlib
@@ -12,12 +16,13 @@ import os
 import subprocess
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
 from pathlib import Path
 
-from .comum import DADOS, TRABALHO, ler, log
+from .comum import DADOS, TRABALHO, gravar, ler, log
 
 TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT = int(os.environ["TELEGRAM_CHAT"])
@@ -31,6 +36,15 @@ CREDITO_POR_CARACTERE = 0.12  # medido no Eleven v4 (Text to Dialogue): 224 cré
 CREDITO_FALA_AVULSA = 0.45
 ocupado = threading.Lock()  # uma etapa pesada por vez
 atual = {"nome": None, "desde": None}  # o que está rodando, para o /status e o aviso de ocupado
+# Cores aceitas pelo createForumTopic: azul 7322096, amarelo 16766590, violeta 13338331, verde 9367192, rosa 16749490,
+# vermelho 16478047.
+ABAS = {"pautas": ("🗞️ Pautas", 16766590), "producao": ("🎙️ Produção", 13338331),
+        "publicacao": ("🚀 Publicação", 9367192), "sistema": ("⚙️ Sistema", 7322096)}
+ABA_DA_ACAO = {"sugerir": "pautas", "produzir": "producao", "audio": "producao", "refazer": "producao",
+               "publicar": "publicacao", "descartar": "producao"}
+TOPICOS = DADOS / "topicos.json"
+topicos_trava = threading.Lock()
+sem_topicos_ate = [0.0]  # Threaded Mode desligado: não tenta criar aba de novo por 10 min
 NOMES = {"sugerir": "buscando pautas", "produzir": "escrevendo o roteiro", "audio": "gerando o áudio",
          "refazer": "refazendo uma fala", "publicar": "publicando", "descartar": "descartando"}
 
@@ -42,9 +56,16 @@ def andamento():
     return f"⏳ {NOMES.get(atual['nome'], atual['nome'])} há {minutos} min."
 
 
+class ErroTelegram(Exception):
+    pass
+
+
 def tg(metodo, **campos):
     dados = urllib.parse.urlencode({k: json.dumps(v) if isinstance(v, (dict, list)) else v for k, v in campos.items()}).encode()
-    r = urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/{metodo}", data=dados, timeout=70)
+    try:
+        r = urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/{metodo}", data=dados, timeout=70)
+    except urllib.error.HTTPError as e:  # o motivo vem no corpo ("message thread not found" etc.)
+        raise ErroTelegram(f"{metodo}: {e.code} {e.read().decode(errors='replace')[:300]}") from None
     return json.loads(r.read())["result"]
 
 
@@ -59,12 +80,51 @@ def tg_arquivo(metodo, campo, caminho, **campos):
               f"Content-Type: application/octet-stream\r\n\r\n").encode() + Path(caminho).read_bytes() + f"\r\n--{limite}--\r\n".encode()
     req = urllib.request.Request(f"https://api.telegram.org/bot{TOKEN}/{metodo}", data=corpo,
                                  headers={"Content-Type": f"multipart/form-data; boundary={limite}"})
-    return json.loads(urllib.request.urlopen(req, timeout=300).read())["result"]
+    try:
+        return json.loads(urllib.request.urlopen(req, timeout=300).read())["result"]
+    except urllib.error.HTTPError as e:
+        raise ErroTelegram(f"{metodo}: {e.code} {e.read().decode(errors='replace')[:300]}") from None
 
 
-def msg(texto, botoes=None):
+def topico(aba, recriar=False):
+    """message_thread_id da aba, criando o tópico na primeira vez. None = sem Threaded Mode (vai para o chat normal)."""
+    with topicos_trava:
+        ids = ler(TOPICOS) if TOPICOS.exists() else {}
+        if aba in ids and not recriar:
+            return ids[aba]
+        if time.time() < sem_topicos_ate[0]:
+            return None
+        nome, cor = ABAS[aba]
+        try:
+            ids[aba] = tg("createForumTopic", chat_id=CHAT, name=nome, icon_color=cor)["message_thread_id"]
+        except Exception as e:
+            log("aba", aba, "não criada (Threaded Mode desligado?):", e)
+            sem_topicos_ate[0] = time.time() + 600
+            return None
+        gravar(TOPICOS, ids)
+        return ids[aba]
+
+
+def na_aba(aba, enviar):
+    """Chama enviar(extra) com o message_thread_id da aba; se a aba foi apagada no app, recria e manda de novo."""
+    t = topico(aba)
+    try:
+        return enviar({"message_thread_id": t} if t else {})
+    except ErroTelegram as e:
+        if not t or "thread not found" not in str(e).lower():
+            raise
+        t = topico(aba, recriar=True)
+        return enviar({"message_thread_id": t} if t else {})
+
+
+def msg(texto, botoes=None, aba="sistema"):
     extra = {"reply_markup": {"inline_keyboard": botoes}} if botoes else {}
-    return tg("sendMessage", chat_id=CHAT, text=texto, parse_mode="HTML", link_preview_options={"is_disabled": True}, **extra)
+    return na_aba(aba, lambda t: tg("sendMessage", chat_id=CHAT, text=texto, parse_mode="HTML",
+                                    link_preview_options={"is_disabled": True}, **extra, **t))
+
+
+def arquivo(metodo, campo, caminho, aba, **campos):
+    return na_aba(aba, lambda t: tg_arquivo(metodo, campo, caminho, chat_id=CHAT, **campos, **t))
 
 
 def etapa(*args, env=None):
@@ -101,7 +161,8 @@ def ocupados(erro, acao, args):
     """Todos os modelos fortes ocupados: avisa e agenda outra tentativa em 15 minutos, sem entregar texto pior."""
     if "PROVEDORES OCUPADOS" not in erro:
         return False
-    msg(f"⏳ Gemini, NVIDIA e Cloudflare ocupados agora. Tento de novo sozinho em 15 min ({NOMES.get(acao, acao)}).")
+    msg(f"⏳ Gemini, NVIDIA e Cloudflare ocupados agora. Tento de novo sozinho em 15 min ({NOMES.get(acao, acao)}).",
+        aba=ABA_DA_ACAO[acao])
     threading.Timer(900, executar, args=(acao, args)).start()
     return True
 
@@ -111,7 +172,7 @@ def sugerir_pautas():
     if not ok:
         if ocupados(erro, "sugerir", ()):
             return
-        return msg(f"⚠️ Falha ao buscar pautas:\n<pre>{esc(erro[-800:])}</pre>")
+        return msg(f"⚠️ Falha ao buscar pautas:\n<pre>{esc(erro[-800:])}</pre>", aba="pautas")
     pautas = ler(arquivo)
     meta = Path(arquivo).with_suffix(".meta.json")
     repetidas = ler(meta).get("repetidas", 0) if meta.exists() else 0
@@ -121,16 +182,16 @@ def sugerir_pautas():
         fontes = sum(len(n["fontes"]) for n in p["noticias"])
         linhas.append(f"<b>{i}. {esc(p['titulo'])}</b>\nNota {p['nota']}/10 · {p['tema']} · {fontes} fontes\n<i>{esc(p['por_que'])}</i>\n")
         botoes.append([{"text": f"🎙️ Produzir {i}", "callback_data": f"produzir|{Path(arquivo).name}|{i}"}])
-    msg("\n".join(linhas), botoes)
+    msg("\n".join(linhas), botoes, aba="pautas")
 
 
 def produzir(arquivo, n):
-    msg(f"✍️ Apurando as fontes e escrevendo o roteiro da pauta {n}… (grátis, alguns minutos)")
+    msg(f"✍️ Apurando as fontes e escrevendo o roteiro da pauta {n}… (grátis, alguns minutos)", aba="producao")
     ok, pasta, erro = etapa("pipeline.roteiro", f"pautas/{arquivo}", str(n))
     if not ok:
         if ocupados(erro, "produzir", (arquivo, str(n))):
             return
-        return msg(f"⚠️ Roteiro falhou:\n<pre>{esc(erro[-800:])}</pre>")
+        return msg(f"⚠️ Roteiro falhou:\n<pre>{esc(erro[-800:])}</pre>", aba="producao")
     pasta = Path(pasta)
     info = ler(pasta / "modelos.json") if (pasta / "modelos.json").exists() else {"etapas": [], "avisos": []}
     modelos = " · ".join(f"{e['tarefa']}: {e['modelo']}" for e in info["etapas"]) or "?"
@@ -144,30 +205,30 @@ def produzir(arquivo, n):
     md.write_text(f"# {r['titulo']}\n\n" + "\n\n".join(
         (f"## {f['capitulo']}\n\n" if f.get("capitulo") else "") + f"**{f['quem'].upper()}:** {f['texto']}" for f in r["falas"]
     ) + "\n\n---\n\n## Ficha de fatos\n\n" + (pasta / "ficha.md").read_text(encoding="utf-8"), encoding="utf-8")
-    tg_arquivo("sendDocument", "document", md, chat_id=CHAT, caption=f"Roteiro: {r['titulo']}"[:1000])
+    arquivo("sendDocument", "document", md, "producao", caption=f"Roteiro: {r['titulo']}"[:1000])
     revisao = "\n".join(f"• <i>{esc(p['tipo'])}</i>: {esc(p['problema'][:150])}" for p in problemas[:8]) or "• nenhum"
     msg(f"📝 <b>{esc(r['titulo'])}</b>\n{palavras} palavras (~{palavras / 160:.0f} min) · status {r['status']}{avisos}\n"
         f"🤖 {esc(modelos)}\n\n"
         f"<b>A revisão automática corrigiu:</b>\n{revisao}\n\n"
         f"💳 Gerar o áudio custa cerca de <b>{int(chars * CREDITO_POR_CARACTERE):,}</b> créditos ({chars:,} caracteres).".replace(",", "."),
         [[{"text": "✅ Aprovar roteiro (gera o áudio)", "callback_data": f"audio|{chave(pasta.name)}"}],
-         [{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(pasta.name)}"}]])
+         [{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(pasta.name)}"}]], aba="producao")
 
 
 def gerar_audio(nome):
     pasta = TRABALHO / nome
-    msg("🎧 Gerando o áudio na ElevenLabs… (gasta créditos; uns 2 minutos)")
+    msg("🎧 Gerando o áudio na ElevenLabs… (gasta créditos; uns 2 minutos)", aba="producao")
     ok, saida, erro = etapa("pipeline.audio", str(pasta), "--gerar")
     if not ok:
         return msg(f"⚠️ Áudio falhou (os blocos já gerados ficam salvos):\n<pre>{esc(erro[-800:])}</pre>",
-                   [[{"text": "🔁 Tentar de novo", "callback_data": f"audio|{chave(nome)}"}]])
+                   [[{"text": "🔁 Tentar de novo", "callback_data": f"audio|{chave(nome)}"}]], aba="producao")
     custo = json.loads(saida)
     ok, _, erro = etapa("pipeline.legenda", str(pasta))
     if not ok:
-        return msg(f"⚠️ Legenda falhou:\n<pre>{esc(erro[-800:])}</pre>")
+        return msg(f"⚠️ Legenda falhou:\n<pre>{esc(erro[-800:])}</pre>", aba="producao")
     qa, caps = ler(pasta / "qa.json"), ler(pasta / "capitulos.json")
     r = ler(pasta / "roteiro.json")
-    tg_arquivo("sendAudio", "audio", pasta / "episodio.m4a", chat_id=CHAT, title=r["titulo"][:60], performer="CyberJustiça")
+    arquivo("sendAudio", "audio", pasta / "episodio.m4a", "producao", title=r["titulo"][:60], performer="CyberJustiça")
     capitulos = "\n".join(f"{c['inicio']} {esc(c['titulo'])}" for c in caps)
     selo = "✅" if qa["aprovado"] else "❌"
     fora = qa.get("fora_do_tom", [])
@@ -180,7 +241,7 @@ def gerar_audio(nome):
         [[{"text": f"🔁 Refazer fala de {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} (~{custo_fala(r, f['fala'])} créditos)",
            "callback_data": f"refazer|{chave(nome)}|{f['fala']}"}] for f in fora]
         + ([[{"text": "🚀 Publicar no site", "callback_data": f"publicar|{chave(nome)}"}]] if qa["aprovado"] else [])
-        + [[{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(nome)}"}]])
+        + [[{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(nome)}"}]], aba="producao")
 
 
 def custo_fala(roteiro, n):
@@ -189,33 +250,33 @@ def custo_fala(roteiro, n):
 
 def refazer(nome, n):
     pasta = TRABALHO / nome
-    msg(f"🔁 Refazendo só a fala {int(n) + 1}, sem tag e em tom neutro…")
+    msg(f"🔁 Refazendo só a fala {int(n) + 1}, sem tag e em tom neutro…", aba="producao")
     ok, _, erro = etapa("pipeline.audio", str(pasta), "--refazer-fala", str(n), "--gerar")
     if not ok:
-        return msg(f"⚠️ Não consegui refazer a fala:\n<pre>{esc(erro[-800:])}</pre>")
+        return msg(f"⚠️ Não consegui refazer a fala:\n<pre>{esc(erro[-800:])}</pre>", aba="producao")
     gerar_audio(nome)  # blocos todos reaproveitados (0 crédito): só refaz acabamento, legenda e QA
 
 
 def publicar(nome):
-    msg("🚀 Publicando…")
+    msg("🚀 Publicando…", aba="publicacao")
     ok, saida, erro = etapa("pipeline.episodio", str(TRABALHO / nome), str(REPO), "--publicar")
     if not ok:
-        return msg(f"⚠️ Publicação falhou:\n<pre>{esc(erro[-800:])}</pre>")
+        return msg(f"⚠️ Publicação falhou:\n<pre>{esc(erro[-800:])}</pre>", aba="publicacao")
     info = json.loads(saida)
-    msg(f"📤 Episódio {info['numero']} enviado. Esperando o deploy do Coolify…")
+    msg(f"📤 Episódio {info['numero']} enviado. Esperando o deploy do Coolify…", aba="publicacao")
     for _ in range(30):  # até 15 minutos
         time.sleep(30)
         try:
             if urllib.request.urlopen(info["url"], timeout=20).status == 200:
-                return msg(f"🎉 <b>No ar:</b> {info['url']}")
+                return msg(f"🎉 <b>No ar:</b> {info['url']}", aba="publicacao")
         except Exception:
             pass
-    msg(f"⚠️ O commit foi feito, mas {info['url']} ainda não responde. Confira o deploy no Coolify.")
+    msg(f"⚠️ O commit foi feito, mas {info['url']} ainda não responde. Confira o deploy no Coolify.", aba="publicacao")
 
 
 def descartar(nome):
     (TRABALHO / nome / "descartado").touch()
-    msg(f"🗑️ Descartado: {esc(nome)}")
+    msg(f"🗑️ Descartado: {esc(nome)}", aba="producao")
 
 
 ACOES = {"produzir": lambda a, n: produzir(a, int(n)),
@@ -227,13 +288,13 @@ ACOES = {"produzir": lambda a, n: produzir(a, int(n)),
 
 def executar(acao, args):
     if not ocupado.acquire(blocking=False):
-        return msg(f"{andamento()} Tente de novo quando terminar.")
+        return msg(f"{andamento()} Tente de novo quando terminar.", aba=ABA_DA_ACAO.get(acao, "sistema"))
     atual.update(nome=acao, desde=time.time())
     try:
         ACOES[acao](*args)
     except Exception as e:  # o bot não pode morrer por causa de uma etapa
         log("erro:", repr(e))
-        msg(f"⚠️ Erro inesperado em {acao}: <pre>{esc(repr(e))[:800]}</pre>")
+        msg(f"⚠️ Erro inesperado em {acao}: <pre>{esc(repr(e))[:800]}</pre>", aba=ABA_DA_ACAO.get(acao, "sistema"))
     finally:
         atual.update(nome=None, desde=None)
         ocupado.release()
@@ -260,6 +321,8 @@ def main():
                                   {"command": "status", "description": "Créditos e etapa em andamento"}])
     threading.Thread(target=agenda, daemon=True).start()
     log("bot no ar")
+    for aba in ABAS:  # cria as abas na ordem certa já na subida
+        topico(aba)
     msg("🟢 <b>Pipeline do CyberJust no ar.</b>\nPautas seg, qua e sex às 9h. Comandos: /pautas e /status.")
     proximo = 0
     while True:
@@ -286,7 +349,9 @@ def main():
                 threading.Thread(target=executar, args=("sugerir", ()), daemon=True).start()
             elif m and m.get("text", "").startswith("/status"):
                 ok, _, erro = etapa("pipeline.audio", "--saldo")
-                msg(f"{andamento()}\n{esc(erro.strip().splitlines()[-1] if erro.strip() else '')}")
+                texto = f"{andamento()}\n{esc(erro.strip().splitlines()[-1] if erro.strip() else '')}"
+                t = m.get("message_thread_id")  # responde na aba em que o /status foi digitado
+                tg("sendMessage", chat_id=CHAT, text=texto, parse_mode="HTML", **({"message_thread_id": t} if t else {}))
 
 
 if __name__ == "__main__":
