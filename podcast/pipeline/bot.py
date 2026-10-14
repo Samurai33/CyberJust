@@ -24,7 +24,7 @@ DIAS = {int(d) for d in os.environ.get("PAUTAS_DIAS", "0,2,4").split(",")}
 HORA = int(os.environ.get("PAUTAS_HORA", "9"))
 REPO = Path(os.environ.get("REPO", "/dados/repo"))
 BRT = dt.timezone(dt.timedelta(hours=-3))
-CREDITO_POR_CARACTERE = 0.44  # medido no piloto (eleven_v3, Text to Dialogue): 3.282 créditos para 7.460 caracteres
+CREDITO_POR_CARACTERE = 0.12  # medido no Eleven v4 (Text to Dialogue): 224 créditos para 1.852 caracteres
 ocupado = threading.Lock()  # uma etapa pesada por vez
 atual = {"nome": None, "desde": None}  # o que está rodando, para o /status e o aviso de ocupado
 NOMES = {"sugerir": "buscando pautas", "produzir": "escrevendo o roteiro", "audio": "gerando o áudio",
@@ -77,9 +77,20 @@ def esc(t):
 # ---------- etapas acionadas pelos botões ----------
 
 
+def ocupados(erro, acao, args):
+    """Todos os modelos fortes ocupados: avisa e agenda outra tentativa em 15 minutos, sem entregar texto pior."""
+    if "PROVEDORES OCUPADOS" not in erro:
+        return False
+    msg(f"⏳ Gemini, NVIDIA e Cloudflare ocupados agora. Tento de novo sozinho em 15 min ({NOMES.get(acao, acao)}).")
+    threading.Timer(900, executar, args=(acao, args)).start()
+    return True
+
+
 def sugerir_pautas():
     ok, arquivo, erro = etapa("pipeline.pautas")
     if not ok:
+        if ocupados(erro, "sugerir", ()):
+            return
         return msg(f"⚠️ Falha ao buscar pautas:\n<pre>{esc(erro[-800:])}</pre>")
     pautas = ler(arquivo)
     meta = Path(arquivo).with_suffix(".meta.json")
@@ -97,8 +108,13 @@ def produzir(arquivo, n):
     msg(f"✍️ Apurando as fontes e escrevendo o roteiro da pauta {n}… (grátis, alguns minutos)")
     ok, pasta, erro = etapa("pipeline.roteiro", f"pautas/{arquivo}", str(n))
     if not ok:
+        if ocupados(erro, "produzir", (arquivo, str(n))):
+            return
         return msg(f"⚠️ Roteiro falhou:\n<pre>{esc(erro[-800:])}</pre>")
     pasta = Path(pasta)
+    info = ler(pasta / "modelos.json") if (pasta / "modelos.json").exists() else {"etapas": [], "avisos": []}
+    modelos = " · ".join(f"{e['tarefa']}: {e['modelo']}" for e in info["etapas"]) or "?"
+    avisos = "".join(f"\n⚠️ {esc(a)}" for a in info["avisos"])
     r, problemas = ler(pasta / "roteiro.json"), ler(pasta / "revisao.json")
     chars = sum(len(f["texto"]) for f in r["falas"])
     palavras = sum(len(f["texto"].split()) for f in r["falas"])
@@ -108,7 +124,8 @@ def produzir(arquivo, n):
     ) + "\n\n---\n\n## Ficha de fatos\n\n" + (pasta / "ficha.md").read_text(encoding="utf-8"), encoding="utf-8")
     tg_arquivo("sendDocument", "document", md, chat_id=CHAT, caption=f"Roteiro: {r['titulo']}"[:1000])
     revisao = "\n".join(f"• <i>{esc(p['tipo'])}</i>: {esc(p['problema'][:150])}" for p in problemas[:8]) or "• nenhum"
-    msg(f"📝 <b>{esc(r['titulo'])}</b>\n{palavras} palavras (~{palavras / 160:.0f} min) · status {r['status']}\n\n"
+    msg(f"📝 <b>{esc(r['titulo'])}</b>\n{palavras} palavras (~{palavras / 160:.0f} min) · status {r['status']}{avisos}\n"
+        f"🤖 {esc(modelos)}\n\n"
         f"<b>A revisão automática corrigiu:</b>\n{revisao}\n\n"
         f"💳 Gerar o áudio custa cerca de <b>{int(chars * CREDITO_POR_CARACTERE):,}</b> créditos ({chars:,} caracteres).".replace(",", "."),
         [[{"text": "✅ Aprovar roteiro (gera o áudio)", "callback_data": f"audio|{pasta.name}"}],
