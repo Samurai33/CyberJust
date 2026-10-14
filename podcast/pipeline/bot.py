@@ -6,6 +6,7 @@ semana das sugestões, 0 = segunda; padrão "0,2,4"), PAUTAS_HORA (padrão 9, ho
 outras etapas. Long polling: não abre porta nem depende do túnel.
 """
 import datetime as dt
+import hashlib
 import json
 import os
 import subprocess
@@ -70,6 +71,22 @@ def etapa(*args, env=None):
     return r.returncode == 0, (saida[-1] if saida else ""), r.stderr[-1500:]
 
 
+def chave(nome):
+    """O Telegram aceita no máximo 64 bytes em callback_data: "publicar|" + nome de pasta de 60 caracteres passava
+    disso e a mensagem com os botões era recusada. O botão leva um código curto do nome da pasta."""
+    return hashlib.sha1(nome.encode()).hexdigest()[:10]
+
+
+def pasta_da_chave(codigo):
+    # Botões enviados antes desta mudança levam o nome inteiro da pasta.
+    if "/" not in codigo and codigo not in (".", "..") and (TRABALHO / codigo).is_dir():
+        return codigo
+    achada = next((p.name for p in TRABALHO.iterdir() if p.is_dir() and chave(p.name) == codigo), None)
+    if not achada:
+        raise ValueError(f"episódio {codigo} não encontrado em trabalho/")
+    return achada
+
+
 def esc(t):
     return str(t).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -114,7 +131,9 @@ def produzir(arquivo, n):
     pasta = Path(pasta)
     info = ler(pasta / "modelos.json") if (pasta / "modelos.json").exists() else {"etapas": [], "avisos": []}
     modelos = " · ".join(f"{e['tarefa']}: {e['modelo']}" for e in info["etapas"]) or "?"
-    avisos = "".join(f"\n⚠️ {esc(a)}" for a in info["avisos"])
+    avisos = "".join(f"\n⚠️ {esc(a)}" for a in info["avisos"][:8])
+    if len(info["avisos"]) > 8:
+        avisos += f"\n⚠️ e mais {len(info['avisos']) - 8} (lista completa em modelos.json)"
     r, problemas = ler(pasta / "roteiro.json"), ler(pasta / "revisao.json")
     chars = sum(len(f["texto"]) for f in r["falas"])
     palavras = sum(len(f["texto"].split()) for f in r["falas"])
@@ -128,8 +147,8 @@ def produzir(arquivo, n):
         f"🤖 {esc(modelos)}\n\n"
         f"<b>A revisão automática corrigiu:</b>\n{revisao}\n\n"
         f"💳 Gerar o áudio custa cerca de <b>{int(chars * CREDITO_POR_CARACTERE):,}</b> créditos ({chars:,} caracteres).".replace(",", "."),
-        [[{"text": "✅ Aprovar roteiro (gera o áudio)", "callback_data": f"audio|{pasta.name}"}],
-         [{"text": "🗑️ Descartar", "callback_data": f"descartar|{pasta.name}"}]])
+        [[{"text": "✅ Aprovar roteiro (gera o áudio)", "callback_data": f"audio|{chave(pasta.name)}"}],
+         [{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(pasta.name)}"}]])
 
 
 def gerar_audio(nome):
@@ -138,7 +157,7 @@ def gerar_audio(nome):
     ok, saida, erro = etapa("pipeline.audio", str(pasta), "--gerar")
     if not ok:
         return msg(f"⚠️ Áudio falhou (os blocos já gerados ficam salvos):\n<pre>{esc(erro[-800:])}</pre>",
-                   [[{"text": "🔁 Tentar de novo", "callback_data": f"audio|{nome}"}]])
+                   [[{"text": "🔁 Tentar de novo", "callback_data": f"audio|{chave(nome)}"}]])
     custo = json.loads(saida)
     ok, _, erro = etapa("pipeline.legenda", str(pasta))
     if not ok:
@@ -156,9 +175,9 @@ def gerar_audio(nome):
         f"alinhamento {qa['cobertura_alinhamento']:.0%}\n\n<b>Capítulos</b>\n{capitulos}\n\n"
         f"💳 {custo['custo']} créditos usados; saldo {custo['saldo']}.{aviso}",
         [[{"text": f"🔁 Refazer fala de {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} (~20 créditos)",
-           "callback_data": f"refazer|{nome}|{f['fala']}"}] for f in fora]
-        + ([[{"text": "🚀 Publicar no site", "callback_data": f"publicar|{nome}"}]] if qa["aprovado"] else [])
-        + [[{"text": "🗑️ Descartar", "callback_data": f"descartar|{nome}"}]])
+           "callback_data": f"refazer|{chave(nome)}|{f['fala']}"}] for f in fora]
+        + ([[{"text": "🚀 Publicar no site", "callback_data": f"publicar|{chave(nome)}"}]] if qa["aprovado"] else [])
+        + [[{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(nome)}"}]])
 
 
 def refazer(nome, n):
@@ -192,8 +211,11 @@ def descartar(nome):
     msg(f"🗑️ Descartado: {esc(nome)}")
 
 
-ACOES = {"produzir": lambda a, n: produzir(a, int(n)), "audio": gerar_audio, "refazer": refazer, "publicar": publicar,
-         "descartar": descartar}
+ACOES = {"produzir": lambda a, n: produzir(a, int(n)),
+         "audio": lambda c: gerar_audio(pasta_da_chave(c)),
+         "refazer": lambda c, n: refazer(pasta_da_chave(c), n),
+         "publicar": lambda c: publicar(pasta_da_chave(c)),
+         "descartar": lambda c: descartar(pasta_da_chave(c))}
 
 
 def executar(acao, args):
