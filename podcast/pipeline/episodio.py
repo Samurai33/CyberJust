@@ -18,6 +18,7 @@ from pathlib import Path
 
 from .comum import TEMAS, ler, log, slug
 
+BRT = dt.timezone(dt.timedelta(hours=-3))
 SITE_CURTO = "CyberJustiça"  # src/data/site.ts SITE.curto: o título vira "<título> | CyberJustiça" se couber em 60
 OFICIAIS = re.compile(r"\.gov\.br|\.jus\.br|\.mp\.br|oab|\.leg\.br|policiacivil|bcb\.gov|safernet", re.I)
 GRANDES = re.compile(r"g1\.globo|folha|estadao|uol\.com|cnnbrasil|agenciabrasil|metropoles|band\.com|oglobo|bbc\.com|r7\.com|terra\.com", re.I)
@@ -77,22 +78,27 @@ def validar(r, capitulos):
         raise SystemExit("Episódio inválido para o site: " + "; ".join(erros))
 
 
-def main():
-    pasta, repo = Path(sys.argv[1]), Path(sys.argv[2])
-    publicar = "--publicar" in sys.argv
-    r = ler(pasta / "roteiro.json")
-    capitulos = ler(pasta / "capitulos.json")
-    qa = ler(pasta / "qa.json")
-    if not qa.get("aprovado"):
-        raise SystemExit(f"O controle de qualidade reprovou o áudio: {qa}")
-    validar(r, capitulos)
+def git(repo, *args, check=True):
+    return subprocess.run(["git", "-C", str(repo), *args], check=check)
 
-    if publicar:
-        subprocess.run(["git", "-C", str(repo), "pull", "--ff-only", "-q"], check=True)
+
+def sincronizar(repo):
+    """Deixa o clone igual à origin/main. Um ensaio anterior deixava o .md no clone, e o número do episódio
+    seguinte saía pulado (o ensaio contava como publicado); um commit cujo push falhou travava o pull --ff-only."""
+    git(repo, "fetch", "-q", "origin", "main")
+    git(repo, "checkout", "-q", "main")
+    git(repo, "reset", "-q", "--hard", "origin/main")
+    git(repo, "clean", "-q", "-fd")
+
+
+def montar(pasta, repo, r, capitulos, rec):
+    """Grava .md, áudio e VTT no clone; devolve (número, slug, arquivos)."""
     episodios = repo / "src" / "content" / "episodios"
     nome = slug(r.get("slug") or r["titulo"], 50)
     numeros = [int(m) for p in episodios.glob("*.md") for m in re.findall(r"^numero:\s*(\d+)", p.read_text(encoding="utf-8"), re.M)]
     numero = max(numeros, default=0) + 1
+    if (episodios / f"{nome}.md").exists():  # outro caso com o mesmo slug: não sobrescreve o episódio publicado
+        nome = f"{nome}-{numero}"
 
     audio = (pasta / "episodio.m4a").read_bytes()
     marca = hashlib.sha256(audio).hexdigest()[:8]  # arquivo novo a cada versão: o cache do áudio é imutável
@@ -113,7 +119,8 @@ def main():
         fm.append(f"tituloSeo: {yaml(seo)}")
     fm += [
         f"resumo: {yaml(r['resumo'])}",
-        f"data: {yaml(dt.date.today().isoformat())}",
+        # Data de Brasília: em UTC, um episódio publicado depois das 21h saía com a data do dia seguinte.
+        f"data: {yaml(dt.datetime.now(BRT).date().isoformat())}",
         *([f"periodo: {yaml(r['periodo'])}"] if r.get("periodo") else []),
         f"status: {r['status']}",
         f"ameaca: {r['ameaca']}",
@@ -129,7 +136,6 @@ def main():
         "alertas:",
         *[f"  - {yaml(a)}" for a in r["alertas"]],
     ]
-    rec = recursos(ler(pasta / "fontes.json"))
     if rec:
         fm.append("recursos:")
         for x in rec:
@@ -139,16 +145,36 @@ def main():
     destino = episodios / f"{nome}.md"
     destino.write_text(md, encoding="utf-8")
     log(f"episódio {numero}: {destino.relative_to(repo)} | {arq_audio} | {len(capitulos)} capítulos | {len(rec)} recursos")
+    return numero, nome, [str(destino.relative_to(repo)), "public" + arq_audio, "public" + arq_vtt]
 
-    if not publicar:
-        subprocess.run(["git", "-C", str(repo), "status", "--short"])
-        log("ENSAIO: nada foi enviado. Use --publicar para commit e push na main.")
-        return
-    arquivos = [str(destino.relative_to(repo)), "public" + arq_audio, "public" + arq_vtt]
-    subprocess.run(["git", "-C", str(repo), "add", *arquivos], check=True)
-    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", f"content: episódio {numero}, {r['titulo']}"], check=True)
-    subprocess.run(["git", "-C", str(repo), "push", "-q", "origin", "HEAD:main"], check=True)
-    print(json.dumps({"numero": numero, "url": f"https://www.cyberjus.org/episodios/{nome}/"}))
+
+def main():
+    pasta, repo = Path(sys.argv[1]), Path(sys.argv[2])
+    publicar = "--publicar" in sys.argv
+    r = ler(pasta / "roteiro.json")
+    capitulos = ler(pasta / "capitulos.json")
+    qa = ler(pasta / "qa.json")
+    if not qa.get("aprovado"):
+        raise SystemExit(f"O controle de qualidade reprovou o áudio: {qa}")
+    validar(r, capitulos)
+    rec = recursos(ler(pasta / "fontes.json"))
+
+    for tentativa in range(2):
+        sincronizar(repo)
+        numero, nome, arquivos = montar(pasta, repo, r, capitulos, rec)
+        if not publicar:
+            git(repo, "status", "--short")
+            log("ENSAIO: nada foi enviado. Use --publicar para commit e push na main.")
+            return
+        git(repo, "add", *arquivos)
+        git(repo, "commit", "-q", "-m", f"content: episódio {numero}, {r['titulo']}")
+        # Push recusado = alguém publicou na main no meio (o painel, outro episódio): refaz em cima da main nova,
+        # com o número recalculado.
+        if git(repo, "push", "-q", "origin", "HEAD:main", check=False).returncode == 0:
+            print(json.dumps({"numero": numero, "url": f"https://www.cyberjus.org/episodios/{nome}/"}))
+            return
+        log(f"push recusado (tentativa {tentativa + 1}/2); sincronizando com a main e montando de novo")
+    raise SystemExit("O push para a main falhou duas vezes; nada foi publicado.")
 
 
 if __name__ == "__main__":

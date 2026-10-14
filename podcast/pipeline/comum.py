@@ -45,36 +45,160 @@ def pasta_episodio(nome):
     return p
 
 
-# ---------- Gemini (plano gratuito) ----------
-# O plano gratuito não inclui a busca no Google (429 com a ferramenta google_search) e devolve 503 em picos de uso.
-MODELOS = os.environ.get("GEMINI_MODELOS", "gemini-flash-latest,gemini-3.5-flash,gemini-flash-lite-latest").split(",")
-_cliente = None
+# ---------- Modelos de linguagem (planos gratuitos, em cadeia) ----------
+# Gemini (principal, vários modelos: a sobrecarga 503 costuma ser por modelo), NVIDIA NIM e Cloudflare Workers AI.
+# Fora (verificado em 14/10/2026): Mistral (API só no plano pago), OpenCode (grátis só dentro do app), Groq e
+# GitHub Models (8 mil tokens por pedido, e os nossos têm de 10 a 36 mil).
+#
+# Regra de qualidade: texto que vai ao ar (ficha, roteiro, ajuste, revisão) só sai de modelo FORTE. O flash-lite
+# só entra na triagem de pautas. Sem modelo forte disponível, a etapa falha com PROVEDORES OCUPADOS e o bot tenta
+# de novo mais tarde, em vez de entregar um roteiro pior (13/10/2026: o flash-lite estragou ajuste e reescrita).
+# A Cloudflare (gpt-oss-120b) NÃO escreve texto que vai ao ar: no teste de 14/10/2026, ao acrescentar 11 falas,
+# inventou endereços, um "e-mail oficial do DEIC" e que "os bancos não conseguem reverter Pix" (errado: existe o MED).
+# O Nemotron, no mesmo teste, só usou fatos da ficha. A Cloudflare fica na triagem de pautas, onde um erro não vai ao ar.
+FORTES = [
+    ("gemini", "gemini-flash-latest"), ("gemini", "gemini-3.8-flash"), ("gemini", "gemini-3.7-flash"),
+    ("gemini", "gemini-3.6-flash"), ("gemini", "gemini-3.5-flash"),
+    ("nvidia", "nvidia/nemotron-3-super-120b-a12b"),
+]
+TRIAGEM = FORTES + [("cloudflare", "@cf/openai/gpt-oss-120b"), ("gemini", "gemini-flash-lite-latest")]
+USADOS = []  # (tarefa, provedor, modelo) de cada chamada que deu certo, para o resumo no Telegram
 
 
-def gemini(conteudo, *, instrucao=None, esquema=None, temperatura=0.2):
-    """Gera texto (ou JSON, se houver esquema). Tenta de novo com espera e troca de modelo em 429/5xx."""
-    global _cliente
+class ProvedoresOcupados(SystemExit):
+    pass
+
+
+class _Tentar(Exception):
+    """Erro passageiro (429, 5xx, rede, resposta vazia ou modelo fora do ar): passa para o próximo modelo."""
+
+
+_gemini = None
+
+
+def _chamar_gemini(modelo, conteudo, instrucao, esquema, temperatura):
+    global _gemini
     from google import genai
     from google.genai import types
 
-    if _cliente is None:
-        _cliente = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    if _gemini is None:
+        _gemini = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     config = types.GenerateContentConfig(
-        system_instruction=instrucao,
-        temperature=temperatura,
+        system_instruction=instrucao, temperature=temperatura,
         **({"response_mime_type": "application/json", "response_json_schema": esquema} if esquema else {}),
     )
-    for modelo in MODELOS:
-        for espera in (0, 15, 45):
-            time.sleep(espera)
+    try:
+        r = _gemini.models.generate_content(model=modelo, contents=conteudo, config=config)
+    except genai.errors.APIError as e:
+        if e.code in (404, 429, 500, 502, 503, 504):  # 404: modelo indisponível para esta chave
+            raise _Tentar(f"HTTP {e.code}") from e
+        raise
+    if not r.text:
+        raise _Tentar("resposta vazia")
+    return r.text
+
+
+def _json_da_resposta(texto):
+    """Modelos sem saída estruturada às vezes cercam o JSON com ```json ou texto: pega do primeiro { ao último }."""
+    texto = texto.strip()
+    if texto.startswith("```"):
+        texto = texto.split("\n", 1)[1].rsplit("```", 1)[0]
+    inicio, fim = texto.find("{"), texto.rfind("}")
+    return texto[inicio:fim + 1] if inicio >= 0 and fim > inicio else texto
+
+
+def _chamar_openai(url, chave, modelo, conteudo, instrucao, esquema, temperatura, extra=None):
+    """API no formato da OpenAI (NVIDIA NIM e Cloudflare Workers AI). O esquema vai no prompt e a resposta é
+    conferida depois: nem todo modelo desses provedores aceita response_format com JSON Schema."""
+    import urllib.error
+    import urllib.request
+
+    sistema = instrucao or ""
+    if esquema:
+        sistema += ("\n\nResponda SOMENTE com um objeto JSON válido (sem texto antes ou depois, sem ```), que siga "
+                    "exatamente este JSON Schema, com todos os campos obrigatórios:\n" + json.dumps(esquema, ensure_ascii=False))
+    corpo = {"model": modelo, "temperature": temperatura, "max_tokens": 16000,
+             "messages": ([{"role": "system", "content": sistema}] if sistema else []) + [{"role": "user", "content": conteudo}],
+             **(extra or {})}
+    req = urllib.request.Request(url, data=json.dumps(corpo).encode(),
+                                 headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"})
+    try:
+        r = json.loads(urllib.request.urlopen(req, timeout=600).read())
+    except urllib.error.HTTPError as e:
+        if e.code in (404, 410, 429, 500, 502, 503, 504):  # 410: modelo aposentado (aconteceu na NVIDIA)
+            raise _Tentar(f"HTTP {e.code}") from e
+        raise SystemExit(f"{url.split('/')[2]} {e.code}: {e.read()[:300].decode(errors='replace')}")
+    except (urllib.error.URLError, TimeoutError) as e:
+        raise _Tentar(str(e)) from e
+    texto = (r.get("choices") or [{}])[0].get("message", {}).get("content") or ""
+    if not texto.strip():
+        raise _Tentar("resposta vazia")
+    return _json_da_resposta(texto) if esquema else texto
+
+
+def _chamar_nvidia(modelo, *args):
+    # O Nemotron 3 "pensa" antes de responder e o pensamento vai para reasoning_content, consumindo os tokens: no
+    # teste de 14/10/2026 os 400 tokens foram todos de raciocínio e o content voltou vazio. Sem pensamento, ele
+    # responde direto (111 tokens para a mesma pergunta).
+    return _chamar_openai("https://integrate.api.nvidia.com/v1/chat/completions", os.environ["NVIDIA_API_KEY"], modelo, *args,
+                          extra={"chat_template_kwargs": {"enable_thinking": False}})
+
+
+def _chamar_cloudflare(modelo, *args):
+    conta = os.environ["CLOUDFLARE_ACCOUNT_ID"]
+    return _chamar_openai(f"https://api.cloudflare.com/client/v4/accounts/{conta}/ai/v1/chat/completions",
+                          os.environ["CLOUDFLARE_AI_TOKEN"], modelo, *args)
+
+
+def _completo(saida, esquema):
+    """Confere os campos obrigatórios (também nos objetos de listas): modelo sem saída estruturada pode esquecer um."""
+    if not esquema:
+        return True
+    if esquema.get("type") == "object":
+        if not isinstance(saida, dict) or any(c not in saida for c in esquema.get("required", [])):
+            return False
+        return all(_completo(saida[c], sub) for c, sub in esquema.get("properties", {}).items() if c in saida)
+    if esquema.get("type") == "array":
+        return isinstance(saida, list) and all(_completo(x, esquema.get("items", {})) for x in saida)
+    return True
+
+
+CHAMADAS = {"gemini": _chamar_gemini, "nvidia": _chamar_nvidia, "cloudflare": _chamar_cloudflare}
+CHAVES = {"gemini": "GEMINI_API_KEY", "nvidia": "NVIDIA_API_KEY", "cloudflare": "CLOUDFLARE_AI_TOKEN"}
+
+
+def llm(conteudo, *, instrucao=None, esquema=None, temperatura=0.2, tarefa="escrita"):
+    """Gera texto (ou JSON, com esquema) na cadeia de provedores gratuitos.
+
+    tarefa="triagem" aceita o flash-lite no fim; qualquer outra usa só modelos fortes. Cada modelo recebe uma
+    tentativa por rodada (falha passageira passa ao próximo na hora); a cadeia inteira roda até 3 vezes, com 60 s
+    de espera entre as rodadas."""
+    cadeia = [(p, m) for p, m in (FORTES if tarefa != "triagem" else TRIAGEM) if os.environ.get(CHAVES[p])]
+    if not cadeia:
+        raise SystemExit("Nenhuma chave de provedor configurada.")
+    for rodada in range(3):
+        if rodada:
+            log(f"todos os provedores ocupados; nova rodada em 60 s ({rodada + 1}/3)")
+            time.sleep(60)
+        for provedor, modelo in cadeia:
             try:
-                r = _cliente.models.generate_content(model=modelo, contents=conteudo, config=config)
-            except genai.errors.APIError as e:
-                log(f"gemini {modelo}: {e.code}")
-                if e.code not in (429, 500, 503):
-                    raise
+                texto = CHAMADAS[provedor](modelo, conteudo, instrucao, esquema, temperatura)
+                saida = json.loads(texto) if esquema else texto
+            except _Tentar as e:
+                log(f"{provedor} {modelo}: {e}; próximo")
                 continue
-            u = r.usage_metadata
-            log(f"gemini {modelo}: {u.prompt_token_count} + {u.candidates_token_count} tokens")
-            return json.loads(r.text) if esquema else r.text
-    raise SystemExit("Gemini indisponível em todos os modelos; tente mais tarde.")
+            except json.JSONDecodeError:
+                log(f"{provedor} {modelo}: JSON inválido; próximo")
+                continue
+            if not _completo(saida, esquema):
+                log(f"{provedor} {modelo}: JSON sem campos obrigatórios; próximo")
+                continue
+            USADOS.append((tarefa, provedor, modelo))
+            log(f"ok: {provedor} {modelo}")
+            return saida
+    raise ProvedoresOcupados("PROVEDORES OCUPADOS: nenhum modelo forte respondeu; tente mais tarde.")
+
+
+def gemini(*args, **kwargs):
+    """Nome antigo, mantido para compatibilidade: agora passa pela cadeia de provedores."""
+    return llm(*args, **kwargs)
