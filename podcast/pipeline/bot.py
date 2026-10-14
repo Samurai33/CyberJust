@@ -26,6 +26,9 @@ HORA = int(os.environ.get("PAUTAS_HORA", "9"))
 REPO = Path(os.environ.get("REPO", "/dados/repo"))
 BRT = dt.timezone(dt.timedelta(hours=-3))
 CREDITO_POR_CARACTERE = 0.12  # medido no Eleven v4 (Text to Dialogue): 224 créditos para 1.852 caracteres
+# Fala avulsa (--refazer-fala) sai bem mais cara: no episódio 2 (14/10/2026), 8 falas custaram de 0,41 a 0,44 crédito
+# por caractere (63 créditos para 144 caracteres), e não os ~20 por fala que o botão prometia.
+CREDITO_FALA_AVULSA = 0.45
 ocupado = threading.Lock()  # uma etapa pesada por vez
 atual = {"nome": None, "desde": None}  # o que está rodando, para o /status e o aviso de ocupado
 NOMES = {"sugerir": "buscando pautas", "produzir": "escrevendo o roteiro", "audio": "gerando o áudio",
@@ -174,10 +177,14 @@ def gerar_audio(nome):
         f"{qa['lufs']} LUFS · pico {qa['pico_dbtp']} dBTP · faststart {'ok' if qa['faststart'] else 'FALHOU'} · "
         f"alinhamento {qa['cobertura_alinhamento']:.0%}\n\n<b>Capítulos</b>\n{capitulos}\n\n"
         f"💳 {custo['custo']} créditos usados; saldo {custo['saldo']}.{aviso}",
-        [[{"text": f"🔁 Refazer fala de {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} (~20 créditos)",
+        [[{"text": f"🔁 Refazer fala de {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} (~{custo_fala(r, f['fala'])} créditos)",
            "callback_data": f"refazer|{chave(nome)}|{f['fala']}"}] for f in fora]
         + ([[{"text": "🚀 Publicar no site", "callback_data": f"publicar|{chave(nome)}"}]] if qa["aprovado"] else [])
         + [[{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(nome)}"}]])
+
+
+def custo_fala(roteiro, n):
+    return int(len(roteiro["falas"][n]["texto"]) * CREDITO_FALA_AVULSA)
 
 
 def refazer(nome, n):
