@@ -1,10 +1,12 @@
 import { expect, type Page } from '@playwright/test';
 
+// Episódio de referência dos testes (o nome da página não muda quando o áudio é refeito).
+export const EPISODIO = '/episodios/falso-advogado-ceara/';
+
 export const PAGINAS = [
   '/',
   '/episodios/',
-  '/episodios/fraudes-digitais/',
-  '/episodios/protecao-de-criancas/',
+  EPISODIO,
   '/temas/',
   '/temas/fraudes/',
   '/fui-vitima/',

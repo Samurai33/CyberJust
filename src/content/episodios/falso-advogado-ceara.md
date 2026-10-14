@@ -1,5 +1,5 @@
 ---
-numero: 14
+numero: 1
 titulo: "Falso advogado: R$ 2 milhões perdidos e quadrilha presa no Ceará"
 tituloSeo: "Falso advogado: R$ 2 milhões e prisões no Ceará"
 resumo: "Uma idosa do Paraná perdeu R$ 2 milhões para golpistas que se passavam pelo advogado dela. Como o golpe funcionava e como a polícia chegou ao Ceará."
