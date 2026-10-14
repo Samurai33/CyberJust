@@ -68,6 +68,8 @@ def validar(r, capitulos):
         erros.append("periodo com mais de 40 caracteres")
     if r["tema"] not in TEMAS:
         erros.append(f"tema inválido: {r['tema']}")
+    if not capitulos:
+        erros.append("roteiro sem capítulos (o modelo não marcou o campo capitulo em nenhuma fala)")
     for c in capitulos:
         if not 2 <= len(c["titulo"]) <= 80:
             erros.append(f"capítulo com título inválido: {c['titulo']!r}")
@@ -119,7 +121,8 @@ def main():
         f"tags: {yaml(r['tags'][:8])}",
         f"audio: {arq_audio}",
         f"transcricao: {arq_vtt}",
-        "capitulos:",
+        # "capitulos:" sem itens vira null no YAML e o esquema do site recusa (deploy do episódio 2 quebrou assim).
+        "capitulos:" if capitulos else "capitulos: []",
         *[f"  - inicio: {yaml(c['inicio'])}\n    titulo: {yaml(c['titulo'])}" for c in capitulos],
         "pontos:",
         *[f"  - {yaml(p)}" for p in r["pontos"]],
