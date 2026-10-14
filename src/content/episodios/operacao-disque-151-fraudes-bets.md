@@ -9,20 +9,20 @@ status: ATIVO
 ameaca: CRÍTICO
 tema: fraudes
 tags: ["Operação Disque 151", "Bets ilegais", "Fraudes financeiras", "DEIC", "Procon-SP"]
-audio: /audio/operacao-disque-151-fraudes-bets-a7842d28.m4a
-transcricao: /transcricoes/operacao-disque-151-fraudes-bets-a7842d28.vtt
+audio: /audio/operacao-disque-151-fraudes-bets-cfba57fb.m4a
+transcricao: /transcricoes/operacao-disque-151-fraudes-bets-cfba57fb.vtt
 capitulos:
   - inicio: "0:00"
     titulo: "Abertura: a armadilha do saque"
-  - inicio: "0:29"
+  - inicio: "0:26"
     titulo: "O rastro do Procon e a Operação Disque 151"
-  - inicio: "1:45"
+  - inicio: "1:34"
     titulo: "As duas armadilhas e o mecanismo da fraude"
-  - inicio: "3:03"
+  - inicio: "2:50"
     titulo: "O golpe do falso emprego e o Pix obrigatório"
-  - inicio: "3:57"
+  - inicio: "3:39"
     titulo: "Contas-bolsão e a lavagem de dinheiro"
-  - inicio: "5:02"
+  - inicio: "4:35"
     titulo: "O cerco da polícia e a situação atual"
 pontos:
   - "Operação Disque 151 cumpriu mandados em São Paulo e Mogi das Cruzes"
