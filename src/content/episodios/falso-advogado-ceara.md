@@ -9,8 +9,8 @@ status: ATIVO
 ameaca: CRÍTICO
 tema: fraudes
 tags: ["golpe do falso advogado", "engenharia social", "PCPR", "OAB", "fraude digital", "Pix"]
-audio: /audio/falso-advogado-ceara-796b62a7.m4a
-transcricao: /transcricoes/falso-advogado-ceara-796b62a7.vtt
+audio: /audio/falso-advogado-ceara-ef7f4332.m4a
+transcricao: /transcricoes/falso-advogado-ceara-ef7f4332.vtt
 capitulos:
   - inicio: "0:00"
     titulo: "A notificação que parecia um milagre"
@@ -18,7 +18,7 @@ capitulos:
     titulo: "A engenharia da extorsão e os dois milhões"
   - inicio: "3:28"
     titulo: "Operação no Ceará: desmontando a fábrica de golpes"
-  - inicio: "4:53"
+  - inicio: "4:54"
     titulo: "O escudo definitivo e o que fazer se cair"
 pontos:
   - "Mineração de dados reais em processos judiciais públicos para dar veracidade ao contato"
