@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { closeSync, openSync, writeSync } from 'node:fs';
+import { closeSync, openSync, readdirSync, statSync, writeSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { lerInfoAudio } from './mp4';
 
 describe('lerInfoAudio', () => {
-  it('lê duração e tamanho dos áudios publicados (valores do ffprobe)', () => {
-    expect(lerInfoAudio('public/audio/bfraudes-digitais.m4a')).toEqual({ segundos: 389.6, bytes: 12535498 });
-    expect(lerInfoAudio('public/audio/lulu.m4a').segundos).toBe(556.8);
-    expect(lerInfoAudio('public/audio/namoral.m4a').segundos).toBe(444);
+  it('lê duração e tamanho de todos os áudios publicados', () => {
+    // Os episódios entram e saem pelo pipeline: o teste confere cada arquivo em vez de valores fixos.
+    const arquivos = readdirSync('public/audio').filter((a) => a.endsWith('.m4a'));
+    expect(arquivos.length).toBeGreaterThan(0);
+    for (const a of arquivos) {
+      const info = lerInfoAudio(`public/audio/${a}`);
+      expect(info.bytes, a).toBe(statSync(`public/audio/${a}`).size);
+      expect(info.segundos, a).toBeGreaterThan(60);
+      expect(info.segundos, a).toBeLessThan(2 * 3600);
+    }
   });
 
   it('recusa MP4 com o índice no fim (sem faststart)', () => {

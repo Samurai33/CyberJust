@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { PAGINAS, semRolagemLateral, vigiar } from './ajuda';
+import { EPISODIO, PAGINAS, semRolagemLateral, vigiar } from './ajuda';
 
 for (const caminho of PAGINAS) {
   test(`${caminho} abre sem erro, sem violação de CSP e sem rolagem lateral`, async ({ page }) => {
@@ -37,7 +37,7 @@ test('página inexistente responde 404 com a página própria', async ({ page })
 });
 
 test('links do menu levam às seções da home a partir de outra página', async ({ page, isMobile }) => {
-  await page.goto('/episodios/fraudes-digitais/');
+  await page.goto(EPISODIO);
   if (isMobile) await page.getByRole('button', { name: 'Abrir menu' }).or(page.locator('summary[aria-label="Abrir menu"]')).click();
   const menu = page.getByRole('navigation', { name: isMobile ? 'Principal (celular)' : 'Principal' });
   await menu.getByRole('link', { name: 'Proteção', exact: true }).click();
@@ -55,11 +55,13 @@ test('filtro de episódios funciona sem JavaScript', async ({ browser }) => {
   // Conta pelo atributo, não por número fixo: o pipeline publica episódios novos com áudio.
   const comAudio = await page.locator('.ep-row[data-audio]').count();
   expect(comAudio).toBeGreaterThan(0);
-  expect(comAudio).toBeLessThan(total);
+  expect(comAudio).toBeLessThanOrEqual(total);
   await page.locator('label[for="f-audio"]').click();
   await expect(linhas.filter({ visible: true })).toHaveCount(comAudio);
-  await page.locator('label[for="f-corrupcao"]').click();
-  await expect(linhas.filter({ visible: true })).toHaveCount(2);
+  // filtro por tema: mostra só as linhas daquele tema (inclusive zero)
+  const deFraudes = await page.locator('.ep-row[data-tema="fraudes"]').count();
+  await page.locator('label[for="f-fraudes"]').click();
+  await expect(linhas.filter({ visible: true })).toHaveCount(deFraudes);
   await page.locator('label[for="f-todos"]').click();
   await expect(linhas.filter({ visible: true })).toHaveCount(total);
   await contexto.close();
@@ -69,10 +71,13 @@ test('conteúdo e navegação funcionam com JavaScript desligado', async ({ brow
   const contexto = await browser.newContext({ javaScriptEnabled: false });
   const page = await contexto.newPage();
   await page.goto('/');
-  await page.getByRole('link', { name: /Ver todos os \d+ episódios/ }).click();
+  await page.getByRole('link', { name: /Ver (todos os \d+ episódios|o episódio)/ }).click();
   await expect(page).toHaveURL(/\/episodios\/$/);
-  await page.getByRole('link', { name: /Caso Lulu/ }).first().click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Caso Lulu');
+  // abre o primeiro episódio da lista pelo título, seja qual for
+  const link = page.locator('.ep-row :is(h2, h3) a').first();
+  const titulo = (await link.textContent())!.trim();
+  await link.click();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(titulo);
   await contexto.close();
 });
 
@@ -85,11 +90,16 @@ test('especialista em destaque com foto carregada', async ({ page }) => {
 });
 
 test('episódio tem trilha de navegação, autoria e anterior/próximo', async ({ page }) => {
-  await page.goto('/episodios/caso-lulu/');
+  await page.goto('/episodios/');
+  const episodios = await page.locator('.ep-row').count();
+  await page.goto(EPISODIO);
   const trilha = page.getByRole('navigation', { name: 'Você está em' });
-  await expect(trilha.getByRole('link', { name: 'Dados pessoais e privacidade' })).toHaveAttribute('href', '/temas/dados-pessoais/');
+  await expect(trilha.getByRole('link', { name: 'Fraudes digitais' })).toHaveAttribute('href', '/temas/fraudes/');
   await expect(page.locator('.byline a[rel="author"]')).toHaveText('Samurai');
-  await expect(page.locator('.vizinhos a[rel="next"], .vizinhos a[rel="prev"]').first()).toBeVisible();
+  // anterior/próximo só existe com mais de um episódio publicado
+  const vizinhos = page.locator('.vizinhos a[rel="next"], .vizinhos a[rel="prev"]');
+  if (episodios > 1) await expect(vizinhos.first()).toBeVisible();
+  else await expect(vizinhos).toHaveCount(0);
   const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '');
   const tipos = ld['@graph'].map((n: { '@type': string }) => n['@type']);
   expect(tipos).toEqual(expect.arrayContaining(['WebSite', 'PodcastEpisode', 'BreadcrumbList']));
@@ -122,7 +132,7 @@ test('texto e links não grudam (espaço preservado na compressão do HTML)', as
 });
 
 test('clique simples no logo navega uma vez só e não interrompe o player', async ({ page }) => {
-  await page.goto('/episodios/namoral/');
+  await page.goto(EPISODIO);
   await page.locator('.ep-head [data-tocar]').click();
   await page.evaluate(() => {
     (document.querySelector('cj-player audio') as HTMLAudioElement & { marca?: string }).marca = 'mesmo';

@@ -85,7 +85,7 @@ const serie = {
       <div class="index">
         {recentes.map((ep) => <LinhaEpisodio ep={ep} />)}
       </div>
-      <p class="mt-2"><a class="link-arrow" href="/episodios/">Ver todos os {episodios.length} episódios <Icon name="arrow" /></a></p>
+      <p class="mt-2"><a class="link-arrow" href="/episodios/">{episodios.length === 1 ? 'Ver o episódio' : `Ver todos os ${episodios.length} episódios`} <Icon name="arrow" /></a></p>
     </div>
   </section>
 
