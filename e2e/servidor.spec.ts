@@ -41,7 +41,7 @@ test('áudio: streaming por Range, tipo correto e cache imutável', async ({ req
 });
 
 test('imagem de prévia com CORP cross-origin (WhatsApp Web)', async ({ request }) => {
-  const r = await request.get('/og-v1.jpg');
+  const r = await request.get('/og-v2.jpg');
   expect(r.status()).toBe(200);
   expect(r.headers()['content-type']).toBe('image/jpeg');
   expect(r.headers()['cross-origin-resource-policy']).toBe('cross-origin');

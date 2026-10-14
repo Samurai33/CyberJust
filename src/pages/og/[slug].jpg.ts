@@ -38,46 +38,57 @@ const h = (type: string, style: Record<string, unknown>, ...children: (No | stri
 function arte(ep: Episodio): No {
   const o = dadosOg(ep);
   const cor = COR_AMEACA[o.ameaca];
-  const tamanho = o.titulo.length > 62 ? 60 : o.titulo.length > 40 ? 68 : 76;
+  const tamanho = o.titulo.length > 62 ? 50 : o.titulo.length > 40 ? 56 : 62;
+  // Todo o texto fica no quadrado central (x 285 a 915): o app do Facebook no celular corta a prévia em 1:1.
+  const onda = (alturas: number[], lado: 'left' | 'right') =>
+    h(
+      'div',
+      { position: 'absolute', top: 175, [lado]: 56, width: 200, height: 280, alignItems: 'center', gap: 8 },
+      ...alturas.map((v) => h('div', { flex: 1, height: `${v * 100}%`, borderRadius: 99, opacity: 0.25 + v * 0.5, backgroundImage: 'linear-gradient(#5cc8ff, #8b7cff)' })),
+    );
+  const ALTURAS = [0.25, 0.5, 0.3, 0.65, 0.4, 0.8, 0.55, 1, 0.7, 0.9, 0.45, 0.6, 0.35];
   return h(
     'div',
     {
       width: 1200,
       height: 630,
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '64px 80px',
+      position: 'relative',
       backgroundColor: '#05070c',
-      backgroundImage:
-        'radial-gradient(circle at 85% 40%, rgba(92,200,255,0.16), rgba(5,7,12,0) 45%), radial-gradient(circle at 0% 0%, rgba(139,124,255,0.14), rgba(5,7,12,0) 40%)',
+      backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(92,200,255,0.13), rgba(5,7,12,0) 50%), radial-gradient(circle at 0% 0%, rgba(139,124,255,0.14), rgba(5,7,12,0) 40%)',
       color: '#f3f6fb',
       fontFamily: 'IN',
     },
+    onda(ALTURAS, 'left'),
+    onda([...ALTURAS].reverse(), 'right'),
     h(
       'div',
-      { display: 'flex', alignItems: 'center', gap: 14, fontFamily: 'SG', fontSize: 30, letterSpacing: -0.9 },
-      { type: 'img', props: { src: ESCUDO, width: 40, height: 40 } },
-      h('div', { display: 'flex' }, 'CyberJustiça', h('span', { color: '#8492a8', marginLeft: 8 }, 'Brasil')),
-    ),
-    h(
-      'div',
-      { display: 'flex', alignItems: 'center', gap: 16, marginTop: 56, fontFamily: 'JB', fontSize: 22, color: '#a3afc2' },
-      h('span', { color: '#5cc8ff' }, o.rotulo),
-      h('span', {}, '·'),
-      h('span', {}, o.tema),
-    ),
-    h('div', { display: 'flex', marginTop: 22, fontFamily: 'SG', fontSize: tamanho, lineHeight: 1.04, letterSpacing: -2.6, maxWidth: 1040 }, o.titulo),
-    h(
-      'div',
-      { display: 'flex', alignItems: 'center', gap: 20, marginTop: 'auto', fontFamily: 'JB', fontSize: 21, color: '#8492a8' },
+      { position: 'absolute', left: 285, top: 56, width: 630, height: 522, flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
       h(
         'div',
-        { display: 'flex', alignItems: 'center', gap: 10, padding: '7px 16px', borderRadius: 999, border: `1px solid ${cor}66`, color: cor, backgroundColor: `${cor}1a` },
-        h('div', { width: 10, height: 10, borderRadius: 999, backgroundColor: cor }),
-        `Ameaça ${FEMININO[o.ameaca]}`,
+        { alignItems: 'center', gap: 14, fontFamily: 'SG', fontSize: 30, letterSpacing: -0.9 },
+        { type: 'img', props: { src: ESCUDO, width: 40, height: 40 } },
+        h('div', {}, 'CyberJustiça', h('span', { color: '#8492a8', marginLeft: 8 }, 'Brasil')),
       ),
-      h('span', {}, `Podcast · ${o.duracao}`),
-      h('span', { marginLeft: 'auto', color: '#a3afc2' }, 'cyberjus.org'),
+      h(
+        'div',
+        { alignItems: 'center', gap: 14, marginTop: 40, fontFamily: 'JB', fontSize: 21, color: '#a3afc2' },
+        h('span', { color: '#5cc8ff' }, o.rotulo),
+        h('span', {}, '·'),
+        h('span', {}, o.tema),
+      ),
+      h('div', { justifyContent: 'center', marginTop: 20, fontFamily: 'SG', fontSize: tamanho, lineHeight: 1.04, letterSpacing: -2, width: 630 }, o.titulo),
+      h(
+        'div',
+        { alignItems: 'center', gap: 18, marginTop: 'auto', fontFamily: 'JB', fontSize: 20, color: '#8492a8' },
+        h(
+          'div',
+          { alignItems: 'center', gap: 10, padding: '7px 16px', borderRadius: 999, border: `1px solid ${cor}66`, color: cor, backgroundColor: `${cor}1a` },
+          h('div', { width: 10, height: 10, borderRadius: 999, backgroundColor: cor }),
+          `Ameaça ${FEMININO[o.ameaca]}`,
+        ),
+        h('span', {}, o.duracao),
+      ),
+      h('div', { marginTop: 16, fontFamily: 'JB', fontSize: 20, color: '#a3afc2' }, h('span', { color: '#5cc8ff', marginRight: 10 }, '›'), 'cyberjus.org'),
     ),
   );
 }
