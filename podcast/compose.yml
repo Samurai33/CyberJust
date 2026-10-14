@@ -7,7 +7,7 @@ services:
     image: cyberjust-podcast:latest
     command: python -m pipeline.bot
     restart: unless-stopped
-    env_file: [gemini.env, elevenlabs.env, telegram.env, vozes.env]
+    env_file: [gemini.env, nvidia.env, cloudflare.env, elevenlabs.env, telegram.env, vozes.env]
     environment:
       DADOS: /dados
       REPO: /dados/repo

@@ -6,6 +6,7 @@ semana das sugestões, 0 = segunda; padrão "0,2,4"), PAUTAS_HORA (padrão 9, ho
 outras etapas. Long polling: não abre porta nem depende do túnel.
 """
 import datetime as dt
+import hashlib
 import json
 import os
 import subprocess
@@ -24,7 +25,10 @@ DIAS = {int(d) for d in os.environ.get("PAUTAS_DIAS", "0,2,4").split(",")}
 HORA = int(os.environ.get("PAUTAS_HORA", "9"))
 REPO = Path(os.environ.get("REPO", "/dados/repo"))
 BRT = dt.timezone(dt.timedelta(hours=-3))
-CREDITO_POR_CARACTERE = 0.44  # medido no piloto (eleven_v3, Text to Dialogue): 3.282 créditos para 7.460 caracteres
+CREDITO_POR_CARACTERE = 0.12  # medido no Eleven v4 (Text to Dialogue): 224 créditos para 1.852 caracteres
+# Fala avulsa (--refazer-fala) sai bem mais cara: no episódio 2 (14/10/2026), 8 falas custaram de 0,41 a 0,44 crédito
+# por caractere (63 créditos para 144 caracteres), e não os ~20 por fala que o botão prometia.
+CREDITO_FALA_AVULSA = 0.45
 ocupado = threading.Lock()  # uma etapa pesada por vez
 atual = {"nome": None, "desde": None}  # o que está rodando, para o /status e o aviso de ocupado
 NOMES = {"sugerir": "buscando pautas", "produzir": "escrevendo o roteiro", "audio": "gerando o áudio",
@@ -70,6 +74,22 @@ def etapa(*args, env=None):
     return r.returncode == 0, (saida[-1] if saida else ""), r.stderr[-1500:]
 
 
+def chave(nome):
+    """O Telegram aceita no máximo 64 bytes em callback_data: "publicar|" + nome de pasta de 60 caracteres passava
+    disso e a mensagem com os botões era recusada. O botão leva um código curto do nome da pasta."""
+    return hashlib.sha1(nome.encode()).hexdigest()[:10]
+
+
+def pasta_da_chave(codigo):
+    # Botões enviados antes desta mudança levam o nome inteiro da pasta.
+    if "/" not in codigo and codigo not in (".", "..") and (TRABALHO / codigo).is_dir():
+        return codigo
+    achada = next((p.name for p in TRABALHO.iterdir() if p.is_dir() and chave(p.name) == codigo), None)
+    if not achada:
+        raise ValueError(f"episódio {codigo} não encontrado em trabalho/")
+    return achada
+
+
 def esc(t):
     return str(t).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -77,9 +97,20 @@ def esc(t):
 # ---------- etapas acionadas pelos botões ----------
 
 
+def ocupados(erro, acao, args):
+    """Todos os modelos fortes ocupados: avisa e agenda outra tentativa em 15 minutos, sem entregar texto pior."""
+    if "PROVEDORES OCUPADOS" not in erro:
+        return False
+    msg(f"⏳ Gemini, NVIDIA e Cloudflare ocupados agora. Tento de novo sozinho em 15 min ({NOMES.get(acao, acao)}).")
+    threading.Timer(900, executar, args=(acao, args)).start()
+    return True
+
+
 def sugerir_pautas():
     ok, arquivo, erro = etapa("pipeline.pautas")
     if not ok:
+        if ocupados(erro, "sugerir", ()):
+            return
         return msg(f"⚠️ Falha ao buscar pautas:\n<pre>{esc(erro[-800:])}</pre>")
     pautas = ler(arquivo)
     meta = Path(arquivo).with_suffix(".meta.json")
@@ -97,8 +128,15 @@ def produzir(arquivo, n):
     msg(f"✍️ Apurando as fontes e escrevendo o roteiro da pauta {n}… (grátis, alguns minutos)")
     ok, pasta, erro = etapa("pipeline.roteiro", f"pautas/{arquivo}", str(n))
     if not ok:
+        if ocupados(erro, "produzir", (arquivo, str(n))):
+            return
         return msg(f"⚠️ Roteiro falhou:\n<pre>{esc(erro[-800:])}</pre>")
     pasta = Path(pasta)
+    info = ler(pasta / "modelos.json") if (pasta / "modelos.json").exists() else {"etapas": [], "avisos": []}
+    modelos = " · ".join(f"{e['tarefa']}: {e['modelo']}" for e in info["etapas"]) or "?"
+    avisos = "".join(f"\n⚠️ {esc(a)}" for a in info["avisos"][:8])
+    if len(info["avisos"]) > 8:
+        avisos += f"\n⚠️ e mais {len(info['avisos']) - 8} (lista completa em modelos.json)"
     r, problemas = ler(pasta / "roteiro.json"), ler(pasta / "revisao.json")
     chars = sum(len(f["texto"]) for f in r["falas"])
     palavras = sum(len(f["texto"].split()) for f in r["falas"])
@@ -108,11 +146,12 @@ def produzir(arquivo, n):
     ) + "\n\n---\n\n## Ficha de fatos\n\n" + (pasta / "ficha.md").read_text(encoding="utf-8"), encoding="utf-8")
     tg_arquivo("sendDocument", "document", md, chat_id=CHAT, caption=f"Roteiro: {r['titulo']}"[:1000])
     revisao = "\n".join(f"• <i>{esc(p['tipo'])}</i>: {esc(p['problema'][:150])}" for p in problemas[:8]) or "• nenhum"
-    msg(f"📝 <b>{esc(r['titulo'])}</b>\n{palavras} palavras (~{palavras / 160:.0f} min) · status {r['status']}\n\n"
+    msg(f"📝 <b>{esc(r['titulo'])}</b>\n{palavras} palavras (~{palavras / 160:.0f} min) · status {r['status']}{avisos}\n"
+        f"🤖 {esc(modelos)}\n\n"
         f"<b>A revisão automática corrigiu:</b>\n{revisao}\n\n"
         f"💳 Gerar o áudio custa cerca de <b>{int(chars * CREDITO_POR_CARACTERE):,}</b> créditos ({chars:,} caracteres).".replace(",", "."),
-        [[{"text": "✅ Aprovar roteiro (gera o áudio)", "callback_data": f"audio|{pasta.name}"}],
-         [{"text": "🗑️ Descartar", "callback_data": f"descartar|{pasta.name}"}]])
+        [[{"text": "✅ Aprovar roteiro (gera o áudio)", "callback_data": f"audio|{chave(pasta.name)}"}],
+         [{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(pasta.name)}"}]])
 
 
 def gerar_audio(nome):
@@ -121,7 +160,7 @@ def gerar_audio(nome):
     ok, saida, erro = etapa("pipeline.audio", str(pasta), "--gerar")
     if not ok:
         return msg(f"⚠️ Áudio falhou (os blocos já gerados ficam salvos):\n<pre>{esc(erro[-800:])}</pre>",
-                   [[{"text": "🔁 Tentar de novo", "callback_data": f"audio|{nome}"}]])
+                   [[{"text": "🔁 Tentar de novo", "callback_data": f"audio|{chave(nome)}"}]])
     custo = json.loads(saida)
     ok, _, erro = etapa("pipeline.legenda", str(pasta))
     if not ok:
@@ -138,10 +177,14 @@ def gerar_audio(nome):
         f"{qa['lufs']} LUFS · pico {qa['pico_dbtp']} dBTP · faststart {'ok' if qa['faststart'] else 'FALHOU'} · "
         f"alinhamento {qa['cobertura_alinhamento']:.0%}\n\n<b>Capítulos</b>\n{capitulos}\n\n"
         f"💳 {custo['custo']} créditos usados; saldo {custo['saldo']}.{aviso}",
-        [[{"text": f"🔁 Refazer fala de {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} (~20 créditos)",
-           "callback_data": f"refazer|{nome}|{f['fala']}"}] for f in fora]
-        + ([[{"text": "🚀 Publicar no site", "callback_data": f"publicar|{nome}"}]] if qa["aprovado"] else [])
-        + [[{"text": "🗑️ Descartar", "callback_data": f"descartar|{nome}"}]])
+        [[{"text": f"🔁 Refazer fala de {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} (~{custo_fala(r, f['fala'])} créditos)",
+           "callback_data": f"refazer|{chave(nome)}|{f['fala']}"}] for f in fora]
+        + ([[{"text": "🚀 Publicar no site", "callback_data": f"publicar|{chave(nome)}"}]] if qa["aprovado"] else [])
+        + [[{"text": "🗑️ Descartar", "callback_data": f"descartar|{chave(nome)}"}]])
+
+
+def custo_fala(roteiro, n):
+    return int(len(roteiro["falas"][n]["texto"]) * CREDITO_FALA_AVULSA)
 
 
 def refazer(nome, n):
@@ -175,8 +218,11 @@ def descartar(nome):
     msg(f"🗑️ Descartado: {esc(nome)}")
 
 
-ACOES = {"produzir": lambda a, n: produzir(a, int(n)), "audio": gerar_audio, "refazer": refazer, "publicar": publicar,
-         "descartar": descartar}
+ACOES = {"produzir": lambda a, n: produzir(a, int(n)),
+         "audio": lambda c: gerar_audio(pasta_da_chave(c)),
+         "refazer": lambda c, n: refazer(pasta_da_chave(c), n),
+         "publicar": lambda c: publicar(pasta_da_chave(c)),
+         "descartar": lambda c: descartar(pasta_da_chave(c))}
 
 
 def executar(acao, args):

@@ -5,12 +5,13 @@ Saída em trabalho/<slug>/: pauta.json, fontes.json, ficha.md, roteiro.json (já
 Custo: zero (sites públicos + plano gratuito do Gemini). Nenhum áudio é gerado aqui.
 """
 import json
+import re
 import sys
 
 import trafilatura
 from googlenewsdecoder import gnewsdecoder
 
-from .comum import LOCUTORES, TEMAS, gemini, gravar, ler, log, pasta_episodio, slug
+from .comum import LOCUTORES, TEMAS, USADOS, gravar, ler, llm, log, pasta_episodio, slug
 
 # ---------- fontes ----------
 
@@ -95,8 +96,11 @@ ESTILO DE APRESENTADOR (soar falado, nunca lido; o modelo de voz segue o texto e
 - Pausas antes do dado importante (reticências) e variação de ritmo: pergunta, resposta curta, explicação.
 
 ESCRITA PARA VOZ (ElevenLabs):
-- Números e valores por extenso ("dois milhões de reais"); siglas soletradas com hífens ("O-A-B", "cê-pê-éfe");
+- Números e valores por extenso ("dois milhões de reais"), inclusive em nomes ("Operação Disque cento e cinquenta e
+  um"). Sigla lida letra por letra vai soletrada com hífens ("O-A-B", "cê-pê-éfe"); sigla lida como palavra vai como
+  palavra comum ("Deic", "Procon", "Gedec"); estado por extenso ("Procon de São Paulo"). Nada em CAIXA ALTA.
   "cyberjus ponto org" para o site.
+- Título de capítulo vai só no campo "capitulo", nunca falado ("Capítulo um: ..." não entra no texto).
 - Tags de entrega em inglês entre colchetes, no início da fala, no máximo uma a cada 3 falas: [chuckles], [sighs],
   [curious], [sarcastic], [serious], [surprised], [whispers], [short pause], [clears throat]; [excited] só para a
   Sara e no máximo uma vez no episódio.
@@ -142,43 +146,98 @@ ESQUEMA = {
 
 # ---------- revisão ----------
 
-REVISAR = """Você é o revisor de fatos e de tom do CyberJustiça. Compare o ROTEIRO com a FICHA DE FATOS e com as regras
-abaixo e corrija o mínimo necessário, mantendo o estilo e o protocolo de retenção.
+REVISAR = """Você é o revisor de fatos e de tom do CyberJustiça. Compare o ROTEIRO (falas numeradas) com a FICHA DE
+FATOS e com as regras abaixo e aponte só o que precisa mudar.
 Procure: número, data, cidade, órgão ou nome que não está na ficha ou diverge dela; detalhe inventado (distância,
 idade, "exatamente", citação literal de pessoa real); status do caso diferente da ficha; suspeito não condenado
 citado pelo nome; riso ou deboche sobre o prejuízo da vítima; tags de emoção demais (mais de uma a cada 3 falas);
 tag [excited], [shouting], [angry] ou [yelling] em fala do Samurai, ou fala dele escrita para soar brava ou
-eufórica (exclamações em sequência, caixa alta); siglas não soletradas e números não escritos por extenso; a apresentação "Eu sou o Samurai, e este é o
-CyberJustiça." ausente ou dita pela coapresentadora; a coapresentadora chamada por outro nome que não Sara;
-promessa do início não cumprida.
-NÃO mude a extensão do roteiro (o tamanho já foi conferido pelo código): não acrescente nem remova falas além do
-necessário para corrigir um problema. Devolva a lista de problemas (vazia se nenhum) e o roteiro completo corrigido."""
-
-AJUSTAR = """Reescreva o roteiro (JSON) para ficar com cerca de {alvo} palavras somando todas as falas (agora tem {atual}).
-{como} Mantenha o protocolo de retenção, a ordem dos capítulos, a promessa e o seu pagamento, a apresentação do Samurai,
-os fatos (só os da ficha) e todos os outros campos. Devolva o roteiro completo."""
+eufórica (exclamações em sequência, caixa alta); siglas não soletradas e números não escritos por extenso; a
+apresentação "Eu sou o Samurai, e este é o CyberJustiça." ausente ou dita pela coapresentadora; a coapresentadora
+chamada por outro nome que não Sara; promessa do início não cumprida. Confira também os campos da página.
+Os PROBLEMAS DETECTADOS PELO CÓDIGO (se houver) são certos: corrija cada um que estiver numa fala.
+Para cada problema devolva a CORREÇÃO PRONTA: em fala, o texto completo da fala corrigida (mesmo locutor, tamanho
+parecido, mesmo estilo, mudando o mínimo); em campo da página, o valor novo. UM item por fala: se a mesma fala tem
+vários problemas, junte as correções num só item (o código troca a fala inteira pelo texto_novo). Não mexa em falas que estão certas e
+não acrescente nem remova falas (o tamanho já foi conferido pelo código). Lista vazia se não houver problema."""
 
 FAIXA = (1250, 1550)  # 8 a 9,5 minutos a ~160 palavras por minuto
+ALVO = 1400
+
+# Ajuste de tamanho por CONTAGEM DE FALAS, não de palavras: modelo conta palavras mal (Gemini viu 950 onde havia 1.300;
+# no teste de 14/10/2026 o Nemotron devolveu 1.023 -> 1.023 e o gpt-oss 1.023 -> 906 ao pedir "alongue para 1.400").
+# Pedir "exatamente N falas novas, cada uma depois da fala X" funciona, e quem insere e remove é o código.
+EXPANDIR = """O roteiro está curto: {atual} palavras, a meta é {alvo}. Escreva EXATAMENTE {n} falas NOVAS para inserir no
+roteiro, espalhadas pelos capítulos (não todas no mesmo lugar). Elas aprofundam o mecanismo do crime, o contexto do caso e
+o que a pessoa deve fazer, SÓ com fatos da FICHA. PROIBIDO acrescentar o que a ficha não traz: endereços, tipo de imóvel,
+e-mails, telefones, sites, valores, motivos ou justificativas dos criminosos, e afirmações sobre o que bancos, polícia ou
+Justiça podem ou não fazer (ex.: nunca diga que o Pix não pode ser revertido; o MED existe). Na dúvida, não escreva o
+detalhe. Cada fala nova tem de 25 a 45 palavras, segue o estilo
+de apresentador e as regras de tom, e encaixa na conversa: a Sara pergunta ou reage, o Samurai explica. Para cada uma,
+diga depois de qual fala existente ela entra ("depois" = índice da fala, 0 = primeira). Não altere as falas existentes."""
+
+CORTAR = """O roteiro está longo: {atual} palavras, a meta é {alvo}. Indique EXATAMENTE {n} falas para REMOVER (índices, 0 =
+primeira): as mais repetitivas ou que menos acrescentam. NÃO remova: abertura, apresentação do Samurai, falas que abrem
+capítulo, a promessa e o seu pagamento, o checklist do que fazer e o fechamento. A conversa precisa continuar fazendo
+sentido sem elas."""
+
+ESQUEMA_EXPANDIR = {
+    "type": "object",
+    "properties": {"insercoes": {"type": "array", "items": {"type": "object", "properties": {
+        "depois": {"type": "integer"}, "quem": {"type": "string", "enum": list(LOCUTORES)}, "texto": {"type": "string"}},
+        "required": ["depois", "quem", "texto"]}}},
+    "required": ["insercoes"],
+}
+ESQUEMA_CORTAR = {"type": "object", "properties": {"remover": {"type": "array", "items": {"type": "integer"}}},
+                  "required": ["remover"]}
+
+
+def sem_prefixo(texto):
+    """Os modelos veem as falas como "[3] samurai: texto" e às vezes devolvem o texto com esse começo (Nemotron,
+    14/10/2026); o prefixo iria para o áudio."""
+    return re.sub(rf"^\s*(\[\d+\]\s*)?({'|'.join(LOCUTORES)}|{'|'.join(LOCUTORES.values())})\s*:\s*", "", texto.strip(), flags=re.I)
 
 
 def palavras(roteiro):
     return sum(len(f["texto"].split()) for f in roteiro["falas"])
 
 
+def protegidas(falas):
+    """Falas que o corte não pode tirar: começo (cold open e apresentação), capítulos, site e as 3 últimas."""
+    fixas = set(range(min(8, len(falas)))) | set(range(max(0, len(falas) - 3), len(falas)))
+    return fixas | {i for i, f in enumerate(falas) if f.get("capitulo") or "cyberjus" in f["texto"].lower()}
+
+
 def ajustar_tamanho(roteiro, ficha):
-    """LLM conta palavras mal (a revisão chegou a 'ver' 950 onde havia 1.300): quem confere é o código."""
-    for _ in range(2):
-        atual = palavras(roteiro)
+    """Leva o roteiro para dentro da FAIXA inserindo ou removendo falas inteiras; o código confere a cada passo."""
+    roteiro = json.loads(json.dumps(roteiro))  # cópia: o original fica em roteiro-bruto.json
+    for _ in range(3):
+        falas, atual = roteiro["falas"], palavras(roteiro)
         if FAIXA[0] <= atual <= FAIXA[1]:
-            return roteiro
-        como = ("Encurte: tire repetições e falas que não acrescentam, sem cortar o mecanismo do crime nem o checklist."
-                if atual > FAIXA[1] else "Alongue: aprofunde o mecanismo do crime e o que fazer, só com fatos da ficha.")
-        log(f"roteiro com {atual} palavras, fora de {FAIXA}: ajustando")
-        roteiro = gemini(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}",
-                         instrucao=AJUSTAR.format(alvo=1400, atual=atual, como=como) + "\n\n" + PROTOCOLO,
-                         esquema=ESQUEMA, temperatura=0.4)
+            break
+        media = max(15, atual / max(1, len(falas)))
+        n = max(1, round(abs(ALVO - atual) / (35 if atual < ALVO else media)))
+        numeradas = "\n".join(f"[{i}] {f['quem']}: {f['texto']}" for i, f in enumerate(falas))
+        log(f"roteiro com {atual} palavras, fora de {FAIXA}: {'acrescentando' if atual < ALVO else 'removendo'} {n} falas")
+        if atual < ALVO:
+            r = llm(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (falas numeradas):\n{numeradas}", tarefa="ajuste",
+                    instrucao=EXPANDIR.format(atual=atual, alvo=ALVO, n=n) + "\n\n" + PROTOCOLO, esquema=ESQUEMA_EXPANDIR,
+                    temperatura=0.5)
+            # de trás para a frente, para os índices das inserções seguintes continuarem valendo
+            for ins in sorted(r["insercoes"], key=lambda x: x["depois"], reverse=True):
+                pos = min(max(int(ins["depois"]), 0), len(falas) - 1) + 1
+                if ins["quem"] in LOCUTORES and len(ins["texto"].split()) >= 8:
+                    falas.insert(pos, {"quem": ins["quem"], "texto": sem_prefixo(ins["texto"])})
+        else:
+            r = llm(f"ROTEIRO (falas numeradas):\n{numeradas}", tarefa="ajuste", esquema=ESQUEMA_CORTAR, temperatura=0.2,
+                    instrucao=CORTAR.format(atual=atual, alvo=ALVO, n=n))
+            fora = {i for i in r["remover"] if 0 <= i < len(falas)} - protegidas(falas)
+            roteiro["falas"] = [f for i, f in enumerate(falas) if i not in fora]
+    log(f"tamanho final: {palavras(roteiro)} palavras")
     return roteiro
 
+
+CAMPOS_REVISAVEIS = ["titulo", "tituloSeo", "resumo", "descricao", "status", "ameaca", "periodo"]
 ESQUEMA_REVISAO = {
     "type": "object",
     "properties": {
@@ -187,18 +246,125 @@ ESQUEMA_REVISAO = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "fala": {"type": "integer", "description": "índice da fala (0 = primeira), -1 se for de outro campo"},
+                    "fala": {"type": "integer", "description": "índice da fala (0 = primeira), -1 se for campo da página"},
+                    "campo": {"type": "string", "enum": ["fala", *CAMPOS_REVISAVEIS]},
                     "tipo": {"type": "string", "enum": ["fato", "inventado", "status", "nome", "tom", "voz", "protocolo"]},
                     "problema": {"type": "string"},
-                    "correcao": {"type": "string"},
+                    "texto_novo": {"type": "string", "description": "a fala inteira já corrigida, ou o valor novo do campo"},
                 },
-                "required": ["fala", "tipo", "problema", "correcao"],
+                "required": ["fala", "campo", "tipo", "problema", "texto_novo"],
             },
         },
-        "roteiro": ESQUEMA,
     },
-    "required": ["problemas", "roteiro"],
+    "required": ["problemas"],
 }
+
+
+def aplicar_revisao(roteiro, problemas):
+    """Aplica as correções pontuais da revisão. Até 14/10/2026 o revisor devolvia o roteiro inteiro: mexia em falas
+    certas, às vezes mudava o tamanho (e a revisão toda era descartada) e gastava ~10 mil tokens de saída."""
+    roteiro = json.loads(json.dumps(roteiro))
+    falas, aplicadas = roteiro["falas"], []
+    for p in problemas:
+        novo = sem_prefixo(p.get("texto_novo") or "")
+        if not novo:
+            continue
+        if p["campo"] == "fala":
+            i = p["fala"]
+            if not 0 <= i < len(falas):
+                log(f"revisão: a fala {i} não existe; correção ignorada")
+                continue
+            antes, depois = len(falas[i]["texto"].split()), len(novo.split())
+            if not 0.4 * antes <= depois <= 2.5 * antes + 10:  # correção, não reescrita
+                log(f"revisão: a fala {i} iria de {antes} para {depois} palavras; correção ignorada")
+                continue
+            if novo == falas[i]["texto"]:
+                log(f"revisão: a correção da fala {i} veio igual ao original; ignorada")
+                continue
+            falas[i]["texto"] = novo
+        elif p["campo"] in ("status", "ameaca") and novo not in ESQUEMA["properties"][p["campo"]]["enum"]:
+            log(f"revisão: {p['campo']} inválido ({novo!r}); correção ignorada")
+            continue
+        else:
+            roteiro[p["campo"]] = novo
+        aplicadas.append(p)
+    return roteiro, aplicadas
+
+
+# ---------- conferências do código (sem modelo) ----------
+
+TAG = re.compile(r"\[[^\]]+\]")
+PROIBIDAS_SAMURAI = re.compile(r"\[(excited|shouting|angry|yelling|shouts|furious)\]", re.I)
+SIGLA = re.compile(r"\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{2,}\b")
+
+
+def conferir(roteiro):
+    """Regras que o código confere melhor que o modelo. Devolve [(fala, problema)]; fala -1 = roteiro todo."""
+    falas, nome = roteiro["falas"], LOCUTORES["coapresentadora"]
+    achados = []
+    apresentacao = [i for i, f in enumerate(falas) if "eu sou o samurai" in f["texto"].lower()]
+    if not apresentacao:
+        achados.append((-1, 'falta a apresentação "Eu sou o Samurai, e este é o CyberJustiça."'))
+    achados += [(i, "a apresentação do Samurai está numa fala da coapresentadora") for i in apresentacao
+                if falas[i]["quem"] != "samurai"]
+    if not any("cyberjus ponto org" in f["texto"].lower() for f in falas):
+        achados.append((-1, 'falta "cyberjus ponto org" no fechamento'))
+    capitulos = sum(1 for f in falas if f.get("capitulo"))
+    if not 3 <= capitulos <= 6:
+        achados.append((-1, f"{capitulos} capítulos marcados (o protocolo pede 4 a 5)"))
+    tags = sum(len(TAG.findall(f["texto"])) for f in falas)
+    if tags > len(falas) / 3 + 1:
+        achados.append((-1, f"{tags} tags de emoção em {len(falas)} falas (no máximo uma a cada 3)"))
+    for i, f in enumerate(falas):
+        texto = TAG.sub("", f["texto"])
+        if f["quem"] == "samurai" and (PROIBIDAS_SAMURAI.search(f["texto"]) or "!!" in texto):
+            achados.append((i, "fala do Samurai com tag ou pontuação de grito (o tom dele é calmo)"))
+        if f["quem"] == "coapresentadora" and re.search(rf"\b{re.escape(nome)}\b", texto, re.I):
+            achados.append((i, f"a {nome} diz o próprio nome"))
+        if re.match(r"\s*cap[ií]tulo\s+\w+\s*:", texto, re.I):
+            achados.append((i, "título de capítulo lido em voz alta (vai só no campo capitulo)"))
+        if re.search(r"\d", texto):
+            achados.append((i, "número em algarismos (na fala vai por extenso)"))
+        siglas = set(SIGLA.findall(texto)) - {"MED"}  # MED se fala como palavra
+        if siglas:
+            achados.append((i, f"caixa alta: escreva como palavra (Deic) se a sigla é lida como palavra, ou soletrada (cê-pê-éfe): {', '.join(sorted(siglas))}"))
+    if not any(re.search(rf"\b{re.escape(nome)}\b", f["texto"], re.I) for f in falas if f["quem"] == "samurai"):
+        achados.append((-1, f"o Samurai nunca chama a {nome} pelo nome"))
+    return achados
+
+
+def formatar(achados):
+    return "\n".join(f"- {'roteiro' if i < 0 else f'fala {i}'}: {p}" for i, p in achados)
+
+
+MARCAR_CAPITULOS = """Divida o ROTEIRO (falas numeradas) em 4 ou 5 CAPÍTULOS, nos pontos em que a conversa muda de
+assunto (abertura, como o crime funciona, o caso real, o que fazer, fechamento). O primeiro começa na fala 0. Para
+cada capítulo dê o índice da fala em que ele começa e um título curto (3 a 8 palavras, frase normal, sem "Capítulo
+1"). Use só índices que existem."""
+
+ESQUEMA_CAPITULOS = {"type": "object", "properties": {"capitulos": {"type": "array", "items": {"type": "object", "properties": {
+    "fala": {"type": "integer"}, "titulo": {"type": "string"}}, "required": ["fala", "titulo"]}}}, "required": ["capitulos"]}
+
+
+def marcar_capitulos(roteiro):
+    """O "capitulo" é opcional no esquema e o modelo às vezes não marca nenhum (episódio 2). Em vez de parar e gerar
+    tudo de novo, uma chamada pequena escolhe onde cortar e o código grava os títulos."""
+    falas = roteiro["falas"]
+    numeradas = "\n".join(f"[{i}] {f['quem']}: {f['texto']}" for i, f in enumerate(falas))
+    r = llm(f"ROTEIRO (falas numeradas):\n{numeradas}", instrucao=MARCAR_CAPITULOS, esquema=ESQUEMA_CAPITULOS,
+            temperatura=0.2, tarefa="capítulos")
+    marcas = {c["fala"]: c["titulo"].strip()[:80] for c in r["capitulos"]
+              if 0 <= c["fala"] < len(falas) and len(c["titulo"].strip()) >= 2}
+    if len(marcas) < 3:
+        return False
+    if 0 not in marcas:  # o primeiro capítulo começa no 0:00 do áudio
+        marcas[0] = marcas.pop(min(marcas)) if min(marcas) <= 3 else "Abertura"
+    for f in falas:
+        f.pop("capitulo", None)
+    for i, titulo in marcas.items():
+        falas[i]["capitulo"] = titulo
+    log(f"capítulos marcados à parte, nas falas {sorted(marcas)}")
+    return True
 
 
 NATURALIZAR = """Reescreva só o campo "texto" de cada fala no ESTILO DE APRESENTADOR, para soar como dois apresentadores
@@ -210,7 +376,7 @@ pagamento, e o tamanho total (no máximo 5% a mais ou a menos de palavras). Devo
 def naturalizar(pasta):
     """Passa um roteiro já aprovado para o estilo de apresentador (uso: python -m pipeline.roteiro --naturalizar <pasta>)."""
     roteiro, ficha = ler(pasta / "roteiro.json"), (pasta / "ficha.md").read_text(encoding="utf-8")
-    novo = gemini(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}",
+    novo = llm(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}",
                   instrucao=NATURALIZAR + "\n\n" + PROTOCOLO, esquema=ESQUEMA, temperatura=0.7)
     if len(novo["falas"]) != len(roteiro["falas"]) or any(a["quem"] != b["quem"] for a, b in zip(novo["falas"], roteiro["falas"])):
         raise SystemExit("A reescrita mudou a estrutura das falas; roteiro mantido.")
@@ -239,32 +405,38 @@ def main():
     gravar(pasta / "fontes.json", materias)
 
     textos = "\n\n".join(f"=== FONTE {i}: {m['fonte']} ({m['data']}) {m['url']}\n{m['texto']}" for i, m in enumerate(materias, 1))
-    ficha = gemini(f"Pauta: {pauta['titulo']}\n\n{textos}", instrucao=APURAR, temperatura=0.1)
+    ficha = llm(f"Pauta: {pauta['titulo']}\n\n{textos}", instrucao=APURAR, temperatura=0.1, tarefa="ficha")
     (pasta / "ficha.md").write_text(ficha, encoding="utf-8")
 
-    roteiro = gemini(f"TEMA DO SITE: {pauta['tema']}\nPAUTA: {pauta['titulo']}\n\nFICHA DE FATOS:\n{ficha}",
+    roteiro = llm(f"TEMA DO SITE: {pauta['tema']}\nPAUTA: {pauta['titulo']}\n\nFICHA DE FATOS:\n{ficha}", tarefa="roteiro",
                      instrucao=PROTOCOLO, esquema=ESQUEMA, temperatura=0.8)
     gravar(pasta / "roteiro-bruto.json", roteiro)
     roteiro = ajustar_tamanho(roteiro, ficha)
+    if sum(1 for f in roteiro["falas"] if f.get("capitulo")) < 3 and not marcar_capitulos(roteiro):
+        gravar(pasta / "roteiro-sem-capitulos.json", roteiro)
+        raise SystemExit("O roteiro saiu com menos de 3 capítulos e a marcação à parte falhou; gere de novo antes do áudio.")
 
-    revisao = gemini(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}", instrucao=REVISAR + "\n\n" + PROTOCOLO,
-                     esquema=ESQUEMA_REVISAO, temperatura=0.1)
-    final = revisao["roteiro"]
-    if not FAIXA[0] * 0.9 <= palavras(final) <= FAIXA[1] * 1.1:
-        log(f"a revisão mudou o tamanho para {palavras(final)} palavras; mantendo o roteiro ajustado e as correções listadas")
-        final = roteiro  # a lista de problemas fica em revisao.json para a aprovação humana
+    achados = conferir(roteiro)
+    detectados = f"\n\nPROBLEMAS DETECTADOS PELO CÓDIGO:\n{formatar(achados)}" if achados else ""
+    pagina = {c: roteiro.get(c) for c in CAMPOS_REVISAVEIS}
+    numeradas = "\n".join(f"[{i}] {f['quem']}: {f['texto']}" for i, f in enumerate(roteiro["falas"]))
+    revisao = llm(f"FICHA DE FATOS:\n{ficha}\n\nCAMPOS DA PÁGINA:\n{json.dumps(pagina, ensure_ascii=False)}\n\n"
+                  f"ROTEIRO (falas numeradas):\n{numeradas}{detectados}", tarefa="revisão",
+                  instrucao=REVISAR + "\n\n" + PROTOCOLO, esquema=ESQUEMA_REVISAO, temperatura=0.1)
+    final, aplicadas = aplicar_revisao(roteiro, revisao["problemas"])
     final["tema"] = pauta["tema"] if pauta["tema"] in TEMAS else "fraudes"
-    gravar(pasta / "revisao.json", revisao["problemas"])
-    # "capitulo" é opcional no esquema e o modelo às vezes esquece (episódio 2): parar antes de gastar crédito de voz.
-    if sum(1 for f in final["falas"] if f.get("capitulo")) < 3:
-        gravar(pasta / "roteiro-sem-capitulos.json", final)
-        raise SystemExit("O roteiro saiu com menos de 3 capítulos marcados; gere de novo antes do áudio.")
+    gravar(pasta / "revisao.json", aplicadas)
     gravar(pasta / "roteiro.json", final)
+    # Para o resumo no Telegram: qual modelo fez cada etapa e o que continua fora das regras depois da revisão
+    # (o áudio.py ainda tira as tags proibidas, mas número em algarismo ou sigla a pessoa precisa ver antes de aprovar).
+    total = palavras(final)
+    avisos = [f"tamanho fora da meta: {total} palavras (meta {FAIXA[0]} a {FAIXA[1]})"] if not FAIXA[0] <= total <= FAIXA[1] else []
+    avisos += [f"{'roteiro' if i < 0 else f'fala {i + 1}'}: {p}" for i, p in conferir(final)]
+    gravar(pasta / "modelos.json", {"etapas": [{"tarefa": t, "provedor": p, "modelo": m} for t, p, m in USADOS], "avisos": avisos})
 
     caracteres = sum(len(f["texto"]) for f in final["falas"])
-    total = palavras(final)
     log(f"{len(final['falas'])} falas, {total} palavras (~{total / 160:.1f} min), {caracteres} caracteres; "
-        f"{len(revisao['problemas'])} problema(s) corrigido(s) na revisão")
+        f"{len(achados)} achado(s) do código, {len(aplicadas)} correção(ões) da revisão, {len(avisos)} aviso(s) restantes")
     print(pasta)
 
 

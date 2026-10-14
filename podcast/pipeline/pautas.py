@@ -17,7 +17,7 @@ import os
 import unicodedata
 from pathlib import Path
 
-from .comum import DADOS, TEMAS, TRABALHO, gemini, gravar, ler, log
+from .comum import DADOS, TEMAS, TRABALHO, gravar, ler, llm, log
 
 REPO = Path(os.environ.get("REPO", "/dados/repo"))
 # Palavras que aparecem em quase todo caso e não identificam nenhum: não contam para dizer que a pauta repete um episódio.
@@ -177,7 +177,7 @@ def main():
     )
     feitos = ja_feitos()
     lista_feitos = "\n".join(f"- ({f['onde']}) {f['titulo']}" for f in feitos)
-    r = gemini(linhas, instrucao=INSTRUCAO + f"\nDevolva as {a.quantas} melhores.\n\nEPISÓDIOS JÁ PUBLICADOS OU EM "
+    r = llm(linhas, tarefa="triagem", instrucao=INSTRUCAO + f"\nDevolva as {a.quantas} melhores.\n\nEPISÓDIOS JÁ PUBLICADOS OU EM "
                f"PRODUÇÃO (NÃO sugira o mesmo caso nem um caso quase igual a eles):\n{lista_feitos}", esquema=ESQUEMA)
     pautas, repetidas = [], 0
     for p in sorted(r["pautas"], key=lambda p: p["nota"], reverse=True):

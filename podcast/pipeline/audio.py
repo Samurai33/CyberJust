@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -34,11 +35,18 @@ def api(caminho, corpo=None):
         headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"], "Content-Type": "application/json"},
         method="POST" if corpo is not None else "GET",
     )
-    try:
-        r = urllib.request.urlopen(req, timeout=300)
-    except urllib.error.HTTPError as e:
-        raise SystemExit(f"ElevenLabs {e.code} em {caminho.split('?')[0]}: {e.read()[:400].decode(errors='replace')}")
-    return r.read(), r.headers
+    # 429 (fila cheia) e 5xx voltam sem áudio: espera e tenta de novo. Timeout NÃO é repetido, porque o pedido
+    # pode ter sido gerado e cobrado do lado de lá (o bloco pago não pode ser pago de novo).
+    for tentativa in range(4):
+        try:
+            r = urllib.request.urlopen(req, timeout=300)
+            return r.read(), r.headers
+        except urllib.error.HTTPError as e:
+            erro = f"ElevenLabs {e.code} em {caminho.split('?')[0]}: {e.read()[:400].decode(errors='replace')}"
+            if e.code not in (429, 500, 502, 503, 504) or tentativa == 3:
+                raise SystemExit(erro)
+            log(f"{erro}; nova tentativa em {30 * (tentativa + 1)} s")
+            time.sleep(30 * (tentativa + 1))
 
 
 # Rede de segurança do tom (episódio 14, 4:03: [excited] no Samurai saiu quase gritado). Mesmo que o roteiro traga
