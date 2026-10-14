@@ -53,14 +53,15 @@ def pasta_episodio(nome):
 # Regra de qualidade: texto que vai ao ar (ficha, roteiro, ajuste, revisão) só sai de modelo FORTE. O flash-lite
 # só entra na triagem de pautas. Sem modelo forte disponível, a etapa falha com PROVEDORES OCUPADOS e o bot tenta
 # de novo mais tarde, em vez de entregar um roteiro pior (13/10/2026: o flash-lite estragou ajuste e reescrita).
-# A Cloudflare fica por último: o plano grátis tem 10 mil neurons por dia (uns 2 episódios inteiros).
+# A Cloudflare (gpt-oss-120b) NÃO escreve texto que vai ao ar: no teste de 14/10/2026, ao acrescentar 11 falas,
+# inventou endereços, um "e-mail oficial do DEIC" e que "os bancos não conseguem reverter Pix" (errado: existe o MED).
+# O Nemotron, no mesmo teste, só usou fatos da ficha. A Cloudflare fica na triagem de pautas, onde um erro não vai ao ar.
 FORTES = [
     ("gemini", "gemini-flash-latest"), ("gemini", "gemini-3.8-flash"), ("gemini", "gemini-3.7-flash"),
     ("gemini", "gemini-3.6-flash"), ("gemini", "gemini-3.5-flash"),
     ("nvidia", "nvidia/nemotron-3-super-120b-a12b"),
-    ("cloudflare", "@cf/openai/gpt-oss-120b"),
 ]
-TRIAGEM = FORTES + [("gemini", "gemini-flash-lite-latest")]
+TRIAGEM = FORTES + [("cloudflare", "@cf/openai/gpt-oss-120b"), ("gemini", "gemini-flash-lite-latest")]
 USADOS = []  # (tarefa, provedor, modelo) de cada chamada que deu certo, para o resumo no Telegram
 
 
