@@ -13,3 +13,4 @@ playwright-report
 *.md
 Dockerfile
 .dockerignore
+podcast
