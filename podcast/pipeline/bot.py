@@ -271,14 +271,22 @@ def publicar(nome):
         return msg(f"⚠️ Publicação falhou:\n<pre>{esc(erro[-800:])}</pre>", aba="publicacao")
     info = json.loads(saida)
     msg(f"📤 Episódio {info['numero']} enviado. Esperando o deploy do Coolify…", aba="publicacao")
+    # User-Agent próprio: a Cloudflare do cyberjus.org responde 403 ao "Python-urllib" padrão. No episódio 3
+    # (14/10/2026) a página estava no ar e o bot passou 15 minutos vendo 403 e avisou que o deploy tinha falhado.
+    pedido = urllib.request.Request(info["url"], headers={"User-Agent": "CyberJust-pipeline/1.0 (+https://www.cyberjus.org)"})
+    ultimo = "sem resposta"
     for _ in range(30):  # até 15 minutos
         time.sleep(30)
         try:
-            if urllib.request.urlopen(info["url"], timeout=20).status == 200:
+            if urllib.request.urlopen(pedido, timeout=20).status == 200:
                 return msg(f"🎉 <b>No ar:</b> {info['url']}", aba="publicacao")
-        except Exception:
-            pass
-    msg(f"⚠️ O commit foi feito, mas {info['url']} ainda não responde. Confira o deploy no Coolify.", aba="publicacao")
+        except urllib.error.HTTPError as e:
+            ultimo = f"HTTP {e.code}"  # 404 é o normal enquanto o deploy roda
+        except Exception as e:
+            ultimo = repr(e)[:120]
+    log("publicação: página não respondeu 200 em 15 min; última resposta:", ultimo)
+    msg(f"⚠️ O commit foi feito, mas {info['url']} ainda não responde (última resposta: {esc(ultimo)}). "
+        "Confira o deploy no Coolify.", aba="publicacao")
 
 
 def descartar(nome):
