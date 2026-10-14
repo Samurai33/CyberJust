@@ -6,6 +6,7 @@ Saída em <pasta>: episodio.vtt, capitulos.json e qa.json. Custo: zero (Whisper 
 """
 import difflib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -66,8 +67,11 @@ def main():
 
     pcm = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", str(audio), "-ac", "1", "-ar", "16000", "-f", "f32le", "-"],
                          capture_output=True, check=True).stdout
-    modelo = WhisperModel("small", device="cpu", compute_type="int8", cpu_threads=8)
-    segs, _ = modelo.transcribe(np.frombuffer(pcm, dtype=np.float32), language="pt", beam_size=5, word_timestamps=True)
+    # O texto vem do roteiro; o Whisper só dá os tempos. Busca gulosa (beam 1) e uma thread por CPU do contêiner
+    # (compose.yml: cpus 4): no episódio 2 (6:52), 285 s -> 119 s com a mesma cobertura (93,7% -> 93,8%). O modelo
+    # "base" faz em 38 s, mas cai para 91%, e os tempos servem também para cortar o áudio (--refazer-fala) e para a QA.
+    modelo = WhisperModel("small", device="cpu", compute_type="int8", cpu_threads=int(os.environ.get("WHISPER_THREADS", "4")))
+    segs, _ = modelo.transcribe(np.frombuffer(pcm, dtype=np.float32), language="pt", beam_size=1, word_timestamps=True)
     ditas = []  # (palavra normalizada, início, fim)
     for s in segs:
         for w in s.words:
