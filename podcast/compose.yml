@@ -12,6 +12,8 @@ services:
       DADOS: /dados
       REPO: /dados/repo
       TZ: America/Sao_Paulo
+      MODELO_TTS: eleven_v4         # aprovado no episódio 14 (v3 custava ~3,7x mais)
+      ESTABILIDADE_TTS: "0.35"       # mais expressivo que o padrão 0,5; o tom é vigiado pelo tom.py
       GIT_AUTHOR_NAME: CyberJust pipeline
       GIT_AUTHOR_EMAIL: contato@n3xus.dev
       GIT_COMMITTER_NAME: CyberJust pipeline

@@ -199,6 +199,7 @@ def main():
                                   {"command": "status", "description": "Créditos e etapa em andamento"}])
     threading.Thread(target=agenda, daemon=True).start()
     log("bot no ar")
+    msg("🟢 <b>Pipeline do CyberJust no ar.</b>\nPautas seg, qua e sex às 9h. Comandos: /pautas e /status.")
     proximo = 0
     while True:
         try:
