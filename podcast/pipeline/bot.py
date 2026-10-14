@@ -26,6 +26,16 @@ REPO = Path(os.environ.get("REPO", "/dados/repo"))
 BRT = dt.timezone(dt.timedelta(hours=-3))
 CREDITO_POR_CARACTERE = 0.44  # medido no piloto (eleven_v3, Text to Dialogue): 3.282 créditos para 7.460 caracteres
 ocupado = threading.Lock()  # uma etapa pesada por vez
+atual = {"nome": None, "desde": None}  # o que está rodando, para o /status e o aviso de ocupado
+NOMES = {"sugerir": "buscando pautas", "produzir": "escrevendo o roteiro", "audio": "gerando o áudio",
+         "refazer": "refazendo uma fala", "publicar": "publicando", "descartar": "descartando"}
+
+
+def andamento():
+    if not atual["nome"]:
+        return "💤 Livre."
+    minutos = int((time.time() - atual["desde"]) // 60)
+    return f"⏳ {NOMES.get(atual['nome'], atual['nome'])} há {minutos} min."
 
 
 def tg(metodo, **campos):
@@ -72,7 +82,10 @@ def sugerir_pautas():
     if not ok:
         return msg(f"⚠️ Falha ao buscar pautas:\n<pre>{esc(erro[-800:])}</pre>")
     pautas = ler(arquivo)
-    linhas, botoes = ["🗞️ <b>Pautas da semana</b> (casos reais, últimos 14 dias)\n"], []
+    meta = Path(arquivo).with_suffix(".meta.json")
+    repetidas = ler(meta).get("repetidas", 0) if meta.exists() else 0
+    nota = f" · {repetidas} já feita(s) no site, fora" if repetidas else ""
+    linhas, botoes = [f"🗞️ <b>Pautas da semana</b> (casos reais, últimos 14 dias{nota})\n"], []
     for i, p in enumerate(pautas[:3], 1):
         fontes = sum(len(n["fontes"]) for n in p["noticias"])
         linhas.append(f"<b>{i}. {esc(p['titulo'])}</b>\nNota {p['nota']}/10 · {p['tema']} · {fontes} fontes\n<i>{esc(p['por_que'])}</i>\n")
@@ -168,13 +181,15 @@ ACOES = {"produzir": lambda a, n: produzir(a, int(n)), "audio": gerar_audio, "re
 
 def executar(acao, args):
     if not ocupado.acquire(blocking=False):
-        return msg("⏳ Ainda estou numa etapa anterior; tente de novo quando ela terminar.")
+        return msg(f"{andamento()} Tente de novo quando terminar.")
+    atual.update(nome=acao, desde=time.time())
     try:
         ACOES[acao](*args)
     except Exception as e:  # o bot não pode morrer por causa de uma etapa
         log("erro:", repr(e))
         msg(f"⚠️ Erro inesperado em {acao}: <pre>{esc(repr(e))[:800]}</pre>")
     finally:
+        atual.update(nome=None, desde=None)
         ocupado.release()
 
 
@@ -225,7 +240,7 @@ def main():
                 threading.Thread(target=executar, args=("sugerir", ()), daemon=True).start()
             elif m and m.get("text", "").startswith("/status"):
                 ok, _, erro = etapa("pipeline.audio", "--saldo")
-                msg(("⏳ Etapa em andamento." if ocupado.locked() else "💤 Livre.") + f"\n{esc(erro.strip().splitlines()[-1] if erro.strip() else '')}")
+                msg(f"{andamento()}\n{esc(erro.strip().splitlines()[-1] if erro.strip() else '')}")
 
 
 if __name__ == "__main__":

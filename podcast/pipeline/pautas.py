@@ -13,7 +13,21 @@ import urllib.parse
 import urllib.request
 from email.utils import parsedate_to_datetime
 
-from .comum import DADOS, TEMAS, gemini, gravar, log
+import os
+import unicodedata
+from pathlib import Path
+
+from .comum import DADOS, TEMAS, TRABALHO, gemini, gravar, ler, log
+
+REPO = Path(os.environ.get("REPO", "/dados/repo"))
+# Palavras que aparecem em quase todo caso e não identificam nenhum: não contam para dizer que a pauta repete um episódio.
+GENERICAS = set("""golpe golpes operacao operacoes policia civil federal quadrilha grupo presos preso prisao prisoes
+fraude fraudes digital digitais crime crimes criminosos vitima vitimas milhoes milhao reais contra sobre como pessoas
+investigacao investigados esquema desarticula desmonta deflagra cumpre mandados justica brasil estado cidade dados
+online internet virtual virtuais caso casos novo nova alerta alertas
+criancas crianca adolescentes adolescente menores menor infantil protecao aliciamento abuso sexual exploracao escola
+especial corrupcao lavagem dinheiro redes sociais pessoais privacidade vazamento vazamentos hacker hackers ataque
+ciberneticos cibernetico seguranca""".split())  # palavras de tema (src/data/temas.ts) também não identificam o caso
 
 # Consultas específicas por tipo de crime, agrupadas pelos temas do site (src/data/temas.ts).
 CONSULTAS = {
@@ -90,6 +104,36 @@ def rss(consulta, dias):
     return urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "ignore")
 
 
+def palavras_caso(texto):
+    t = unicodedata.normalize("NFKD", texto.lower())
+    t = "".join(c for c in t if not unicodedata.combining(c))
+    return {p for p in re.findall(r"[a-z0-9]{4,}", t) if p not in GENERICAS}
+
+
+def ja_feitos():
+    """Episódios publicados (repositório) e em produção (trabalho/, menos os descartados): não podem virar pauta de novo."""
+    feitos = []
+    for md in sorted((REPO / "src" / "content" / "episodios").glob("*.md")):
+        texto = md.read_text(encoding="utf-8")
+        campo = lambda nome: (re.search(rf"^{nome}:\s*(.+)$", texto, re.M) or [None, ""])[1].strip().strip('"')
+        feitos.append({"titulo": campo("titulo"), "chave": f"{campo('titulo')} {campo('tags')}", "onde": "publicado"})
+    for pasta in sorted(TRABALHO.glob("*/")):
+        if (pasta / "roteiro.json").exists() and not (pasta / "descartado").exists():
+            r = ler(pasta / "roteiro.json")
+            feitos.append({"titulo": r["titulo"], "chave": f"{r['titulo']} {' '.join(r.get('tags', []))}", "onde": "em produção"})
+    return feitos
+
+
+def repete(pauta, feitos):
+    """Mesmo caso = duas ou mais palavras que identificam o caso em comum (ex.: "falso" e "advogado", ou "discord")."""
+    alvo = palavras_caso(pauta["titulo"] + " " + " ".join(n["titulo"] for n in pauta.get("noticias", [])[:3]))
+    for f in feitos:
+        comum = alvo & palavras_caso(f["chave"])
+        if len(comum) >= 2 or comum & {"discord", "roblox", "lulu", "einstein"}:
+            return f, comum
+    return None, None
+
+
 def chave(titulo):
     # O mesmo título publicado por veículos diferentes vira um caso só.
     return " ".join(re.findall(r"[a-zà-ú0-9]{4,}", titulo.lower())[:8])
@@ -131,14 +175,22 @@ def main():
     linhas = "\n".join(
         f"{i}\t{c['data']}\t{c['tema']}\t{', '.join(f['nome'] for f in c['fontes'])}\t{c['titulo']}" for i, c in enumerate(casos)
     )
-    r = gemini(linhas, instrucao=INSTRUCAO + f"\nDevolva as {a.quantas} melhores.", esquema=ESQUEMA)
-    pautas = []
+    feitos = ja_feitos()
+    lista_feitos = "\n".join(f"- ({f['onde']}) {f['titulo']}" for f in feitos)
+    r = gemini(linhas, instrucao=INSTRUCAO + f"\nDevolva as {a.quantas} melhores.\n\nEPISÓDIOS JÁ PUBLICADOS OU EM "
+               f"PRODUÇÃO (NÃO sugira o mesmo caso nem um caso quase igual a eles):\n{lista_feitos}", esquema=ESQUEMA)
+    pautas, repetidas = [], 0
     for p in sorted(r["pautas"], key=lambda p: p["nota"], reverse=True):
         p["noticias"] = [casos[i] for i in p.pop("indices") if 0 <= i < len(casos)]
-        if p["noticias"]:
+        feito, comum = repete(p, feitos)
+        if feito:
+            repetidas += 1
+            log(f"pauta repetida, fora: {p['titulo']!r} ~ {feito['titulo']!r} ({', '.join(sorted(comum))})")
+        elif p["noticias"]:
             pautas.append(p)
     saida = DADOS / "pautas" / f"{dt.date.today().isoformat()}.json"
     gravar(saida, pautas)
+    gravar(saida.with_suffix(".meta.json"), {"repetidas": repetidas, "noticias": len(casos)})
     log(f"{len(pautas)} pautas em {saida}")
     print(saida)
 
