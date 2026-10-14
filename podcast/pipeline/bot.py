@@ -123,7 +123,9 @@ def msg(texto, botoes=None, aba="sistema"):
                                     link_preview_options={"is_disabled": True}, **extra, **t))
 
 
-def arquivo(metodo, campo, caminho, aba, **campos):
+def enviar_arquivo(metodo, campo, caminho, aba, **campos):
+    # Não chame de "arquivo": produzir() e sugerir_pautas() usam esse nome para o arquivo de pautas, e a variável
+    # escondia a função ("'str' object is not callable" ao mandar o roteiro, 14/10/2026).
     return na_aba(aba, lambda t: tg_arquivo(metodo, campo, caminho, chat_id=CHAT, **campos, **t))
 
 
@@ -192,7 +194,12 @@ def produzir(arquivo, n):
         if ocupados(erro, "produzir", (arquivo, str(n))):
             return
         return msg(f"⚠️ Roteiro falhou:\n<pre>{esc(erro[-800:])}</pre>", aba="producao")
-    pasta = Path(pasta)
+    enviar_roteiro(Path(pasta))
+
+
+def enviar_roteiro(pasta):
+    """Manda o roteiro pronto para aprovação. Separado de produzir() para reenviar sem escrever tudo de novo:
+    python -c "from pipeline.bot import enviar_roteiro, TRABALHO; enviar_roteiro(TRABALHO / '<pasta>')"."""
     info = ler(pasta / "modelos.json") if (pasta / "modelos.json").exists() else {"etapas": [], "avisos": []}
     modelos = " · ".join(f"{e['tarefa']}: {e['modelo']}" for e in info["etapas"]) or "?"
     avisos = "".join(f"\n⚠️ {esc(a)}" for a in info["avisos"][:8])
@@ -205,7 +212,7 @@ def produzir(arquivo, n):
     md.write_text(f"# {r['titulo']}\n\n" + "\n\n".join(
         (f"## {f['capitulo']}\n\n" if f.get("capitulo") else "") + f"**{f['quem'].upper()}:** {f['texto']}" for f in r["falas"]
     ) + "\n\n---\n\n## Ficha de fatos\n\n" + (pasta / "ficha.md").read_text(encoding="utf-8"), encoding="utf-8")
-    arquivo("sendDocument", "document", md, "producao", caption=f"Roteiro: {r['titulo']}"[:1000])
+    enviar_arquivo("sendDocument", "document", md, "producao", caption=f"Roteiro: {r['titulo']}"[:1000])
     revisao = "\n".join(f"• <i>{esc(p['tipo'])}</i>: {esc(p['problema'][:150])}" for p in problemas[:8]) or "• nenhum"
     msg(f"📝 <b>{esc(r['titulo'])}</b>\n{palavras} palavras (~{palavras / 160:.0f} min) · status {r['status']}{avisos}\n"
         f"🤖 {esc(modelos)}\n\n"
@@ -228,7 +235,7 @@ def gerar_audio(nome):
         return msg(f"⚠️ Legenda falhou:\n<pre>{esc(erro[-800:])}</pre>", aba="producao")
     qa, caps = ler(pasta / "qa.json"), ler(pasta / "capitulos.json")
     r = ler(pasta / "roteiro.json")
-    arquivo("sendAudio", "audio", pasta / "episodio.m4a", "producao", title=r["titulo"][:60], performer="CyberJustiça")
+    enviar_arquivo("sendAudio", "audio", pasta / "episodio.m4a", "producao", title=r["titulo"][:60], performer="CyberJustiça")
     capitulos = "\n".join(f"{c['inicio']} {esc(c['titulo'])}" for c in caps)
     selo = "✅" if qa["aprovado"] else "❌"
     fora = qa.get("fora_do_tom", [])
@@ -334,24 +341,37 @@ def main():
             continue
         for u in updates:
             proximo = u["update_id"] + 1
-            cb, m = u.get("callback_query"), u.get("message")
-            origem = (cb or m or {}).get("from", {}).get("id")
-            if origem != CHAT:  # só o dono comanda o pipeline
-                continue
-            if cb:
-                tg("answerCallbackQuery", callback_query_id=cb["id"])
-                acao, *args = cb["data"].split("|")
-                if acao in ACOES:
-                    # Tira os botões da mensagem: evita clique duplo (gerar o áudio duas vezes gastaria créditos).
-                    tg("editMessageReplyMarkup", chat_id=CHAT, message_id=cb["message"]["message_id"], reply_markup={"inline_keyboard": []})
-                    threading.Thread(target=executar, args=(acao, args), daemon=True).start()
-            elif m and m.get("text", "").startswith("/pautas"):
-                threading.Thread(target=executar, args=("sugerir", ()), daemon=True).start()
-            elif m and m.get("text", "").startswith("/status"):
-                ok, _, erro = etapa("pipeline.audio", "--saldo")
-                texto = f"{andamento()}\n{esc(erro.strip().splitlines()[-1] if erro.strip() else '')}"
-                t = m.get("message_thread_id")  # responde na aba em que o /status foi digitado
-                tg("sendMessage", chat_id=CHAT, text=texto, parse_mode="HTML", **({"message_thread_id": t} if t else {}))
+            try:
+                tratar(u)
+            except Exception as e:  # o update já foi confirmado (proximo); um erro aqui não pode derrubar o bot
+                log("update", u["update_id"], "falhou:", repr(e))
+
+
+def tratar(u):
+    """Uma atualização do Telegram. Antes, um 400 do Telegram aqui (clique em botão antigo, clique duplo) saía do laço,
+    derrubava o processo e, como o update ainda não tinha sido confirmado, voltava a cada reinício."""
+    cb, m = u.get("callback_query"), u.get("message")
+    origem = (cb or m or {}).get("from", {}).get("id")
+    if origem != CHAT:  # só o dono comanda o pipeline
+        return
+    if cb:
+        try:  # só tira o "carregando" do botão; clique antigo dá 400 "query is too old" e a ação vale mesmo assim
+            tg("answerCallbackQuery", callback_query_id=cb["id"])
+        except ErroTelegram as e:
+            log("answerCallbackQuery:", e)
+        acao, *args = cb["data"].split("|")
+        if acao in ACOES:
+            # Tira os botões da mensagem: evita clique duplo (gerar o áudio duas vezes gastaria créditos). No segundo
+            # clique a mensagem já está sem botões, o Telegram responde 400 e a ação não roda de novo.
+            tg("editMessageReplyMarkup", chat_id=CHAT, message_id=cb["message"]["message_id"], reply_markup={"inline_keyboard": []})
+            threading.Thread(target=executar, args=(acao, args), daemon=True).start()
+    elif m and m.get("text", "").startswith("/pautas"):
+        threading.Thread(target=executar, args=("sugerir", ()), daemon=True).start()
+    elif m and m.get("text", "").startswith("/status"):
+        _, _, erro = etapa("pipeline.audio", "--saldo")
+        texto = f"{andamento()}\n{esc(erro.strip().splitlines()[-1] if erro.strip() else '')}"
+        t = m.get("message_thread_id")  # responde na aba em que o /status foi digitado
+        tg("sendMessage", chat_id=CHAT, text=texto, parse_mode="HTML", **({"message_thread_id": t} if t else {}))
 
 
 if __name__ == "__main__":

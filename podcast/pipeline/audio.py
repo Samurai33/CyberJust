@@ -134,6 +134,9 @@ def refazer_fala(pasta, n, gerar):
     from .tom import ler_vtt
 
     roteiro = ler(pasta / "roteiro.json")
+    if (pasta / "episodio.vtt").stat().st_mtime < (pasta / "episodio.m4a").stat().st_mtime:
+        # Os tempos do corte vêm da legenda: legenda mais velha que o áudio (outra fala refeita depois dela) corta no lugar errado.
+        raise SystemExit("A legenda é mais antiga que o áudio; rode python -m pipeline.legenda <pasta> antes de refazer outra fala.")
     falas, cues = roteiro["falas"], ler_vtt(pasta / "episodio.vtt")
     if len(cues) != len(falas):
         raise SystemExit("A legenda não tem uma entrada por fala; rode a etapa de legenda antes.")
@@ -147,10 +150,14 @@ def refazer_fala(pasta, n, gerar):
     k = next(i for i, b in enumerate(grupos) if any(f is fala for f in b))
     partes = [pasta / "blocos" / f"{i:02d}.mp3" for i in range(1, len(grupos) + 1)]
     inicio_bloco = sum(duracao(p) for p in partes[:k])
-    # Janela de corte: metade do silêncio antes e depois da fala, no tempo do bloco.
+    # Janela de corte: metade do silêncio antes e depois da fala, no tempo do bloco ATUAL (os tempos vêm da legenda do
+    # áudio atual). Até 14/10/2026 o corte era feito no .orig.mp3: a segunda fala refeita no mesmo bloco apagava a
+    # primeira e cortava fora do lugar (episódio 2: das 8 falas refeitas, as 5, 6, 10 e 29 ficaram de fora).
     a = (cues[n - 1][1] + cues[n][0]) / 2 if n else cues[n][0]
     b = (cues[n][1] + cues[n + 1][0]) / 2 if n + 1 < len(cues) else cues[n][1]
-    a, b = a - inicio_bloco, b - inicio_bloco
+    # A janela pode passar da borda do bloco quando a fala é a primeira ou a última dele (o silêncio vizinho está no
+    # bloco ao lado); o atrim com tempo negativo falha.
+    a, b = max(0.0, a - inicio_bloco), min(duracao(partes[k]), b - inicio_bloco)
 
     corpo = {"model_id": MODELO, "language_code": "pt", "inputs": [{"text": texto, "voice_id": VOZES[fala["quem"]]}],
              "seed": 2033, "settings": {"stability": float(os.environ.get("ESTABILIDADE_REFAZER", "0.5"))}}
@@ -162,7 +169,7 @@ def refazer_fala(pasta, n, gerar):
     alvo = partes[k]
     original = alvo.with_suffix(".orig.mp3")
     if not original.exists():
-        shutil.copyfile(alvo, original)  # guarda o bloco como veio da ElevenLabs
+        shutil.copyfile(alvo, original)  # cópia de segurança do bloco como veio da ElevenLabs (não é usada no corte)
     meio = max(0.15, (b - a - duracao(nova)) / 2) if b - a > duracao(nova) else 0.15
     # antes do corte + silêncio + fala nova (sem silêncio nas pontas) + silêncio + depois do corte
     filtro = (f"[0:a]atrim=0:{a:.3f},asetpts=N/SR/TB[x];"
@@ -171,7 +178,7 @@ def refazer_fala(pasta, n, gerar):
               f"adelay={int(meio * 1000)},apad=pad_dur={meio:.3f},aresample=44100[y];"
               f"[0:a]atrim=start={b:.3f},asetpts=N/SR/TB[z];[x][y][z]concat=n=3:v=0:a=1[s]")
     tmp = alvo.with_suffix(".novo.mp3")
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(original), "-i", str(nova), "-filter_complex", filtro,
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(alvo), "-i", str(nova), "-filter_complex", filtro,
                     "-map", "[s]", "-ac", "1", "-c:a", "libmp3lame", "-b:a", "192k", str(tmp)], check=True)
     tmp.replace(alvo)
 

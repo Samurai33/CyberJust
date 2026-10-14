@@ -12,6 +12,7 @@ import trafilatura
 from googlenewsdecoder import gnewsdecoder
 
 from .comum import LOCUTORES, TEMAS, USADOS, gravar, ler, llm, log, pasta_episodio, slug
+from .episodio import problemas_pagina
 
 # ---------- fontes ----------
 
@@ -432,6 +433,7 @@ def main():
     total = palavras(final)
     avisos = [f"tamanho fora da meta: {total} palavras (meta {FAIXA[0]} a {FAIXA[1]})"] if not FAIXA[0] <= total <= FAIXA[1] else []
     avisos += [f"{'roteiro' if i < 0 else f'fala {i + 1}'}: {p}" for i, p in conferir(final)]
+    avisos += [f"página: {p} (corrija no roteiro.json antes de publicar)" for p in problemas_pagina(final)]
     gravar(pasta / "modelos.json", {"etapas": [{"tarefa": t, "provedor": p, "modelo": m} for t, p, m in USADOS], "avisos": avisos})
 
     caracteres = sum(len(f["texto"]) for f in final["falas"])
