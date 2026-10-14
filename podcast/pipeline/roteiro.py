@@ -255,6 +255,10 @@ def main():
         final = roteiro  # a lista de problemas fica em revisao.json para a aprovação humana
     final["tema"] = pauta["tema"] if pauta["tema"] in TEMAS else "fraudes"
     gravar(pasta / "revisao.json", revisao["problemas"])
+    # "capitulo" é opcional no esquema e o modelo às vezes esquece (episódio 2): parar antes de gastar crédito de voz.
+    if sum(1 for f in final["falas"] if f.get("capitulo")) < 3:
+        gravar(pasta / "roteiro-sem-capitulos.json", final)
+        raise SystemExit("O roteiro saiu com menos de 3 capítulos marcados; gere de novo antes do áudio.")
     gravar(pasta / "roteiro.json", final)
 
     caracteres = sum(len(f["texto"]) for f in final["falas"])
