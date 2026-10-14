@@ -14,3 +14,7 @@
 .env*
 *.log
 .DS_Store
+
+# python (pipeline do podcast)
+__pycache__/
+*.pyc
