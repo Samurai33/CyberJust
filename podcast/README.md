@@ -11,7 +11,7 @@ pautas ──► roteiro ──► [aprovação] ──► áudio ──► lege
 | Etapa | Módulo | O que faz | Custo |
 |---|---|---|---|
 | Pautas | `pipeline.pautas` | 29 buscas no RSS do Google Notícias (14 dias), tira política, eleições e esporte, e o Gemini ranqueia as melhores | grátis |
-| Roteiro | `pipeline.roteiro` | baixa as matérias (decodifica os links do Google Notícias), monta a ficha de fatos, escreve o diálogo com o protocolo de retenção, ajusta o tamanho e revisa contra a ficha | grátis |
+| Roteiro | `pipeline.roteiro` | baixa as matérias (decodifica os links do Google Notícias), monta a ficha de fatos, escreve o diálogo com o protocolo de retenção, ajusta o tamanho, marca os capítulos se o modelo esqueceu, confere as regras no código e revisa contra a ficha com correções pontuais | grátis |
 | Áudio | `pipeline.audio` | Text to Dialogue da ElevenLabs em blocos de até 1.900 caracteres; cada bloco é salvo assim que chega e reaproveitado; normalização em duas passadas (-16 LUFS, pico < -1 dBTP) e AAC com faststart | ~0,44 crédito por caractere (eleven_v3) |
 | Legenda | `pipeline.legenda` | Whisper local alinha o áudio ao texto do roteiro: WebVTT com `<v Locutor>`, tempos dos capítulos e controle de qualidade | grátis |
 | Episódio | `pipeline.episodio` | Markdown no esquema de `src/content.config.ts`, áudio e VTT com hash no nome, recursos com link conferido (HTTP 200), commit e push | grátis |
@@ -51,3 +51,10 @@ são gravadas pelos scripts `n3x-*-token.sh` do Dell, que nunca mostram o valor.
 - O `googlenewsdecoder` 0.2.1 precisa do `selectolax` < 1 e responde `success` (não `status`).
 - `gemini-2.5-flash` não existe mais para chaves novas; o plano gratuito devolve 503 em picos (há novas tentativas e
   troca de modelo).
+- 14/10/2026: o revisor não devolve mais o roteiro inteiro, só a fala corrigida (o código troca e recusa reescrita,
+  texto igual e fala inexistente). O código confere antes (apresentação, capítulos, tags, algarismos, caixa alta,
+  título de capítulo lido em voz alta, Sara dizendo o próprio nome) e o que sobrar vai como aviso no Telegram.
+- Sigla lida como palavra vai como palavra ("Deic", "Procon"); só a lida letra por letra é soletrada ("cê-pê-éfe").
+- Botões do Telegram levam um código de 10 caracteres da pasta: `callback_data` tem limite de 64 bytes.
+- A publicação reseta o clone para a `origin/main` antes de montar (um ensaio deixava o número do episódio pulado) e
+  refaz uma vez se o push for recusado.
