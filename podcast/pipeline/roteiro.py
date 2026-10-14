@@ -154,29 +154,73 @@ promessa do início não cumprida.
 NÃO mude a extensão do roteiro (o tamanho já foi conferido pelo código): não acrescente nem remova falas além do
 necessário para corrigir um problema. Devolva a lista de problemas (vazia se nenhum) e o roteiro completo corrigido."""
 
-AJUSTAR = """Reescreva o roteiro (JSON) para ficar com cerca de {alvo} palavras somando todas as falas (agora tem {atual}).
-{como} Mantenha o protocolo de retenção, a ordem dos capítulos, a promessa e o seu pagamento, a apresentação do Samurai,
-os fatos (só os da ficha) e todos os outros campos. Devolva o roteiro completo."""
-
 FAIXA = (1250, 1550)  # 8 a 9,5 minutos a ~160 palavras por minuto
+ALVO = 1400
+
+# Ajuste de tamanho por CONTAGEM DE FALAS, não de palavras: modelo conta palavras mal (Gemini viu 950 onde havia 1.300;
+# no teste de 14/10/2026 o Nemotron devolveu 1.023 -> 1.023 e o gpt-oss 1.023 -> 906 ao pedir "alongue para 1.400").
+# Pedir "exatamente N falas novas, cada uma depois da fala X" funciona, e quem insere e remove é o código.
+EXPANDIR = """O roteiro está curto: {atual} palavras, a meta é {alvo}. Escreva EXATAMENTE {n} falas NOVAS para inserir no
+roteiro, espalhadas pelos capítulos (não todas no mesmo lugar). Elas aprofundam o mecanismo do crime, o contexto do caso e
+o que a pessoa deve fazer, SÓ com fatos da FICHA. PROIBIDO acrescentar o que a ficha não traz: endereços, tipo de imóvel,
+e-mails, telefones, sites, valores, motivos ou justificativas dos criminosos, e afirmações sobre o que bancos, polícia ou
+Justiça podem ou não fazer (ex.: nunca diga que o Pix não pode ser revertido; o MED existe). Na dúvida, não escreva o
+detalhe. Cada fala nova tem de 25 a 45 palavras, segue o estilo
+de apresentador e as regras de tom, e encaixa na conversa: a Sara pergunta ou reage, o Samurai explica. Para cada uma,
+diga depois de qual fala existente ela entra ("depois" = índice da fala, 0 = primeira). Não altere as falas existentes."""
+
+CORTAR = """O roteiro está longo: {atual} palavras, a meta é {alvo}. Indique EXATAMENTE {n} falas para REMOVER (índices, 0 =
+primeira): as mais repetitivas ou que menos acrescentam. NÃO remova: abertura, apresentação do Samurai, falas que abrem
+capítulo, a promessa e o seu pagamento, o checklist do que fazer e o fechamento. A conversa precisa continuar fazendo
+sentido sem elas."""
+
+ESQUEMA_EXPANDIR = {
+    "type": "object",
+    "properties": {"insercoes": {"type": "array", "items": {"type": "object", "properties": {
+        "depois": {"type": "integer"}, "quem": {"type": "string", "enum": list(LOCUTORES)}, "texto": {"type": "string"}},
+        "required": ["depois", "quem", "texto"]}}},
+    "required": ["insercoes"],
+}
+ESQUEMA_CORTAR = {"type": "object", "properties": {"remover": {"type": "array", "items": {"type": "integer"}}},
+                  "required": ["remover"]}
 
 
 def palavras(roteiro):
     return sum(len(f["texto"].split()) for f in roteiro["falas"])
 
 
+def protegidas(falas):
+    """Falas que o corte não pode tirar: começo (cold open e apresentação), capítulos, site e as 3 últimas."""
+    fixas = set(range(min(8, len(falas)))) | set(range(max(0, len(falas) - 3), len(falas)))
+    return fixas | {i for i, f in enumerate(falas) if f.get("capitulo") or "cyberjus" in f["texto"].lower()}
+
+
 def ajustar_tamanho(roteiro, ficha):
-    """LLM conta palavras mal (a revisão chegou a 'ver' 950 onde havia 1.300): quem confere é o código."""
-    for _ in range(2):
-        atual = palavras(roteiro)
+    """Leva o roteiro para dentro da FAIXA inserindo ou removendo falas inteiras; o código confere a cada passo."""
+    roteiro = json.loads(json.dumps(roteiro))  # cópia: o original fica em roteiro-bruto.json
+    for _ in range(3):
+        falas, atual = roteiro["falas"], palavras(roteiro)
         if FAIXA[0] <= atual <= FAIXA[1]:
-            return roteiro
-        como = ("Encurte: tire repetições e falas que não acrescentam, sem cortar o mecanismo do crime nem o checklist."
-                if atual > FAIXA[1] else "Alongue: aprofunde o mecanismo do crime e o que fazer, só com fatos da ficha.")
-        log(f"roteiro com {atual} palavras, fora de {FAIXA}: ajustando")
-        roteiro = llm(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}", tarefa="ajuste",
-                         instrucao=AJUSTAR.format(alvo=1400, atual=atual, como=como) + "\n\n" + PROTOCOLO,
-                         esquema=ESQUEMA, temperatura=0.4)
+            break
+        media = max(15, atual / max(1, len(falas)))
+        n = max(1, round(abs(ALVO - atual) / (35 if atual < ALVO else media)))
+        numeradas = "\n".join(f"[{i}] {f['quem']}: {f['texto']}" for i, f in enumerate(falas))
+        log(f"roteiro com {atual} palavras, fora de {FAIXA}: {'acrescentando' if atual < ALVO else 'removendo'} {n} falas")
+        if atual < ALVO:
+            r = llm(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (falas numeradas):\n{numeradas}", tarefa="ajuste",
+                    instrucao=EXPANDIR.format(atual=atual, alvo=ALVO, n=n) + "\n\n" + PROTOCOLO, esquema=ESQUEMA_EXPANDIR,
+                    temperatura=0.5)
+            # de trás para a frente, para os índices das inserções seguintes continuarem valendo
+            for ins in sorted(r["insercoes"], key=lambda x: x["depois"], reverse=True):
+                pos = min(max(int(ins["depois"]), 0), len(falas) - 1) + 1
+                if ins["quem"] in LOCUTORES and len(ins["texto"].split()) >= 8:
+                    falas.insert(pos, {"quem": ins["quem"], "texto": ins["texto"].strip()})
+        else:
+            r = llm(f"ROTEIRO (falas numeradas):\n{numeradas}", tarefa="ajuste", esquema=ESQUEMA_CORTAR, temperatura=0.2,
+                    instrucao=CORTAR.format(atual=atual, alvo=ALVO, n=n))
+            fora = {i for i in r["remover"] if 0 <= i < len(falas)} - protegidas(falas)
+            roteiro["falas"] = [f for i, f in enumerate(falas) if i not in fora]
+    log(f"tamanho final: {palavras(roteiro)} palavras")
     return roteiro
 
 ESQUEMA_REVISAO = {
