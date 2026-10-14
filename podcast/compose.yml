@@ -1,0 +1,26 @@
+# Bot do pipeline de episódios, na VM de build (samurai@192.168.52.2), em /home/samurai/cyberjust-podcast.
+# Segredos ficam fora do repositório, em arquivos 600 nessa pasta (gravados pelos scripts n3x-*-token.sh do Dell).
+#   docker compose -f app/compose.yml --project-directory . up -d --build
+services:
+  bot:
+    build: app
+    image: cyberjust-podcast:latest
+    command: python -m pipeline.bot
+    restart: unless-stopped
+    env_file: [gemini.env, elevenlabs.env, telegram.env, vozes.env]
+    environment:
+      DADOS: /dados
+      REPO: /dados/repo
+      TZ: America/Sao_Paulo
+      GIT_AUTHOR_NAME: CyberJust pipeline
+      GIT_AUTHOR_EMAIL: contato@n3xus.dev
+      GIT_COMMITTER_NAME: CyberJust pipeline
+      GIT_COMMITTER_EMAIL: contato@n3xus.dev
+      GIT_SSH_COMMAND: ssh -i /dados/deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=/dados/known_hosts
+    volumes:
+      - .:/dados
+    mem_limit: 3g
+    cpus: 4
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
