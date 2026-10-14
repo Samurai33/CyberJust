@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { infoAudio, nomeTema, rotuloEpisodio, type Episodio } from './episodios';
 import { formatarTempo } from './tempo';
 
-export const VERSAO_ARTE = 1;
+export const VERSAO_ARTE = 2;
 
 export function dadosOg(ep: Episodio) {
   const audio = infoAudio(ep);

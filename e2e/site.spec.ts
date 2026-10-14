@@ -25,7 +25,7 @@ test('título, descrição, canonical e prévia de link em cada página', async 
     expect(ld['@graph'].length).toBeGreaterThan(0);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.{40,}/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://www.cyberjus.org${caminho}`);
-    const og = caminho.startsWith('/episodios/') && caminho !== '/episodios/' ? /^https:\/\/www\.cyberjus\.org\/og\/[a-z0-9-]+-[0-9a-f]{8}\.jpg$/ : /^https:\/\/www\.cyberjus\.org\/og-v1\.jpg$/;
+    const og = caminho.startsWith('/episodios/') && caminho !== '/episodios/' ? /^https:\/\/www\.cyberjus\.org\/og\/[a-z0-9-]+-[0-9a-f]{8}\.jpg$/ : /^https:\/\/www\.cyberjus\.org\/og-v2\.jpg$/;
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', og);
   }
 });
