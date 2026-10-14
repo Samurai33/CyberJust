@@ -9,20 +9,32 @@ status: ATIVO
 ameaca: CRÍTICO
 tema: fraudes
 tags: ["Operação Disque 151", "Bets ilegais", "Fraudes financeiras", "DEIC", "Procon-SP"]
-audio: /audio/operacao-disque-151-fraudes-bets-33578771.m4a
-transcricao: /transcricoes/operacao-disque-151-fraudes-bets-33578771.vtt
-capitulos: []
+audio: /audio/operacao-disque-151-fraudes-bets-a7842d28.m4a
+transcricao: /transcricoes/operacao-disque-151-fraudes-bets-a7842d28.vtt
+capitulos:
+  - inicio: "0:00"
+    titulo: "Abertura: a armadilha do saque"
+  - inicio: "0:29"
+    titulo: "O rastro do Procon e a Operação Disque 151"
+  - inicio: "1:45"
+    titulo: "As duas armadilhas e o mecanismo da fraude"
+  - inicio: "3:03"
+    titulo: "O golpe do falso emprego e o Pix obrigatório"
+  - inicio: "3:57"
+    titulo: "Contas-bolsão e a lavagem de dinheiro"
+  - inicio: "5:02"
+    titulo: "O cerco da polícia e a situação atual"
 pontos:
   - "Operação Disque 151 cumpriu mandados em São Paulo e Mogi das Cruzes"
   - "Plataformas como FortuneSlots e ThinkTV aplicavam golpes em apostadores"
   - "Esquema utilizava contas-bolsão e pulverização para lavar dinheiro"
-  - "Justiça autorizou bloqueio patrimonial de até cento e cinquenta e quatro milhões de reais"
-  - "Mais de dez milhões de apostadores foram estimados como potenciais vítimas"
+  - "Justiça autorizou bloqueio patrimonial de até R$ 154 milhões"
+  - "Mais de 10 milhões de apostadores foram estimados como potenciais vítimas"
 alertas:
   - "Desconfie de plataformas de apostas e cassinos on-line, pois operam na clandestinidade"
   - "Nunca pague taxas ou depósitos extras para liberar saques de valores"
   - "Fique atento ao golpe do falso emprego que exige Pix para realizar tarefas"
-  - "Registre denúncia formal no Procon pelo telefone cento e cinquenta e um"
+  - "Registre denúncia formal no Procon pelo telefone 151"
   - "Comunique seu banco imediatamente e faça um Boletim de Ocorrência"
 recursos:
   - titulo: "Polícia prende 3 em operação contra bets ilegais e plataformas suspeitas de golpes em SP"
