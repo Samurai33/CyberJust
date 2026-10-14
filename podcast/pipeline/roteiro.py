@@ -10,7 +10,7 @@ import sys
 import trafilatura
 from googlenewsdecoder import gnewsdecoder
 
-from .comum import LOCUTORES, TEMAS, gemini, gravar, ler, log, pasta_episodio, slug
+from .comum import LOCUTORES, TEMAS, USADOS, gravar, ler, llm, log, pasta_episodio, slug
 
 # ---------- fontes ----------
 
@@ -174,7 +174,7 @@ def ajustar_tamanho(roteiro, ficha):
         como = ("Encurte: tire repetições e falas que não acrescentam, sem cortar o mecanismo do crime nem o checklist."
                 if atual > FAIXA[1] else "Alongue: aprofunde o mecanismo do crime e o que fazer, só com fatos da ficha.")
         log(f"roteiro com {atual} palavras, fora de {FAIXA}: ajustando")
-        roteiro = gemini(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}",
+        roteiro = llm(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}", tarefa="ajuste",
                          instrucao=AJUSTAR.format(alvo=1400, atual=atual, como=como) + "\n\n" + PROTOCOLO,
                          esquema=ESQUEMA, temperatura=0.4)
     return roteiro
@@ -210,7 +210,7 @@ pagamento, e o tamanho total (no máximo 5% a mais ou a menos de palavras). Devo
 def naturalizar(pasta):
     """Passa um roteiro já aprovado para o estilo de apresentador (uso: python -m pipeline.roteiro --naturalizar <pasta>)."""
     roteiro, ficha = ler(pasta / "roteiro.json"), (pasta / "ficha.md").read_text(encoding="utf-8")
-    novo = gemini(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}",
+    novo = llm(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}",
                   instrucao=NATURALIZAR + "\n\n" + PROTOCOLO, esquema=ESQUEMA, temperatura=0.7)
     if len(novo["falas"]) != len(roteiro["falas"]) or any(a["quem"] != b["quem"] for a, b in zip(novo["falas"], roteiro["falas"])):
         raise SystemExit("A reescrita mudou a estrutura das falas; roteiro mantido.")
@@ -239,15 +239,15 @@ def main():
     gravar(pasta / "fontes.json", materias)
 
     textos = "\n\n".join(f"=== FONTE {i}: {m['fonte']} ({m['data']}) {m['url']}\n{m['texto']}" for i, m in enumerate(materias, 1))
-    ficha = gemini(f"Pauta: {pauta['titulo']}\n\n{textos}", instrucao=APURAR, temperatura=0.1)
+    ficha = llm(f"Pauta: {pauta['titulo']}\n\n{textos}", instrucao=APURAR, temperatura=0.1, tarefa="ficha")
     (pasta / "ficha.md").write_text(ficha, encoding="utf-8")
 
-    roteiro = gemini(f"TEMA DO SITE: {pauta['tema']}\nPAUTA: {pauta['titulo']}\n\nFICHA DE FATOS:\n{ficha}",
+    roteiro = llm(f"TEMA DO SITE: {pauta['tema']}\nPAUTA: {pauta['titulo']}\n\nFICHA DE FATOS:\n{ficha}", tarefa="roteiro",
                      instrucao=PROTOCOLO, esquema=ESQUEMA, temperatura=0.8)
     gravar(pasta / "roteiro-bruto.json", roteiro)
     roteiro = ajustar_tamanho(roteiro, ficha)
 
-    revisao = gemini(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}", instrucao=REVISAR + "\n\n" + PROTOCOLO,
+    revisao = llm(f"FICHA DE FATOS:\n{ficha}\n\nROTEIRO (JSON):\n{json.dumps(roteiro, ensure_ascii=False)}", tarefa="revisão", instrucao=REVISAR + "\n\n" + PROTOCOLO,
                      esquema=ESQUEMA_REVISAO, temperatura=0.1)
     final = revisao["roteiro"]
     if not FAIXA[0] * 0.9 <= palavras(final) <= FAIXA[1] * 1.1:
@@ -260,6 +260,10 @@ def main():
         gravar(pasta / "roteiro-sem-capitulos.json", final)
         raise SystemExit("O roteiro saiu com menos de 3 capítulos marcados; gere de novo antes do áudio.")
     gravar(pasta / "roteiro.json", final)
+    # Para o resumo no Telegram: qual modelo fez cada etapa e o que ficou fora da meta.
+    total = palavras(final)
+    avisos = [f"tamanho fora da meta: {total} palavras (meta {FAIXA[0]} a {FAIXA[1]})"] if not FAIXA[0] <= total <= FAIXA[1] else []
+    gravar(pasta / "modelos.json", {"etapas": [{"tarefa": t, "provedor": p, "modelo": m} for t, p, m in USADOS], "avisos": avisos})
 
     caracteres = sum(len(f["texto"]) for f in final["falas"])
     total = palavras(final)
