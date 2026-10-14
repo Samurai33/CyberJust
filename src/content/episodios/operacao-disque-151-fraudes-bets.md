@@ -11,7 +11,7 @@ tema: fraudes
 tags: ["Operação Disque 151", "Bets ilegais", "Fraudes financeiras", "DEIC", "Procon-SP"]
 audio: /audio/operacao-disque-151-fraudes-bets-33578771.m4a
 transcricao: /transcricoes/operacao-disque-151-fraudes-bets-33578771.vtt
-capitulos:
+capitulos: []
 pontos:
   - "Operação Disque 151 cumpriu mandados em São Paulo e Mogi das Cruzes"
   - "Plataformas como FortuneSlots e ThinkTV aplicavam golpes em apostadores"
