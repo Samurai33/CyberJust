@@ -25,11 +25,20 @@ const trilha = [
     <ul class="wrap canais" role="list">
       {temas.map((t) => (
         <li>
-          <a class="surface canal" href={urlTema(t.t)}>
-            <h2>{t.nome} <Icon name="arrow" size={14} /></h2>
-            <p>{t.descricao}</p>
-            <p class="label"><b>{t.n}</b> {t.n === 1 ? 'episódio' : 'episódios'}</p>
-          </a>
+          {t.n > 0 ? (
+            <a class="surface canal" href={urlTema(t.t)}>
+              <h2>{t.nome} <Icon name="arrow" size={14} /></h2>
+              <p>{t.descricao}</p>
+              <p class="label"><b>{t.n}</b> {t.n === 1 ? 'episódio' : 'episódios'}</p>
+            </a>
+          ) : (
+            /* tema sem episódio não tem página ([tema].astro só gera os que têm): sem link, para não levar a um 404 */
+            <div class="surface canal">
+              <h2>{t.nome}</h2>
+              <p>{t.descricao}</p>
+              <p class="label">Em breve</p>
+            </div>
+          )}
         </li>
       ))}
     </ul>

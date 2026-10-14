@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { semRolagemLateral, vigiar } from './ajuda';
+import { EPISODIO, semRolagemLateral, vigiar } from './ajuda';
 
 // O Chromium do Playwright não decodifica AAC; os testes verificam o comportamento do player
 // (estado, persistência, controles), não o som. O som é conferido em navegador real.
@@ -23,7 +23,7 @@ test('ouvir abre o player e ele continua o mesmo ao navegar entre páginas', asy
   await page.evaluate(() => {
     (document.querySelector('cj-player audio') as HTMLAudioElement & { marca?: string }).marca = 'mesmo';
   });
-  await page.getByRole('link', { name: /Ver todos os \d+ episódios/ }).click();
+  await page.getByRole('link', { name: /Ver (todos os \d+ episódios|o episódio)/ }).click();
   await expect(page).toHaveURL(/\/episodios\/$/);
   await expect(player).toBeVisible();
   const marca = await page.evaluate(() => (document.querySelector('cj-player audio') as HTMLAudioElement & { marca?: string }).marca);
@@ -36,14 +36,16 @@ test('ouvir abre o player e ele continua o mesmo ao navegar entre páginas', asy
 });
 
 test('player publica título na Media Session (tela de bloqueio e teclas de mídia)', async ({ page }) => {
-  await page.goto('/episodios/caso-lulu/');
-  await page.locator('.ep-head [data-tocar]').click();
+  await page.goto(EPISODIO);
+  const botao = page.locator('.ep-head [data-tocar]');
+  const esperado = await botao.getAttribute('data-titulo');
+  await botao.click();
   const titulo = await page.evaluate(() => navigator.mediaSession?.metadata?.title ?? null);
-  expect(titulo).toBe('Caso Lulu: uso indevido de dados pessoais');
+  expect(titulo).toBe(esperado);
 });
 
 test('controles do player têm nome acessível e alvo de toque >= 44px', async ({ page }) => {
-  await page.goto('/episodios/namoral/');
+  await page.goto(EPISODIO);
   await page.locator('.ep-head [data-tocar]').click();
   const botoes = page.locator('cj-player button:visible');
   const n = await botoes.count();
@@ -55,12 +57,12 @@ test('controles do player têm nome acessível e alvo de toque >= 44px', async (
     expect(caixa!.width, await b.getAttribute('aria-label') ?? '').toBeGreaterThanOrEqual(44);
     expect(caixa!.height).toBeGreaterThanOrEqual(44);
   }
-  await expect(page.locator('cj-player input[aria-label="Posição no episódio"]')).toHaveAttribute('aria-valuetext', /de 7 minutos e 24 segundos$/);
+  await expect(page.locator('cj-player input[aria-label="Posição no episódio"]')).toHaveAttribute('aria-valuetext', /de \d+ minutos? e \d+ segundos?$/);
 });
 
 test('velocidade avança e fica lembrada', async ({ page, isMobile }) => {
   test.skip(isMobile, 'no celular o botão de velocidade fica escondido para caber o essencial');
-  await page.goto('/episodios/namoral/');
+  await page.goto(EPISODIO);
   await page.locator('.ep-head [data-tocar]').click();
   const vel = page.locator('cj-player [data-acao="velocidade"]');
   await vel.click();
@@ -69,6 +71,9 @@ test('velocidade avança e fica lembrada', async ({ page, isMobile }) => {
 });
 
 test('episódio sem áudio mostra botão desabilitado', async ({ page }) => {
-  await page.goto('/episodios/lava-jato-digital/');
+  await page.goto('/episodios/');
+  const semAudio = page.locator('.ep-row:not([data-audio]) h2 a, .ep-row:not([data-audio]) h3 a').first();
+  test.skip((await semAudio.count()) === 0, 'nenhum episódio publicado sem áudio no momento');
+  await page.goto((await semAudio.getAttribute('href'))!);
   await expect(page.locator('.ep-head').getByRole('button', { name: 'Áudio em breve' })).toBeDisabled();
 });

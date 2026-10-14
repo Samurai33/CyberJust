@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DASH_PATH } from '../src/data/dash';
+import { EPISODIO } from './ajuda';
 
 // Comportamento do nginx de produção. Não depende do navegador: roda só no projeto chromium.
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'chromium', 'teste de servidor, um navegador basta'));
@@ -21,19 +22,21 @@ test('headers de segurança no HTML', async ({ request }) => {
 });
 
 test('áudio: streaming por Range, tipo correto e cache imutável', async ({ request }) => {
-  const r = await request.get('/audio/bfraudes-digitais.m4a', { headers: { Range: 'bytes=0-15' } });
+  // o nome do arquivo leva um hash e muda quando o áudio é refeito: lê da página do episódio
+  const audio = (await (await request.get(EPISODIO)).text()).match(/data-src="(\/audio\/[^"]+\.m4a)"/)![1]!;
+  const r = await request.get(audio, { headers: { Range: 'bytes=0-15' } });
   expect(r.status()).toBe(206);
   expect(r.headers()['content-type']).toBe('audio/mp4');
-  expect(r.headers()['content-range']).toBe('bytes 0-15/12535498');
+  expect(r.headers()['content-range']).toMatch(/^bytes 0-15\/\d+$/);
   expect(r.headers()['cache-control']).toContain('immutable');
   // apps e players web de podcast tocam o áudio de outra origem
   expect(r.headers()['cross-origin-resource-policy']).toBe('cross-origin');
   // MP4 com moov no início (faststart): o segundo átomo é "moov", senão o streaming quebra.
-  const inicio = await request.get('/audio/bfraudes-digitais.m4a', { headers: { Range: 'bytes=0-63' } });
+  const inicio = await request.get(audio, { headers: { Range: 'bytes=0-63' } });
   const b = await inicio.body();
   const tamanhoFtyp = b.readUInt32BE(0);
   expect(b.subarray(4, 8).toString()).toBe('ftyp');
-  const r2 = await request.get('/audio/bfraudes-digitais.m4a', { headers: { Range: `bytes=${tamanhoFtyp}-${tamanhoFtyp + 7}` } });
+  const r2 = await request.get(audio, { headers: { Range: `bytes=${tamanhoFtyp}-${tamanhoFtyp + 7}` } });
   expect((await r2.body()).subarray(4, 8).toString()).toBe('moov');
 });
 
@@ -46,14 +49,15 @@ test('imagem de prévia com CORP cross-origin (WhatsApp Web)', async ({ request 
 
 const ANTIGOS: [string, string][] = [
   ['/episodes', '/episodios/'],
-  ['/episodes/7', '/episodios/fraudes-digitais/'],
-  ['/episodes/6', '/episodios/caso-lulu/'],
-  ['/episodes/5', '/episodios/namoral/'],
-  ['/episodes/13', '/episodios/fraude-e-estelionato/'],
-  ['/episodes/ESPECIAL', '/episodios/protecao-de-criancas/'],
-  ['/episodes/3', '/episodios/lava-jato-digital/'],
-  ['/episodios/7', '/episodios/fraudes-digitais/'],
-  ['/episodio/6', '/episodios/caso-lulu/'],
+  ['/episodes/7', '/episodios/'],
+  ['/episodes/6', '/episodios/'],
+  ['/episodes/ESPECIAL', '/episodios/'],
+  ['/episodios/7', '/episodios/'],
+  ['/episodio/6', '/episodios/'],
+  // episódios removidos em 14/10/2026: o link compartilhado cai na lista, não num 404
+  ['/episodios/caso-lulu/', '/episodios/'],
+  ['/episodios/namoral', '/episodios/'],
+  ['/episodios/fraudes-digitais/', '/episodios/'],
   ['/episodios', '/episodios/'],
 ];
 for (const [de, para] of ANTIGOS) {
@@ -70,11 +74,24 @@ test('domínio sem www vai para o www com 301', async ({ request }) => {
   expect(r.headers()['location']).toBe('https://www.cyberjus.org/episodios/?x=1');
 });
 
+test('nenhum link interno das páginas principais leva a erro', async ({ request }) => {
+  const vistos = new Set<string>();
+  for (const pagina of ['/', '/episodios/', '/temas/', EPISODIO, '/fui-vitima/', '/sobre/']) {
+    const html = await (await request.get(pagina)).text();
+    for (const [, href] of html.matchAll(/href="(\/(?!\/)[^"#?]*)"/g)) vistos.add(href!);
+  }
+  for (const href of vistos) {
+    const r = await request.get(href, { maxRedirects: 0 });
+    expect(r.status(), href).toBeLessThan(400);
+  }
+});
+
 test('sitemap, robots e security.txt', async ({ request }) => {
   expect((await request.get('/robots.txt')).status()).toBe(200);
   const sm = await request.get('/sitemap-0.xml');
   const xml = await sm.text();
-  expect(xml).toContain('https://www.cyberjus.org/episodios/caso-lulu/');
+  expect(xml).toContain(`https://www.cyberjus.org${EPISODIO}`);
+  expect(xml).not.toContain('/episodios/caso-lulu/');
   expect(xml).not.toContain('/404');
   expect((await request.get('/.well-known/security.txt')).headers()['content-type']).toContain('text/plain');
 });
@@ -112,7 +129,7 @@ test('feed do podcast válido para Apple e Podcasting 2.0', async ({ request }) 
 });
 
 test('prévia de link própria por episódio (JPEG 1200x630, CORP cross-origin)', async ({ request }) => {
-  const html = await (await request.get('/episodios/namoral/')).text();
+  const html = await (await request.get(EPISODIO)).text();
   const og = html.match(/<meta property="og:image" content="https:\/\/www\.cyberjus\.org(\/og\/[^"]+)"/)?.[1];
   expect(og).toBeTruthy();
   const r = await request.get(og!);
