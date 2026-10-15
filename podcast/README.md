@@ -56,5 +56,8 @@ são gravadas pelos scripts `n3x-*-token.sh` do Dell, que nunca mostram o valor.
   título de capítulo lido em voz alta, Sara dizendo o próprio nome) e o que sobrar vai como aviso no Telegram.
 - Sigla lida como palavra vai como palavra ("Deic", "Procon"); só a lida letra por letra é soletrada ("cê-pê-éfe").
 - Botões do Telegram levam um código de 10 caracteres da pasta: `callback_data` tem limite de 64 bytes.
+- Abas no chat do bot (Threaded Mode, ligado só pelo mini app do @BotFather › Bot Settings › Threads Settings):
+  🗞️ Pautas, 🎙️ Produção (roteiro, áudio, QA), 🚀 Publicação e ⚙️ Sistema. Ids em `topicos.json` na pasta da VM;
+  aba apagada no app é recriada. Sem Threaded Mode, tudo vai para o chat normal. `/status` responde na aba onde foi digitado.
 - A publicação reseta o clone para a `origin/main` antes de montar (um ensaio deixava o número do episódio pulado) e
   refaz uma vez se o push for recusado.

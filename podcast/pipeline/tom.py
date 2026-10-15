@@ -75,10 +75,11 @@ def analisar(audio, vtt):
     fora = []
     for quem in {m[2] for m in medidas}:
         do_locutor = [m for m in medidas if m[2] == quem]
-        mf0 = statistics.median([m[4]["f0"] for m in do_locutor if m[4]["f0"]])
+        f0s = [m[4]["f0"] for m in do_locutor if m[4]["f0"]]
+        mf0 = statistics.median(f0s) if f0s else None  # sem F0 medido (áudio ruim): compara só o brilho
         mbr = statistics.median([m[4]["brilho"] for m in do_locutor])
         for i, a, _, texto, m in do_locutor:
-            df0 = (m["f0"] / mf0 - 1) if m["f0"] else 0.0
+            df0 = (m["f0"] / mf0 - 1) if m["f0"] and mf0 else 0.0
             dbr = m["brilho"] / mbr - 1
             if df0 > LIMITE_F0 or dbr > LIMITE_BRILHO:
                 fora.append({"fala": i, "inicio": round(a, 2), "locutor": quem, "f0": round(df0, 2),

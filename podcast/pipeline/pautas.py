@@ -149,16 +149,23 @@ def raspar(dias):
                 log("rss falhou:", c, e)
                 continue
             for item in re.findall(r"<item>(.*?)</item>", xml, re.S):
-                bruto = html.unescape(re.search(r"<title>(.*?)</title>", item, re.S)[1]).strip()
+                titulo_xml, data_xml = re.search(r"<title>(.*?)</title>", item, re.S), re.search(r"<pubDate>(.*?)</pubDate>", item)
+                link = re.search(r"<link>(.*?)</link>", item)
+                if not (titulo_xml and data_xml and link):  # item incompleto não derruba a raspagem inteira
+                    continue
+                bruto = html.unescape(titulo_xml[1]).strip()
                 if FORA.search(bruto):
                     continue
                 titulo = re.sub(r"\s+-\s+[^-]+$", "", bruto)  # tira o " - Veículo" do fim
                 fonte = re.search(r'<source url="([^"]+)">(.*?)</source>', item)
-                data = parsedate_to_datetime(re.search(r"<pubDate>(.*?)</pubDate>", item)[1]).date().isoformat()
+                try:
+                    data = parsedate_to_datetime(data_xml[1]).date().isoformat()
+                except (TypeError, ValueError):
+                    continue
                 caso = casos.setdefault(chave(titulo), {"titulo": titulo, "tema": tema, "data": data, "fontes": []})
                 nome = html.unescape(fonte[2]) if fonte else "?"
                 if nome not in [f["nome"] for f in caso["fontes"]]:
-                    caso["fontes"].append({"nome": nome, "site": fonte[1] if fonte else "", "link": re.search(r"<link>(.*?)</link>", item)[1]})
+                    caso["fontes"].append({"nome": nome, "site": fonte[1] if fonte else "", "link": link[1]})
                 caso["data"] = max(caso["data"], data)
             time.sleep(1)  # educado com o Google
     return sorted(casos.values(), key=lambda c: (c["data"], len(c["fontes"])), reverse=True)
@@ -188,7 +195,9 @@ def main():
             log(f"pauta repetida, fora: {p['titulo']!r} ~ {feito['titulo']!r} ({', '.join(sorted(comum))})")
         elif p["noticias"]:
             pautas.append(p)
-    saida = DADOS / "pautas" / f"{dt.date.today().isoformat()}.json"
+    # Hora no nome: os botões "Produzir N" apontam para este arquivo; com só a data, um segundo /pautas no mesmo dia
+    # sobrescrevia a lista e um botão antigo produzia outra pauta.
+    saida = DADOS / "pautas" / f"{dt.datetime.now().strftime('%Y-%m-%d-%H%M')}.json"
     gravar(saida, pautas)
     gravar(saida.with_suffix(".meta.json"), {"repetidas": repetidas, "noticias": len(casos)})
     log(f"{len(pautas)} pautas em {saida}")
