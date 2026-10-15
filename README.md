@@ -67,7 +67,7 @@ BASE_URL=http://127.0.0.1:18080 pnpm test:e2e                # e2e contra a imag
 
 ## Publicar e gerenciar episódios
 
-**Pelo painel** (recomendado): três cliques no logo do site abrem `/dash-…/` (Sveltia CMS).
+**Pelo painel** (recomendado): `/dash-…/` (Sveltia CMS). Três cliques no logo do site abrem o Estúdio (`/dash-…/estudio/`, o painel do pipeline de episódios), que tem um botão CMS para cá.
 1. O Cloudflare Access pede o login do dono.
 2. No painel, entre com um **token fine-grained do GitHub** com só *Contents: Read and write* no
    repositório `Samurai33/CyberJust`, com validade curta. O OAuth do GitHub foi descartado de propósito,

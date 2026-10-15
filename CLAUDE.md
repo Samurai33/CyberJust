@@ -27,7 +27,7 @@ CI: `ci.yml` (check obrigatório `build`: vitest + astro check + build) e `e2e.y
 
 ## Painel, feed e SEO
 
-- Painel: Sveltia CMS em `src/pages/dash-*/` (caminho em `src/data/dash.ts`, aberto com 3 cliques no logo por `src/scripts/logo-atalho.ts`). O Cloudflare Access protege esse caminho. O painel é noindex (meta e `X-Robots-Tag`), fica fora do sitemap e tem CSP própria em `docker/nginx.conf`. Login só com token fine-grained. Mudou um campo do esquema? Atualize `src/cms/config.ts` também.
+- Painel: Sveltia CMS em `src/pages/dash-*/` (caminho em `src/data/dash.ts`). Os 3 cliques no logo (`src/scripts/logo-atalho.ts`) abrem o Estúdio, `ESTUDIO_PATH` = `/dash-…/estudio/`, o painel do pipeline servido pelo contêiner do bot (`podcast/`), não por este nginx. O Cloudflare Access protege esse caminho. O painel é noindex (meta e `X-Robots-Tag`), fica fora do sitemap e tem CSP própria em `docker/nginx.conf`. Login só com token fine-grained. Mudou um campo do esquema? Atualize `src/cms/config.ts` também.
 - `src/lib/mp4.ts` lê duração e tamanho do áudio no build e **falha** se o MP4 não tiver faststart.
 - Feed: `src/pages/podcast.xml.ts` (RSS + itunes + podcast namespace; `podcast:guid` é um UUIDv5 da URL do feed e não pode mudar). A capa de 3000 px vem de `design/capa.html`.
 - Prévia por episódio: `src/pages/og/[arquivo].ts` (satori + resvg + sharp, fontes `@fontsource/*` em WOFF, porque o satori não lê WOFF2). O nome leva um hash do conteúdo da arte.
