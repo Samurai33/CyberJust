@@ -362,6 +362,11 @@ def tratar(u):
     origem = (cb or m or {}).get("from", {}).get("id")
     if origem != CHAT:  # só o dono comanda o pipeline
         return
+    # Registra cada comando e clique: sem isso não dá para saber pelo log se um /status chegou (14/10/2026).
+    if cb:
+        log("botão:", cb.get("data", ""))
+    elif m and m.get("text", "").startswith("/"):
+        log("comando:", m["text"].split()[0])
     if cb:
         try:  # só tira o "carregando" do botão; clique antigo dá 400 "query is too old" e a ação vale mesmo assim
             tg("answerCallbackQuery", callback_query_id=cb["id"])

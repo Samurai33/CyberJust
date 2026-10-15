@@ -195,7 +195,8 @@ def refazer_fala(pasta, n, gerar):
 def main():
     if sys.argv[1] == "--saldo":  # consulta grátis, usada pelo /status do bot
         livre, limite = saldo()
-        return log(f"créditos ElevenLabs: {livre} livres de {limite}")
+        pct = f"{100 * livre / limite:.1f}".replace(".", ",") if limite else "?"
+        return log(f"créditos ElevenLabs: {livre} livres de {limite} ({pct}% livres)")
     pasta = Path(sys.argv[1])
     gerar = "--gerar" in sys.argv
     if "--refazer-fala" in sys.argv:  # --refazer-fala N: troca só uma fala que saiu fora do tom
