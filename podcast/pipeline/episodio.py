@@ -58,8 +58,9 @@ def recursos(fontes, maximo=4):
     return escolhidos
 
 
-def validar(r, capitulos):
-    """As mesmas regras do esquema em src/content.config.ts, para o build do site não quebrar depois do push."""
+def problemas_pagina(r):
+    """Campos da página fora do esquema de src/content.config.ts. O roteiro.py mostra isto no Telegram ANTES do áudio:
+    descobrir só na publicação, depois de gastar os créditos, obrigava a editar o roteiro.json à mão."""
     erros = []
     if not 10 <= len(r["titulo"]) <= 90:
         erros.append(f"titulo com {len(r['titulo'])} caracteres (10 a 90)")
@@ -69,6 +70,12 @@ def validar(r, capitulos):
         erros.append("periodo com mais de 40 caracteres")
     if r["tema"] not in TEMAS:
         erros.append(f"tema inválido: {r['tema']}")
+    return erros
+
+
+def validar(r, capitulos):
+    """As mesmas regras do esquema em src/content.config.ts, para o build do site não quebrar depois do push."""
+    erros = problemas_pagina(r)
     if not capitulos:
         erros.append("roteiro sem capítulos (o modelo não marcou o campo capitulo em nenhuma fala)")
     for c in capitulos:
