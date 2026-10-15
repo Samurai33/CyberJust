@@ -21,6 +21,17 @@ test('headers de segurança no HTML', async ({ request }) => {
   expect(['nginx', 'cloudflare']).toContain(h['server']);
 });
 
+test('/api/contador sem o Worker: "indisponível" em JSON, sem cache e com os headers de segurança', async ({ request }) => {
+  for (const method of ['GET', 'POST'] as const) {
+    const r = await request.fetch('/api/contador', { method });
+    expect(r.status()).toBe(200);
+    expect(r.headers()['content-type']).toContain('application/json');
+    expect(r.headers()['cache-control']).toBe('no-store');
+    expect(r.headers()['x-content-type-options']).toBe('nosniff');
+    expect(await r.json()).toEqual({ indisponivel: true });
+  }
+});
+
 test('áudio: streaming por Range, tipo correto e cache imutável', async ({ request }) => {
   // o nome do arquivo leva um hash e muda quando o áudio é refeito: lê da página do episódio
   const audio = (await (await request.get(EPISODIO)).text()).match(/data-src="(\/audio\/[^"]+\.m4a)"/)![1]!;
