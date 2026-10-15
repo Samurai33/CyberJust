@@ -12,8 +12,12 @@ RUN pip install --no-cache-dir \
   selectolax==0.4.13 \
   faster-whisper==1.2.1 \
   ctranslate2==4.8.3 \
-  numpy==2.5.4
+  numpy==2.5.4 \
+  pyjwt==2.15.1 \
+  cryptography==50.0.2
 COPY pipeline /app/pipeline
+# Estúdio (painel web): estáticos servidos pelo pipeline/painel.py, sem build.
+COPY painel /app/painel
 ENV PYTHONPATH=/app HF_HOME=/dados/cache/hf HF_HUB_DISABLE_PROGRESS_BARS=1 PYTHONUNBUFFERED=1
 # O OpenSSH (git push) exige um usuário de verdade para o UID: "No user exists for uid 1000" sem isso.
 RUN useradd --uid 1000 --create-home pipeline
