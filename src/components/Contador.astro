@@ -1,0 +1,26 @@
+---
+// Prova social honesta: quantas pessoas já vieram ao site se informar (contador anônimo em worker/contador,
+// preenchido por src/scripts/contador.ts). O HTML já sai com a frase sem número, que é o que fica quando o
+// contador não responde, está abaixo do mínimo ou o JavaScript está desligado.
+import BotaoOuvir from './BotaoOuvir.astro';
+import Icon from './Icon.astro';
+import type { Episodio } from '../lib/episodios';
+interface Props { ep: Episodio }
+const { ep } = Astro.props;
+---
+<section class="contador-faixa" aria-labelledby="contador-t">
+  <div class="wrap">
+    <div class="contador surface" data-contador>
+      <p class="label"><span class="dot" aria-hidden="true"></span><span data-contador-desde>Sem cookies, sem rastreio</span></p>
+      <h2 class="contador-frase" id="contador-t">
+        <span data-contador-frase>Informe-se aqui para não cair em golpe digital.</span>
+        <span class="visually-hidden" aria-live="polite" data-contador-anuncio></span>
+      </h2>
+      <p class="contador-vez">Agora é a sua vez.</p>
+      <div class="actions">
+        <BotaoOuvir ep={ep} />
+        <a class="link-arrow" href="/privacidade/#contador">Como contamos <Icon name="arrow" /></a>
+      </div>
+    </div>
+  </div>
+</section>
