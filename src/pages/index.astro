@@ -4,6 +4,7 @@ import SectionHead from '../components/SectionHead.astro';
 import LinhaEpisodio from '../components/LinhaEpisodio.astro';
 import BotaoOuvir from '../components/BotaoOuvir.astro';
 import Selo from '../components/Selo.astro';
+import Contador from '../components/Contador.astro';
 import Icon from '../components/Icon.astro';
 import { infoAudio, listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/episodios';
 import { formatarTempo } from '../lib/tempo';
@@ -55,6 +56,8 @@ const serie = {
       </article>
     </div>
   </section>
+
+  <Contador ep={destaque} />
 
   <section class="section" id="sobre" aria-labelledby="sobre-t">
     <div class="wrap grid-2">
