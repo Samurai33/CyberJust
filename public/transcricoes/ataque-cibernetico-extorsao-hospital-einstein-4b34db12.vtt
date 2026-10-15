@@ -1,0 +1,148 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:11.420
+<v Samurai>Imagina a cena: a tela do computador de segurança acende no meio da madrugada. Não tem nenhum sistema travado, as consultas continuam marcadas, as cirurgias estão acontecendo nas salas ao lado.
+
+00:00:11.720 --> 00:00:14.980
+<v Sara>Mas tinha alguma coisa errada acontecendo por trás dos panos, né?
+
+00:00:15.300 --> 00:00:30.000
+<v Samurai>Tinha. Um ralo silencioso puxando nomes, cê-pê-éfes, exames de laboratório e prontuários médicos confidenciais. E logo em seguida, a mensagem dos criminosos: paguem uma quantia em dinheiro ou a gente joga tudo na internet.
+
+00:00:30.340 --> 00:00:32.620
+<v Sara>Pediram resgate direto para o hospital?!
+
+00:00:33.040 --> 00:01:00.160
+<v Samurai>Pois é. Hoje você vai entender como um dos hospitais mais renomados do país, o Albert Einstein, enfrentou uma invasão direta nos seus servidores, e como a Polícia Federal rastreou um suspeito até uma residência em Joinville, Santa Catarina. E tem um detalhe que a gente vai revelar até o fim: o motivo de os criminosos não terem conseguido paralisar nem um minuto do atendimento aos pacientes. Eu sou o Samurai, e este é o CyberJustiça.
+
+00:01:00.480 --> 00:01:12.120
+<v Sara>Samurai, quando a gente ouve que prontuários médicos foram parar na mão de criminosos, bate um medo imediato. Quem é paciente e tá ouvindo a gente agora precisa fazer o quê logo de cara?
+
+00:01:12.420 --> 00:01:30.680
+<v Samurai>Essa é a regra de ouro do episódio, Sara. Se alguém te ligar ou mandar mensagem no WhatsApp citando o nome do seu médico, um exame que você fez ou um remédio que toma, e pedir dinheiro, confirmação de código por esse-eme-esse ou Pix para liberar procedimento... para tudo. Não faça nada.
+
+00:01:31.100 --> 00:01:34.320
+<v Sara>Mesmo se a pessoa souber detalhes íntimos da minha saúde?
+
+00:01:34.960 --> 00:01:52.080
+<v Samurai>Principalmente se ela souber. Criminoso que rouba base hospitalar usa a verdade médica para te dar um choque psicológico e fazer você pagar sem pensar. A postura correta é desligar na hora, abrir o aplicativo oficial da instituição ou ligar no número público do hospital para checar.
+
+00:01:52.360 --> 00:01:58.160
+<v Sara>Faz todo o sentido. Mas me explica: como essa história toda começou dentro do Einstein?
+
+00:01:58.720 --> 00:02:13.600
+<v Samurai>Tudo começou no dia quatro de agosto. A equipe de segurança da informação do Hospital Israelita Albert Einstein, lá em São Paulo, detectou uma anomalia nos sistemas. Alguém tinha invadido o ambiente computacional e tava copiando bases de dados.
+
+00:02:13.920 --> 00:02:16.260
+<v Sara>E que tipo de arquivo eles conseguiram puxar?
+
+00:02:16.560 --> 00:02:35.160
+<v Samurai>Olha, não foi pouca coisa. A lista de dados cadastrais inclui nome, cê-pê-éfe, data de nascimento, e-mail e telefone de pacientes. E na parte de saúde, que é muito mais delicada, entraram prescrições médicas, resultados de exames, diagnósticos e notas clínicas.
+
+00:02:35.160 --> 00:02:42.060
+<v Sara>Nossa... prontuário com anotação de médico e receita? Isso é absurdamente sensível!
+
+00:02:42.380 --> 00:02:57.160
+<v Samurai>É o tipo de informação que a legislação trata com o mais alto nível de sigilo. Só que, diferente do que algumas notícias espalharam no começo, não foi aquele golpe tradicional em que um programa malicioso bloqueia a tela e impede o médico de ver o sistema.
+
+00:02:58.380 --> 00:03:01.960
+<v Sara>Pera aí... então as telas não ficaram travadas pedindo senha de resgate?
+
+00:03:01.960 --> 00:03:19.100
+<v Samurai>Não. Segundo a nota oficial da Polícia Federal e do próprio hospital, os prontuários eletrônicos, os portais digitais e as consultas continuaram operando em tempo real. O crime apurado pelas autoridades foi invasão de dispositivo informático e extorsão.
+
+00:03:19.320 --> 00:03:22.560
+<v Sara>Eles roubaram uma cópia e usaram essa cópia como chantagem.
+
+00:03:23.580 --> 00:03:39.860
+<v Samurai>Foi pura extorsão. Os criminosos entraram em contato com a diretoria da instituição e cobraram dinheiro para não vazar as informações na internet. Mas o hospital tomou uma decisão firme: não negociou, não pagou nenhum centavo e foi direto acionar a polícia.
+
+00:03:40.060 --> 00:03:42.860
+<v Sara>E quem eles chamaram quando viram o tamanho do problema?
+
+00:03:43.220 --> 00:04:00.840
+<v Samurai>Acionaram a Diretoria de Repressão a Crimes Cibernéticos da Polícia Federal, a famosa Dê-Ciber, e comunicaram imediatamente a Autoridade Nacional de Proteção de Dados, a Á-Éne-Pê-Dê. Além disso, contrataram peritos forenses independentes para auditar cada pedaço da rede.
+
+00:04:01.040 --> 00:04:04.120
+<v Sara>E a Polícia Federal conseguiu achar o fio da meada rápido?
+
+00:04:04.480 --> 00:04:19.420
+<v Samurai>Demorou cerca de dois meses de investigação técnica. A equipe da Dê-Ciber seguiu os rastros digitais da invasão, os endereços de conexão e a infraestrutura usada para receber os dados extraídos. E a trilha não apontou para a capital paulista.
+
+00:04:19.640 --> 00:04:20.540
+<v Sara>Foi parar onde?
+
+00:04:20.980 --> 00:04:34.960
+<v Samurai>No município de Joinville, no norte de Santa Catarina. A Vara Regional das Garantias de São Paulo expediu dois mandados judiciais: um de busca e apreensão e um mandado de prisão temporária. O nome da missão? Operação Insidioso.
+
+00:04:36.280 --> 00:04:41.640
+<v Sara>Na quarta-feira, dia sete de outubro, os agentes bateram na porta lá em Joinville, certo?
+
+00:04:42.080 --> 00:04:54.600
+<v Samurai>Sete de outubro. Um homem foi preso temporariamente. E a investigação aponta que ele não era só um espectador: ele atuou como o facilitador que viabilizou a extração das bases de dados para o grupo criminoso.
+
+00:04:54.780 --> 00:05:02.080
+<v Sara>Um facilitador em Santa Catarina ajudando a desviar dados de um hospital em São Paulo... Que loucura!
+
+00:05:02.520 --> 00:05:16.560
+<v Samurai>O crime cibernético não tem fronteira física, Sara. O sujeito aperta teclas de outro estado achando que tá invisível. Só que agora os computadores, celulares e mídias dele estão sob perícia minuciosa nos laboratórios da Polícia Federal.
+
+00:05:16.560 --> 00:05:19.820
+<v Sara>Mas e o resto do bando? Esse cara agia sozinho?
+
+00:05:20.220 --> 00:05:34.280
+<v Samurai>Essa é a questão central. O caso não acabou. A investigação segue em andamento. A polícia tá analisando os arquivos apreendidos em Joinville justamente para mapear e alcançar os outros comparsas que participaram da chantagem.
+
+00:05:34.400 --> 00:05:39.040
+<v Sara>E os dados dos pacientes? Chegaram a ser publicados em algum fórum clandestino?
+
+00:05:39.040 --> 00:05:54.100
+<v Samurai>Até o momento, segundo o hospital e a polícia, não existe nenhuma evidência de vazamento público ou de uso indevido das informações roubadas. O Einstein mantém um monitoramento contínuo da infraestrutura para detectar qualquer vazamento na rede.
+
+00:05:54.460 --> 00:05:59.220
+<v Sara>E as pessoas que tiveram os dados copiados, como ficam sabendo se estão nessa lista?
+
+00:05:59.580 --> 00:06:14.600
+<v Samurai>O hospital explicou que essas bases extraídas eram fragmentadas e descentralizadas, muitas em documentos avulsos. Então uma equipe técnica tá fazendo a triagem paciente por paciente e avisando individualmente por e-mail cada titular identificado.
+
+00:06:15.360 --> 00:06:23.000
+<v Sara>E aqui a gente cumpre a nossa promessa do início, né? Por que os criminosos não conseguiram travar os computadores dos médicos no hospital?
+
+00:06:23.460 --> 00:06:46.600
+<v Samurai>Porque a arquitetura de segurança do hospital isolou os servidores de atendimento e as bases operacionais assim que o primeiro alerta disparou em quatro de agosto. O plano dos invasores era a chantagem com a cópia dos dados sensíveis, a famosa exfiltração, e não o bloqueio total dos equipamentos. Como o hospital não cedeu à extorsão e chamou a polícia, o blefe caiu por terra.
+
+00:06:46.820 --> 00:06:54.220
+<v Sara>Mesmo assim, com os dados que eles conseguiram copiar, os golpistas podem tentar armar armadilhas contra os pacientes por fora.
+
+00:06:54.440 --> 00:07:05.760
+<v Samurai>Com certeza, Sara. E é aqui que você aí que tá nos ouvindo precisa redobrar a atenção. Esse tipo de vazamento abastece o chamado golpe do falso hospital ou falso médico.
+
+00:07:06.000 --> 00:07:12.100
+<v Sara>Aquele em que mandam mensagem falando que precisa pagar uma taxa urgente para liberar cirurgia ou exame caro?
+
+00:07:12.300 --> 00:07:25.560
+<v Samurai>Esse mesmo. Eles chegam falando o seu nome completo, citando o nome do laboratório onde você colheu sangue ou a data do seu último atendimento. Parece muito real, mas é pura engenharia social baseada em dados vazados.
+
+00:07:25.560 --> 00:07:31.420
+<v Sara>E se alguém receber uma mensagem dessas ou cair num golpe parecido, qual é o roteiro prático?
+
+00:07:31.780 --> 00:07:50.920
+<v Samurai>Vamos lá. Primeiro: se você chegou a fazer transferência via Pix para esses criminosos, acione imediatamente o seu banco e solicite a abertura do Mecanismo Especial de Devolução, o eme-ê-dê, em até oitenta dias. Quanto mais rápido registrar, maior a chance de bloqueio do valor na conta de destino.
+
+00:07:50.920 --> 00:07:53.140
+<v Sara>E as provas do contato fraudulento?
+
+00:07:53.920 --> 00:08:06.120
+<v Samurai>Guarde tudo. Tire print das conversas, registre o número de telefone, o endereço de e-mail e os comprovantes de envio. Em seguida, faça o boletim de ocorrência na delegacia eletrônica da Polícia Civil do seu estado.
+
+00:08:06.420 --> 00:08:10.600
+<v Sara>E como o paciente do Einstein pode tirar dúvidas diretamente com o hospital?
+
+00:08:10.600 --> 00:08:28.320
+<v Samurai>O Einstein disponibiliza o Portal de Relacionamento com o Titular e o e-mail institucional atendimento ponto privacidade arroba einstein ponto bê-érre. Nunca use links que receber por mensagem de terceiros; digite sempre o endereço no navegador ou acesse o aplicativo oficial.
+
+00:08:28.620 --> 00:08:33.960
+<v Sara>E o passo a passo completo pra quem passou por um golpe cibernético tá organizado lá no nosso site, né Samurai?
+
+00:08:34.960 --> 00:09:05.300
+<v Samurai>Tá tudo explicadinho em cyberjus ponto org, na página Fui vítima. Dá uma olhada lá para saber como agir diante de qualquer fraude eletrônica. Lembra daquela tela acesa na madrugada que a gente falou no início? A tecnologia do hospital segurou o impacto operacional, mas a segurança final dos seus dados no dia a dia depende da sua desconfiança ativa. Manda este episódio agora mesmo no grupo da família ou para aquele amigo que faz exames com frequência. A informação certa é o melhor antivírus que existe.
