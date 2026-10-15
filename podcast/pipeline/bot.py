@@ -30,7 +30,9 @@ DIAS = {int(d) for d in os.environ.get("PAUTAS_DIAS", "0,2,4").split(",")}
 HORA = int(os.environ.get("PAUTAS_HORA", "9"))
 REPO = Path(os.environ.get("REPO", "/dados/repo"))
 BRT = dt.timezone(dt.timedelta(hours=-3))
-CREDITO_POR_CARACTERE = 0.12  # medido no Eleven v4 (Text to Dialogue): 224 créditos para 1.852 caracteres
+# Eleven v4 no Text to Dialogue. Em 13/10/2026 saiu 0,12 (224 créditos para 1.852 caracteres), mas em 15/10/2026 o
+# episódio 1 regerado custou 2.619 créditos para 5.952 caracteres (0,44 por caractere, de 805 a 825 por bloco).
+CREDITO_POR_CARACTERE = 0.45
 # Fala avulsa (--refazer-fala) sai bem mais cara: no episódio 2 (14/10/2026), 8 falas custaram de 0,41 a 0,44 crédito
 # por caractere (63 créditos para 144 caracteres), e não os ~20 por fala que o botão prometia.
 CREDITO_FALA_AVULSA = 0.45
