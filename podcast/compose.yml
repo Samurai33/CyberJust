@@ -7,11 +7,15 @@ services:
     image: cyberjust-podcast:latest
     command: python -m pipeline.bot
     restart: unless-stopped
-    env_file: [gemini.env, nvidia.env, cloudflare.env, elevenlabs.env, telegram.env, vozes.env]
+    # painel.env: ACCESS_AUD (AUD do app "CyberJustiça Painel (/dash)") e PAINEL_EMAILS (quem pode entrar).
+    env_file: [gemini.env, nvidia.env, cloudflare.env, elevenlabs.env, telegram.env, vozes.env, painel.env]
     environment:
       DADOS: /dados
       REPO: /dados/repo
       TZ: America/Sao_Paulo
+      PAINEL_PORTA: "8090"
+      ACCESS_EQUIPE: n3xusdev
+      PAINEL_BASE: /dash-ac0584219dc1/estudio
       MODELO_TTS: eleven_v4         # aprovado no episódio 14 (v3 custava ~3,7x mais)
       ESTABILIDADE_TTS: "0.35"       # mais expressivo que o padrão 0,5; o tom é vigiado pelo tom.py
       GIT_AUTHOR_NAME: CyberJust pipeline
@@ -21,8 +25,26 @@ services:
       GIT_SSH_COMMAND: ssh -i /dados/deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=/dados/known_hosts
     volumes:
       - .:/dados
+    # Estúdio: o Traefik do Coolify (rede "coolify") manda só este caminho de www.cyberjus.org para cá; o resto do site
+    # segue no app cyberjust-web. O Cloudflare Access cobre /dash-ac0584219dc1/* e o painel confere o JWT de novo.
+    # Nenhuma porta publicada no host.
+    networks: [default, coolify]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.cyberjust-estudio.entryPoints: https
+      traefik.http.routers.cyberjust-estudio.rule: Host(`www.cyberjus.org`) && PathPrefix(`/dash-ac0584219dc1/estudio`)
+      traefik.http.routers.cyberjust-estudio.priority: "1000"
+      traefik.http.routers.cyberjust-estudio.tls: "true"
+      traefik.http.routers.cyberjust-estudio.tls.certresolver: letsencrypt
+      traefik.http.routers.cyberjust-estudio.service: cyberjust-estudio
+      traefik.http.services.cyberjust-estudio.loadbalancer.server.port: "8090"
     mem_limit: 3g
     cpus: 4
     logging:
       driver: json-file
       options: { max-size: 10m, max-file: "3" }
+
+networks:
+  coolify:
+    external: true

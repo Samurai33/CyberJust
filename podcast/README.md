@@ -16,6 +16,7 @@ pautas ──► roteiro ──► [aprovação] ──► áudio ──► lege
 | Legenda | `pipeline.legenda` | Whisper local alinha o áudio ao texto do roteiro: WebVTT com `<v Locutor>`, tempos dos capítulos e controle de qualidade | grátis |
 | Episódio | `pipeline.episodio` | Markdown no esquema de `src/content.config.ts`, áudio e VTT com hash no nome, recursos com link conferido (HTTP 200), commit e push | grátis |
 | Bot | `pipeline.bot` | Telegram: sugere pautas (seg, qua e sex às 9h) e conduz as aprovações; só obedece ao chat do dono | grátis |
+| Estúdio | `pipeline.painel` | Painel web com tudo o que o bot faz e mais (ver abaixo); roda dentro do processo do bot | grátis |
 
 ## Regras editoriais (no prompt e na revisão)
 
@@ -61,3 +62,33 @@ são gravadas pelos scripts `n3x-*-token.sh` do Dell, que nunca mostram o valor.
   aba apagada no app é recriada. Sem Threaded Mode, tudo vai para o chat normal. `/status` responde na aba onde foi digitado.
 - A publicação reseta o clone para a `origin/main` antes de montar (um ensaio deixava o número do episódio pulado) e
   refaz uma vez se o push for recusado.
+
+## Estúdio (painel web)
+
+`https://www.cyberjus.org/dash-ac0584219dc1/estudio/` (o CMS continua em `/dash-ac0584219dc1/`). Faz tudo o que o
+Telegram faz e mais:
+
+- **Visão geral**: créditos da ElevenLabs, o que espera você, etapa rodando, próximas pautas, atividade recente.
+- **Pautas**: todos os lotes (não só as 3 primeiras), notícias e fontes, produzir qualquer pauta, buscar agora.
+- **Episódios**: quadro por estado (roteiro para aprovar, áudio para publicar, publicado, outra versão no ar,
+  descartado, cópias). No episódio: player com capítulos e a fala que está tocando destacada, QA, roteiro com
+  tempos, editar uma fala (grátis antes do áudio; depois, "salvar e refazer" só aquela fala), refazer qualquer fala,
+  aprovar o áudio com o custo estimado, publicar, descartar e restaurar; página, ficha de fatos, fontes, revisão.
+- **Site e feed**: episódios no ar, contador de pessoas e um verificador do feed (tags obrigatórias da Apple,
+  `itunes:owner`, `podcast:guid`/`locked`, Range 206 e `length` de cada áudio, transcrição e capítulos).
+- **Atividade**: cada mensagem do bot ao Telegram e cada ação feita no painel (`painel/eventos.jsonl`).
+
+Segurança no padrão do SOC N3XUS: caminho escondido coberto pelo app do Cloudflare Access "CyberJustiça Painel
+(/dash)" (política "Somente o dono") e, no painel, o JWT do Access conferido de novo (assinatura RS256 pelas chaves do
+time, `iss`, `aud`, `exp`) mais a lista de e-mails, porque a rede da VM chega ao Traefik sem passar pela Cloudflare.
+POST só com o cabeçalho `X-Estudio` e a origem do site (CSRF). CSP sem `'unsafe-inline'`, sem nada de terceiros.
+Ações que gastam créditos ou publicam pedem dois toques (o primeiro mostra o custo). O painel usa a mesma trava das
+etapas do bot: painel e Telegram nunca rodam duas etapas ao mesmo tempo.
+
+Roteamento: labels do Traefik no `compose.yml` (rede `coolify`, prioridade acima do app do site), sem porta no host e
+sem mexer no túnel. Configuração em `painel.env` na pasta da VM (600): `ACCESS_AUD` (AUD do app do Access) e
+`PAINEL_EMAILS`. Sem eles o painel não sobe (e o bot segue normal).
+
+Regras de estado: "publicado" = `publicado.json` (gravado pelo bot ao publicar) ou o sha256 do áudio igual ao do
+arquivo no site; mesmo título com áudio diferente = "outra versão no ar", que o painel não publica (sairia um
+episódio duplicado; troque o áudio por PR). Fala editada depois do áudio sem refazer bloqueia remontar e publicar.

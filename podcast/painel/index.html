@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#04060b">
+<title>Estúdio · CyberJustiça</title>
+<link rel="preload" href="estatico/fontes/JetBrainsMono-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="estatico/estudio.css">
+<script type="module" src="estatico/estudio.js"></script>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true">
+  <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-pauta" viewBox="0 0 24 24"><path d="M4 4h13a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-site" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+  <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-refazer" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></symbol>
+  <symbol id="i-envio" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/><path d="M4 21h16"/></symbol>
+  <symbol id="i-lixo" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-editar" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-voltar" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-credito" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></symbol>
+  <symbol id="i-cms" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M14 4v5h5M8 13h8M8 17h6"/></symbol>
+</svg>
+
+<div class="app" id="app" data-st="off">
+  <p class="faixa" role="status">
+    <span class="faixa-rest">Acesso restrito <span>· Cloudflare Access ·</span> <span id="usuario">-</span></span>
+    <span class="faixa-modo">Estúdio CyberJustiça</span>
+    <span class="faixa-geral" id="geral" data-st="off"><i class="st"></i><span id="geral-txt">conectando</span></span>
+  </p>
+
+  <header class="topo">
+    <a class="marca" href="#/" aria-label="Visão geral">
+      <span class="marca-tag">CJ</span><span class="marca-nome">Estúdio</span>
+    </a>
+    <nav class="vista" aria-label="Seções">
+      <a href="#/" data-aba="geral"><svg><use href="#i-painel"/></svg><span class="rot">Visão geral</span></a>
+      <a href="#/pautas" data-aba="pautas"><svg><use href="#i-pauta"/></svg><span class="rot">Pautas</span></a>
+      <a href="#/episodios" data-aba="episodios"><svg><use href="#i-mic"/></svg><span class="rot">Episódios</span></a>
+      <a href="#/site" data-aba="site"><svg><use href="#i-site"/></svg><span class="rot">Site e feed</span></a>
+      <a href="#/atividade" data-aba="atividade"><svg><use href="#i-log"/></svg><span class="rot">Atividade</span></a>
+    </nav>
+    <div class="topo-dir">
+      <p class="pill" id="pill-etapa" data-st="off"><i class="st"></i><span class="pill-k">Pipeline</span> <span id="etapa-txt">-</span></p>
+      <p class="pill" id="pill-cred" data-st="off"><svg><use href="#i-credito"/></svg><span class="pill-k">Créditos</span> <span id="cred-txt">-</span></p>
+      <a class="botao fantasma" href="../" title="Conteúdo do site (Sveltia CMS)"><svg><use href="#i-cms"/></svg><span class="rot">CMS</span></a>
+      <time class="relogio" id="relogio">--:--</time>
+    </div>
+  </header>
+
+  <main class="conteudo" id="conteudo">
+    <section data-sec="geral" aria-labelledby="t-geral">
+      <h1 class="sec-titulo" id="t-geral">Visão geral</h1>
+      <dl class="kpis" id="kpis"></dl>
+      <div class="grade-2">
+        <section class="painel">
+          <h2 class="painel-titulo">Precisa de você</h2>
+          <ul class="fila" id="fila"></ul>
+        </section>
+        <section class="painel">
+          <h2 class="painel-titulo">Atividade recente</h2>
+          <ol class="log" id="log-curto"></ol>
+        </section>
+      </div>
+      <section class="painel">
+        <h2 class="painel-titulo">Pipeline</h2>
+        <ol class="fluxo" id="fluxo"></ol>
+        <p class="nota" id="config"></p>
+      </section>
+    </section>
+
+    <section data-sec="pautas" aria-labelledby="t-pautas" hidden>
+      <div class="sec-cab">
+        <h1 class="sec-titulo" id="t-pautas">Pautas</h1>
+        <button class="botao" type="button" id="buscar-pautas"><svg><use href="#i-busca"/></svg>Buscar pautas agora</button>
+      </div>
+      <p class="nota">Casos reais dos últimos 14 dias, ranqueados pelo modelo. Produzir escreve o roteiro (grátis); o áudio só sai depois da sua aprovação.</p>
+      <div class="lotes" id="lotes"></div>
+    </section>
+
+    <section data-sec="episodios" aria-labelledby="t-eps" hidden>
+      <div class="sec-cab">
+        <h1 class="sec-titulo" id="t-eps">Episódios</h1>
+        <div class="filtros" role="radiogroup" aria-label="Filtro" id="filtros"></div>
+      </div>
+      <div class="quadro" id="quadro"></div>
+    </section>
+
+    <section data-sec="episodio" aria-labelledby="t-ep" hidden>
+      <div class="sec-cab">
+        <a class="botao fantasma" href="#/episodios"><svg><use href="#i-voltar"/></svg>Episódios</a>
+        <p class="estado-tag" id="ep-estado"></p>
+      </div>
+      <h1 class="ep-titulo" id="t-ep"></h1>
+      <p class="nota" id="ep-meta"></p>
+      <div class="acoes" id="ep-acoes"></div>
+      <div class="player" id="ep-player" hidden>
+        <audio id="audio" controls preload="none"></audio>
+        <ol class="capitulos" id="ep-caps"></ol>
+        <dl class="qa" id="ep-qa"></dl>
+      </div>
+      <div class="sub-abas" role="tablist" id="ep-abas">
+        <button role="tab" type="button" data-sub="roteiro" aria-selected="true">Roteiro</button>
+        <button role="tab" type="button" data-sub="pagina" aria-selected="false">Página</button>
+        <button role="tab" type="button" data-sub="ficha" aria-selected="false">Ficha de fatos</button>
+        <button role="tab" type="button" data-sub="fontes" aria-selected="false">Fontes</button>
+        <button role="tab" type="button" data-sub="revisao" aria-selected="false">Revisão e modelos</button>
+      </div>
+      <div class="sub" data-sub="roteiro"><ol class="falas" id="ep-falas"></ol></div>
+      <div class="sub" data-sub="pagina" hidden><dl class="campos" id="ep-pagina"></dl></div>
+      <div class="sub" data-sub="ficha" hidden><pre class="ficha" id="ep-ficha"></pre></div>
+      <div class="sub" data-sub="fontes" hidden><ul class="fontes" id="ep-fontes"></ul></div>
+      <div class="sub" data-sub="revisao" hidden><div id="ep-revisao"></div></div>
+    </section>
+
+    <section data-sec="site" aria-labelledby="t-site" hidden>
+      <div class="sec-cab">
+        <h1 class="sec-titulo" id="t-site">Site e feed</h1>
+        <button class="botao" type="button" id="verificar-feed"><svg><use href="#i-ok"/></svg>Verificar feed agora</button>
+      </div>
+      <p class="nota">O feed é o que Apple Podcasts, Spotify, YouTube e Podcast Index leem. A verificação confere as tags obrigatórias da Apple, o Range (206) e o tamanho de cada áudio, a transcrição e os capítulos.</p>
+      <dl class="kpis" id="site-kpis"></dl>
+      <div class="grade-2">
+        <section class="painel"><h2 class="painel-titulo">Canal</h2><ul class="checks" id="feed-canal"><li class="vazio">Clique em "Verificar feed agora".</li></ul></section>
+        <section class="painel"><h2 class="painel-titulo">No ar</h2><ol class="no-ar" id="no-ar"></ol></section>
+      </div>
+      <section class="painel"><h2 class="painel-titulo">Episódios no feed</h2><div id="feed-itens"></div></section>
+    </section>
+
+    <section data-sec="atividade" aria-labelledby="t-ativ" hidden>
+      <h1 class="sec-titulo" id="t-ativ">Atividade</h1>
+      <p class="nota">Tudo o que o bot manda ao Telegram e cada ação feita por aqui.</p>
+      <ol class="log" id="log-todo"></ol>
+    </section>
+  </main>
+
+  <div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+</div>
+</body>
+</html>

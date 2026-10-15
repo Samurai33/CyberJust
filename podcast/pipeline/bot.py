@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 import threading
 import time
 import urllib.error
@@ -22,6 +23,7 @@ import urllib.request
 import uuid
 from pathlib import Path
 
+from . import painel
 from .comum import DADOS, TRABALHO, gravar, ler, log
 
 TOKEN = os.environ["TELEGRAM_TOKEN"]
@@ -37,7 +39,7 @@ CREDITO_POR_CARACTERE = 0.45
 # por caractere (63 créditos para 144 caracteres), e não os ~20 por fala que o botão prometia.
 CREDITO_FALA_AVULSA = 0.45
 ocupado = threading.Lock()  # uma etapa pesada por vez
-atual = {"nome": None, "desde": None}  # o que está rodando, para o /status e o aviso de ocupado
+atual = {"nome": None, "desde": None, "alvo": None}  # o que está rodando, para o /status, o painel e o aviso de ocupado
 # Cores aceitas pelo createForumTopic: azul 7322096, amarelo 16766590, violeta 13338331, verde 9367192, rosa 16749490,
 # vermelho 16478047.
 ABAS = {"pautas": ("🗞️ Pautas", 16766590), "producao": ("🎙️ Produção", 13338331),
@@ -120,6 +122,7 @@ def na_aba(aba, enviar):
 
 
 def msg(texto, botoes=None, aba="sistema"):
+    painel.registrar(aba, texto)  # a Atividade do painel espelha o Telegram
     extra = {"reply_markup": {"inline_keyboard": botoes}} if botoes else {}
     return na_aba(aba, lambda t: tg("sendMessage", chat_id=CHAT, text=texto, parse_mode="HTML",
                                     link_preview_options={"is_disabled": True}, **extra, **t))
@@ -272,6 +275,7 @@ def publicar(nome):
     if not ok:
         return msg(f"⚠️ Publicação falhou:\n<pre>{esc(erro[-800:])}</pre>", aba="publicacao")
     info = json.loads(saida)
+    gravar(TRABALHO / nome / "publicado.json", info | {"quando": dt.datetime.now(BRT).isoformat(timespec="seconds")})
     msg(f"📤 Episódio {info['numero']} enviado. Esperando o deploy do Coolify…", aba="publicacao")
     # User-Agent próprio: a Cloudflare do cyberjus.org responde 403 ao "Python-urllib" padrão. No episódio 3
     # (14/10/2026) a página estava no ar e o bot passou 15 minutos vendo 403 e avisou que o deploy tinha falhado.
@@ -306,14 +310,14 @@ ACOES = {"produzir": lambda a, n: produzir(a, int(n)),
 def executar(acao, args):
     if not ocupado.acquire(blocking=False):
         return msg(f"{andamento()} Tente de novo quando terminar.", aba=ABA_DA_ACAO.get(acao, "sistema"))
-    atual.update(nome=acao, desde=time.time())
+    atual.update(nome=acao, desde=time.time(), alvo=args[0] if args else None)
     try:
         ACOES[acao](*args)
     except Exception as e:  # o bot não pode morrer por causa de uma etapa
         log("erro:", repr(e))
         msg(f"⚠️ Erro inesperado em {acao}: <pre>{esc(repr(e))[:800]}</pre>", aba=ABA_DA_ACAO.get(acao, "sistema"))
     finally:
-        atual.update(nome=None, desde=None)
+        atual.update(nome=None, desde=None, alvo=None)
         ocupado.release()
 
 
@@ -337,6 +341,7 @@ def main():
     tg("setMyCommands", commands=[{"command": "pautas", "description": "Buscar pautas agora"},
                                   {"command": "status", "description": "Créditos e etapa em andamento"}])
     threading.Thread(target=agenda, daemon=True).start()
+    painel.iniciar(sys.modules[__name__])  # Estúdio web na mesma trava das etapas (ver painel.py)
     log("bot no ar")
     for aba in ABAS:  # cria as abas na ordem certa já na subida
         topico(aba)
