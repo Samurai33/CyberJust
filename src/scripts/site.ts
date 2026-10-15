@@ -1,5 +1,6 @@
 // Comportamentos pequenos do site, por delegação no documento (o documento persiste com o ClientRouter,
 // então cada ouvinte é registrado uma única vez).
+import './contador';
 
 // Menu do celular (<details>): fecha ao tocar fora, ao apertar Esc e ao navegar.
 const fecharMenus = (exceto?: Element | null) => {

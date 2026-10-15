@@ -32,6 +32,15 @@ const VIGENCIA = '13 de outubro de 2026';
         local) a posição de cada episódio, a velocidade e o volume. Esses dados nunca são enviados ao servidor;
         você pode apagá-los limpando os dados do site no navegador.
       </p>
+      <h2 id="contador">Contador de pessoas</h2>
+      <p>
+        A home mostra quantas pessoas já se informaram aqui. A conta é anônima e agregada: na primeira visita, o
+        navegador avisa o contador uma única vez e guarda no próprio aparelho só a marca "já contado", sem
+        nenhum identificador. O servidor guarda apenas o total e a data em que a contagem começou; não guarda
+        IP, cookie nem navegador (o IP é usado só no momento do pedido, para barrar quem tenta inflar o número,
+        e não é gravado). Navegadores com Global Privacy Control ou "Não rastrear" ligado não entram na conta.
+        O número só aparece a partir de 100 pessoas.
+      </p>
       <h2>O que chega ao servidor</h2>
       <p>
         Como em qualquer site, cada acesso gera dados técnicos: endereço IP, data e hora, página pedida e
@@ -43,7 +52,7 @@ const VIGENCIA = '13 de outubro de 2026';
       </p>
       <h2>O que não fazemos</h2>
       <p>
-        Não há cookies, analytics, pixels de redes sociais, formulários nem contas. Fontes, imagens e áudios
+        Não há cookies, analytics, pixels de redes sociais, formulários nem contas (o contador acima só soma um número). Fontes, imagens e áudios
         são servidos deste domínio, sem chamadas a terceiros. Links para órgãos oficiais (Planalto, Banco
         Central, SaferNet, Polícia Federal) abrem os sites deles, que têm políticas próprias.
       </p>
