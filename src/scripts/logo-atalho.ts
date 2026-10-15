@@ -1,4 +1,5 @@
-// Atalho do dono (mesmo padrão do SOC do n3xus.dev): 3 cliques/toques rápidos no logo abrem o painel.
+// Atalho do dono (mesmo padrão do SOC do n3xus.dev): 3 cliques/toques rápidos no logo abrem o Estúdio
+// (o CMS fica a um clique de lá, no botão CMS).
 // Conveniência, não segurança: o painel exige Cloudflare Access e login no GitHub.
 //
 // - Ouvinte na fase de CAPTURA: roda antes do <ClientRouter /> (que também escuta cliques no documento),
@@ -6,7 +7,7 @@
 // - Clique simples: espera ~350 ms para contar os cliques e navega pelo roteador (o áudio continua tocando).
 // - Teclado (Enter, detail 0) e cliques com modificador seguem o comportamento normal do link.
 import { navigate } from 'astro:transitions/client';
-import { DASH_PATH } from '../data/dash';
+import { ESTUDIO_PATH } from '../data/dash';
 
 let n = 0;
 let timer = 0;
@@ -20,7 +21,7 @@ document.addEventListener(
     n += 1;
     if (n >= 3) {
       n = 0;
-      location.assign(DASH_PATH); // navegação completa: o painel é outro app (sem o roteador do site)
+      location.assign(ESTUDIO_PATH); // navegação completa: o Estúdio é outro app (sem o roteador do site)
       return;
     }
     timer = window.setTimeout(() => {
