@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { DASH_PATH } from '../src/data/dash';
 import { EPISODIO, PAGINAS, semRolagemLateral, vigiar } from './ajuda';
 
 for (const caminho of PAGINAS) {
@@ -105,7 +106,7 @@ test('episódio tem trilha de navegação, autoria e anterior/próximo', async (
   expect(tipos).toEqual(expect.arrayContaining(['WebSite', 'PodcastEpisode', 'BreadcrumbList']));
 });
 
-test('três cliques no logo abrem o painel; um clique vai para a home', async ({ page, isMobile }) => {
+test('três cliques no logo abrem o Estúdio; um clique vai para a home; o CMS é noindex', async ({ page, isMobile }) => {
   await page.goto('/episodios/');
   const logo = page.locator('.site-header .logo');
   await logo.click();
@@ -118,7 +119,9 @@ test('três cliques no logo abrem o painel; um clique vai para a home', async ({
   } else {
     await logo.click({ clickCount: 3 });
   }
-  await expect(page).toHaveURL(/\/dash-[0-9a-f]+\/$/);
+  // O Estúdio vem do contêiner do bot pela VM (Traefik); na imagem do site a URL basta.
+  await expect(page).toHaveURL(/\/dash-[0-9a-f]+\/estudio\/$/);
+  await page.goto(DASH_PATH);
   // o Sveltia acrescenta o próprio meta noindex ao carregar: todos precisam dizer noindex
   await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute('content', /noindex/);
   expect(await page.locator('meta[name="robots"]').evaluateAll((ms) => ms.every((m) => (m as HTMLMetaElement).content.includes('noindex')))).toBe(true);
