@@ -1,0 +1,109 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:31.320
+<v Samurai>Imagina a cena: você vende um produto, recebe o Pix, e logo depois o comprador diz que errou o valor e pede que você devolva o dinheiro para outra chave. Você, de boa-fé, faz o novo Pix. Dias depois, descobre que o pagamento original foi bloqueado pelo MED e você perdeu o dinheiro duas vezes. O que você vai aprender hoje é como o golpe da devolução do Pix funciona e como o MED foi ampliado para te proteger. Eu sou o Samurai, e este é o CyberJustiça.
+
+00:00:31.680 --> 00:00:43.140
+<v Samurai>Acontece demais. O criminoso paga o produto, alega um erro qualquer e pede urgência na devolução para uma chave diferente. A pressa é a principal arma desse tipo de golpista.
+
+00:00:43.380 --> 00:00:53.400
+<v Sara>Pera aí! Como é que uma pessoa tenta ser honesta devolvendo o dinheiro e acaba levando esse prejuízo em dobro? Isso acontece muito com quem vende pela internet?
+
+00:00:54.320 --> 00:01:03.000
+<v Sara>Pera, Samurai. Isso significa que o vendedor perde o produto e ainda tem que devolver o valor? Mesmo tendo agido de boa-fé?
+
+00:01:03.520 --> 00:01:28.460
+<v Samurai>Exatamente, Sara. O criminoso recebe o Pix legítimo, pede devolução para outra chave, recebe o dinheiro de volta e então aciona o MED dizendo que o Pix original foi fraudulento. Se o banco aceitar e houver saldo na conta do vendedor, o valor pode ser bloqueado e devolvido ao golpista. Resultado: o vendedor perde o produto e o dinheiro da venda, além de ter feito uma devolução que não devia.
+
+00:01:28.960 --> 00:01:41.260
+<v Samurai>A regra é clara: use apenas a função devolver do próprio aplicativo bancário, vinculada à transação original. Nunca faça uma nova transferência para uma chave diferente indicada pelo pagador.
+
+00:01:41.560 --> 00:01:51.900
+<v Sara>Entendi. E qual é a orientação exata para o vendedor não cair nessa cilada quando o cliente alega que pagou errado e exige o dinheiro de volta com urgência?
+
+00:01:52.460 --> 00:01:59.720
+<v Sara>E o MED é o que pode bloquear esse dinheiro na conta do vendedor, certo? Mesmo que ele não tenha feito nada errado?
+
+00:02:00.000 --> 00:02:23.540
+<v Samurai>Certo. O MED é um procedimento do Banco Central para rastrear e bloquear valores desviados por fraude. Quando acionado, o banco pagador comunica o banco de destino, que bloqueia temporariamente os recursos na conta do recebedor. Se o banco recebedor falhar em cumprir o procedimento e permitir o saque, ele pode ser responsabilizado solidariamente pela devolução.
+
+00:02:23.960 --> 00:02:35.740
+<v Samurai>Exatamente. Se o banco de destino falhar em cumprir as regras do procedimento e permitir o saque do valor desviado, ele atrai responsabilidade solidária para realizar essa restituição à vítima.
+
+00:02:35.920 --> 00:02:47.060
+<v Sara>E se o banco recebedor falhar no procedimento e deixar o golpista sacar o dinheiro, o que acontece? A instituição financeira assume a responsabilidade de devolver o valor?
+
+00:02:48.060 --> 00:02:59.780
+<v Sara>E agora, com a mudança de setembro de dois mil e vinte e seis, o prazo para contestar uma devolução indevida passou de trinta para oitenta dias. Isso ajuda bastante a vítima, não é?
+
+00:03:00.040 --> 00:03:27.820
+<v Samurai>Ajuda muito. Desde primeiro de setembro de dois mil e vinte e seis, quem recebeu um Pix e teve o dinheiro devolvido indevidamente tem oitenta dias, contados da data da devolução, para solicitar o MED. Antes eram só trinta dias. O prazo para a vítima solicitar o MED também permanece em oitenta dias contados da transferência original. Isso dá mais tempo para reunir provas, registrar boletim de ocorrência e pedir o bloqueio.
+
+00:03:28.100 --> 00:03:39.380
+<v Samurai>Isso mesmo, Sara. O prazo para a vítima pedir o procedimento é de oitenta dias da transferência original, e a nova regra da Instrução Normativa da diretoria deu o mesmo prazo ao recebedor.
+
+00:03:39.560 --> 00:03:50.020
+<v Sara>Nossa, de trinta para oitenta dias é uma diferença gigante! E esse prazo vale tanto para a vítima do golpe quanto para o vendedor contestar a devolução?
+
+00:03:50.960 --> 00:03:59.560
+<v Sara>E tem mais novidades, né? Sobre o MED dois ponto zero e a possibilidade de anexar boletim de ocorrência diretamente no app do banco?
+
+00:03:59.560 --> 00:04:36.440
+<v Samurai>Tem sim. O MED dois ponto zero, em vigor desde dois de fevereiro de dois mil e vinte e seis, permite rastrear o dinheiro mesmo após passar por outras contas após o golpe. Isso amplia muito as chances de recuperação. Em três de setembro de dois mil e vinte e seis, o Banco Central publicou regras que permitem anexar boletim de ocorrência e capturas de tela ao contestar operações suspeitas no aplicativo do próprio banco. Também proibiram links, publicidade ou ofertas nos comprovantes de Pix. As instituições têm até primeiro de março de dois mil e vinte e sete para concluir as melhorias.
+
+00:04:37.180 --> 00:04:47.920
+<v Samurai>Foi a Súmula quatrocentos e setenta e nove do Superior Tribunal de Justiça. Os bancos respondem objetivamente por fraudes de terceiros que integram o risco da atividade bancária.
+
+00:04:48.120 --> 00:04:57.600
+<v Sara>E qual foi o fundamento jurídico que a Justiça usou nesse caso dos dezoito mil reais para obrigar o banco a restituir o valor cobrado do cliente?
+
+00:04:57.600 --> 00:05:09.340
+<v Samurai>Isso. O sistema antifraude do banco falhou ao não bloquear as movimentações atípicas e a instituição recusou o ressarcimento, mas a Justiça Cível condenou o banco a devolver tudo.
+
+00:05:09.640 --> 00:05:20.200
+<v Sara>E tem aquele caso na Justiça Cível em que criminosos fizeram seis transferências idênticas de madrugada, somando dezoito mil reais em menos de quinze minutos, né?
+
+00:05:20.200 --> 00:05:29.900
+<v Samurai>Desde dois de fevereiro de dois mil e vinte e seis, o sistema consegue rastrear os recursos mesmo depois de passarem por outras contas, aumentando as chances de bloqueio.
+
+00:05:30.060 --> 00:05:41.100
+<v Sara>E como exatamente funciona esse rastreamento do M-E-D dois ponto zero quando os criminosos espalham o dinheiro rapidamente por várias contas de laranjas em poucos minutos?
+
+00:05:42.000 --> 00:05:47.980
+<v Sara>E se o banco não resolver, a vítima pode recorrer ao Banco Central, certo? Como faz isso?
+
+00:05:48.360 --> 00:06:18.560
+<v Samurai>Exatamente. Se o banco não resolver, a vítima pode reclamar ao Banco Central pelo atendimento cento e quarenta e cinco, que é custo de ligação local, ou pelo site bcb.gov.br. É importante agir rápido: guardar comprovantes, conversas, capturas de tela, registrar boletim de ocorrência e contatar o banco imediatamente pelo app oficial ou telefone confirmado. O prazo para solicitar o MED é de oitenta dias da transferência original.
+
+00:06:19.160 --> 00:06:28.660
+<v Samurai>O prazo de análise é de até sete dias. Após a confirmação da fraude, o banco tem até noventa e seis horas para devolver os recursos disponíveis ao cliente.
+
+00:06:28.800 --> 00:06:37.880
+<v Sara>E se a fraude for confirmada pelo banco, quanto tempo o Banco Central determina para analisar e devolver os recursos que ficarem disponíveis na conta?
+
+00:06:38.320 --> 00:06:49.820
+<v Samurai>Não, Sara. O procedimento não se aplica a erro de digitação, desacordo comercial ou escolha errada da chave. Nesses casos, a devolução deve ser negociada direto com quem recebeu.
+
+00:06:50.020 --> 00:06:58.060
+<v Sara>E se a pessoa cometer um erro de digitação ao fazer o Pix ou se arrepender da compra, ela pode acionar esse mecanismo do Banco Central?
+
+00:06:59.120 --> 00:07:05.140
+<v Sara>Samurai, uma última coisa: o MED garante que eu vou receber meu dinheiro de volta se for vítima?
+
+00:07:05.520 --> 00:07:33.520
+<v Samurai>Não garante, Sara. O MED depende da análise, do rastreamento e da disponibilidade de saldo nas contas envolvidas. A restituição pode ser parcial ou não ocorrer se não houver saldo recuperável. Por isso, prevenção é fundamental: nunca faça devolução com novo Pix para outra chave, sempre use a função 'devolver' do app, confira se o dinheiro entrou antes de entregar o produto e desconfie de pressa excessiva.
+
+00:07:33.520 --> 00:07:45.360
+<v Samurai>Jamais pague taxas ou forneça senhas para quem promete recuperar o valor. Se houver acesso invadido ou celular roubado, solicite imediatamente ao banco o bloqueio das credenciais.
+
+00:07:45.700 --> 00:07:55.440
+<v Sara>E tem algum cuidado importante sobre golpistas prometendo recuperar o dinheiro do Pix mediante o pagamento de taxas ou comissão antecipada que a gente deva avisar?
+
+00:07:55.620 --> 00:08:05.480
+<v Sara>Então, resumindo: o golpe da devolução do Pix ainda é uma ameaça, mas agora temos mais tempo e melhores ferramentas para nos defender, certo?
+
+00:08:05.900 --> 00:08:27.540
+<v Samurai>Certo. As mudanças estão em vigor ou em fase de implementação, mas o golpe continua ativo. O MED permanece como nosso principal instrumento para tentar recuperar valores, mesmo sem garantia integral. Se quiser o passo a passo completo do que fazer se for vítima, tá no nosso site: cyberjus ponto org, na página Fui vítima.
+
+00:08:27.540 --> 00:08:34.340
+<v Sara>Manda esse episódio pra quem vende pela internet ou aceita Pix no trabalho. Pode evitar um prejuízo em dobro.
