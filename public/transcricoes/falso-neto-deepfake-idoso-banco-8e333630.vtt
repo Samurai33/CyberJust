@@ -1,0 +1,148 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:08.860
+<v Samurai>Imagina a cena... A tela do celular acende. É uma chamada de vídeo curta, ou uma mensagem com a gravação do rosto e a voz do seu neto.
+
+00:00:09.020 --> 00:00:11.440
+<v Sara>O neto mesmo? Falando com ele?
+
+00:00:11.820 --> 00:00:24.720
+<v Samurai>Ele fala de um imprevisto grave. Pede socorro financeiro, pede segredo e diz que precisa de ajuda na hora. O avô não pensou duas vezes: abriu o aplicativo do banco e mandou um Pix de sete mil reais.
+
+00:00:25.380 --> 00:00:27.180
+<v Sara>E não era o neto de verdade...
+
+00:00:27.180 --> 00:00:42.820
+<v Samurai>Não era. Era um vídeo sintetizado por inteligência artificial. Um deepfake. E quando o avô percebeu o buraco e procurou a instituição financeira... a resposta foi uma porta fechada na cara: o banco disse que não ia devolver nada.
+
+00:00:43.180 --> 00:00:51.040
+<v Sara>Nossa... Mas como assim? O cliente foi enganado por uma tecnologia sofisticada e a conta fica só com ele?
+
+00:00:51.400 --> 00:01:07.100
+<v Samurai>Até o fim deste episódio, você vai entender como essa tecnologia se espalhou tão rápido e, principalmente, qual foi a decisão do Superior Tribunal de Justiça que pode virar esse jogo a favor da vítima. Eu sou o Samurai, e este é o CyberJustiça.
+
+00:01:07.280 --> 00:01:15.840
+<v Sara>Samurai, antes da gente entrar nos detalhes jurídicos... como alguém consegue se proteger se o próprio olho vê o neto falando na tela?
+
+00:01:16.220 --> 00:01:41.980
+<v Samurai>A regra de ouro é simples, Sara, e precisa entrar na rotina da sua família hoje mesmo: estabeleça uma palavra-senha familiar. Uma combinação secreta que só pais, filhos e netos saibam. Se alguém ligar em apuros, peça a palavra-chave. E a segunda regra: nunca responda no canal em que a mensagem chegou. Desligue e telefone de volta para o número antigo, que já estava salvo nos seus contatos.
+
+00:01:42.260 --> 00:01:50.900
+<v Sara>Parece básico, mas na hora do desespero a pessoa congela, né? Ainda mais quando vê o próprio familiar chorando ou pedindo socorro.
+
+00:01:51.200 --> 00:02:00.560
+<v Samurai>É exatamente aí que o criminoso ganha a partida. Mas como isso aconteceu nesse caso de outubro de dois mil e vinte e seis? É o que a gente vai dissecar agora.
+
+00:02:00.880 --> 00:02:07.880
+<v Sara>Me explica como os golpistas montaram esse vídeo. Eles precisaram invadir o celular do jovem pra pegar material?
+
+00:02:07.880 --> 00:02:28.680
+<v Samurai>Nem sempre. Com as ferramentas atuais de inteligência artificial generativa, alguns segundos de áudio ou pequenos trechos de vídeo postados em redes sociais públicas já são suficientes. O sistema clona os traços do rosto, imita o timbre da voz e sincroniza os movimentos labiais com o texto que o bandido quiser digitar.
+
+00:02:28.980 --> 00:02:34.380
+<v Sara>É assustador pensar que qualquer vídeo inocente na internet vira munição...
+
+00:02:34.380 --> 00:02:58.100
+<v Samurai>Totalmente. Aí o criminoso junta a clonagem com engenharia social pesada. Ele cria uma narrativa de extrema urgência: um acidente, uma dívida repentina ou o clássico pretexto do celular que quebrou. A tecnologia tira a primeira barreira de defesa do idoso, que é estranhar a voz. Vendo o rosto conhecido, o cérebro dele desliga o alerta racional.
+
+00:02:58.400 --> 00:03:03.540
+<v Sara>E aí a vítima age pelo coração... Ela quer salvar o neto naquele minuto.
+
+00:03:03.540 --> 00:03:21.300
+<v Samurai>Exatamente. O idoso entrou no aplicativo bancário no próprio aparelho, digitou a senha pessoal e autorizou a transferência de sete mil reais via Pix para a chave indicada na conversa. Quando ele finalmente conseguiu falar com o neto de verdade... o dinheiro já tinha ido embora.
+
+00:03:21.860 --> 00:03:29.440
+<v Sara>Sete mil reais... É uma quantia pesada. E os números desse tipo de golpe no país estão explodindo, não tão?
+
+00:03:29.760 --> 00:03:44.860
+<v Samurai>Os dados são alarmantes, Sara. As fraudes com deepfake no Brasil saltaram cento e vinte e seis por cento em dois mil e vinte e cinco. E olha isso: o nosso país concentrou trinta e nove por cento de todos os casos desse golpe registrados na América Latina.
+
+00:03:45.060 --> 00:03:49.120
+<v Sara>Quase quarenta por cento de toda a América Latina só no Brasil?!
+
+00:03:49.540 --> 00:04:06.440
+<v Samurai>Quase quatro em cada dez fraudes do continente aconteceram aqui. E as pesquisas revelam que oito em cada dez brasileiros relatam já ter se deparado com deepfakes na internet. Só que tem um abismo entre achar que sabe o que é e conseguir identificar uma manipulação na prática.
+
+00:04:06.680 --> 00:04:11.780
+<v Sara>Como assim? A gente não nota se a imagem tiver meio borrada ou a voz estranha?
+
+00:04:12.120 --> 00:04:29.240
+<v Samurai>Os testes mostram o oposto. Em avaliações com vídeos manipulados, apenas vinte e nove por cento dos brasileiros conseguiram acertar o que era falso e o que era real. A pontuação média de detecção foi de apenas zero vírgula zero oito numa escala que vai até um. Praticamente nula.
+
+00:04:29.240 --> 00:04:37.660
+<v Sara>Nossa... Menos de trinta por cento? Isso significa que a maioria esmagadora não tem chance contra o vídeo falso.
+
+00:04:37.800 --> 00:04:57.980
+<v Samurai>E tem mais: trinta e cinco por cento das pessoas testadas classificaram um vídeo verdadeiro como se fosse montagem. Ou seja: o público tá desorientado. A tecnologia engana os olhos com muita facilidade. Existem ferramentas como o detector SynthID, além de selos de identificação em plataformas, mas nada disso é infalível.
+
+00:04:57.980 --> 00:05:09.340
+<v Sara>E se a pessoa comum não consegue distinguir nem em teste de laboratório, imagina um idoso recebendo mensagem sob pressão emocional. E aí a gente chega na resposta do banco...
+
+00:05:09.640 --> 00:05:18.520
+<v Samurai>Pois é. Quando a família tentou reaver os sete mil reais, veio a recusa imediata da instituição financeira. E o argumento deles é sempre o mesmo.
+
+00:05:18.880 --> 00:05:21.840
+<v Sara>O que o banco alegou formalmente pra lavar as mãos?
+
+00:05:21.840 --> 00:05:38.020
+<v Samurai>O banco sustentou que não houve invasão de sistema, nem falha de segurança nos servidores. A transação foi realizada do aparelho cadastrado do cliente, usando a senha secreta pessoal, digitada e autenticada por ele mesmo. Pro banco, foi uma operação voluntária.
+
+00:05:38.940 --> 00:05:44.540
+<v Sara>Voluntária entre aspas, né? Ele foi induzido ao erro por uma fraude de última geração!
+
+00:05:44.800 --> 00:06:09.170
+<v Samurai>É aí que entra o ponto central do caso. Juridicamente, não existe um tipo penal com o nome de deepfake. Os criminosos respondem por estelionato, extorsão ou outras fraudes correlatas. Na parte regulatória, existe o Decreto doze mil novecentos e setenta e seis, de dois mil e vinte e seis, mas ele foca em conteúdos íntimos de terceiros e remoção em até duas horas pelas plataformas.
+
+00:06:09.800 --> 00:06:14.040
+<v Sara>E no caso bancário? A vítima fica desamparada se o banco recusar?
+
+00:06:14.040 --> 00:06:36.100
+<v Samurai>Não necessariamente. E aqui a gente cumpre a promessa do começo: o Superior Tribunal de Justiça tem uma jurisprudência muito forte, fixada pela Terceira Turma. O S-T-J já estabeleceu que as instituições financeiras têm a obrigação de manter mecanismos capazes de identificar e bloquear transações que fujam do perfil habitual de clientes idosos.
+
+00:06:37.400 --> 00:06:45.840
+<v Sara>Pera aí... Então o banco não pode simplesmente fingir que não viu uma transação de sete mil reais repentina se aquele cliente nunca fazia isso?
+
+00:06:46.260 --> 00:07:03.880
+<v Samurai>Exatamente isso, Sara. O tribunal reconhece a vulnerabilidade agravada da pessoa idosa diante dos golpes eletrônicos. Se a movimentação rompe totalmente com o padrão de gastos do correntista, o sistema antifraude da instituição deveria ao menos suspender a operação para checagem adicional.
+
+00:07:03.880 --> 00:07:09.100
+<v Sara>E esse caso do idoso que perdeu os sete mil reais... como tá a situação dele agora?
+
+00:07:09.460 --> 00:07:24.160
+<v Samurai>O caso não tá encerrado. Não há informação de prisões dos golpistas. A demanda segue em andamento na esfera administrativa e na tentativa de recuperação de crédito. A batalha agora depende do acionamento dos órgãos reguladores e da via judicial.
+
+00:07:24.440 --> 00:07:31.520
+<v Sara>Se acontecer com alguém que tá ouvindo agora, ou com os pais de alguém... qual é o roteiro de sobrevivência imediato?
+
+00:07:31.520 --> 00:07:50.660
+<v Samurai>A primeira ação é dentro do próprio aplicativo do banco: contestar o Pix imediatamente pedindo o acionamento do Mecanismo Especial de Devolução, o M-E-D, criado pelo Banco Central. O objetivo do M-E-D é bloquear na hora o saldo na conta de destino antes que o golpista pulverize a quantia.
+
+00:07:50.980 --> 00:07:55.000
+<v Sara>E as instituições têm prazo pra dar resposta sobre essa contestação?
+
+00:07:55.000 --> 00:08:12.320
+<v Samurai>Têm sim. Os bancos têm até sete dias para avaliar se a contestação pelo M-E-D é procedente. Se o aplicativo não resolver ou der erro, ligue no S-A-C e na Ouvidoria do banco na mesma hora. Guarde todos os números de protocolo, a data e o horário do contato.
+
+00:08:12.460 --> 00:08:14.520
+<v Sara>E registrar queixa na polícia, claro.
+
+00:08:15.060 --> 00:08:32.340
+<v Samurai>Fundamental. Faça o boletim de ocorrência, que na maioria dos estados pode ser aberto direto pela delegacia eletrônica na internet. Junte todas as provas: tire print das telas de conversa, guarde os arquivos de áudio ou vídeo recebidos e salve o comprovante detalhado da transferência.
+
+00:08:32.480 --> 00:08:38.080
+<v Sara>E se a Ouvidoria do banco insistir na negativa, dizendo que a senha foi digitada pela vítima?
+
+00:08:38.340 --> 00:09:02.440
+<v Samurai>Aí você abre uma reclamação formal no Banco Central pelo telefone cento e quarenta e cinco ou pelo site do B-C-B. Com esses registros e a recusa em mãos, procure a Defensoria Pública ou um advogado particular para acionar a Justiça com base no entendimento do S-T-J sobre a proteção a idosos. O passo a passo completo tá detalhado em cyberjus ponto org, na página Fui vítima.
+
+00:09:02.600 --> 00:09:11.660
+<v Sara>Voltando àquela cena que você contou no início... aquele avô viu o rosto do neto na tela e caiu no golpe porque confiou em quem ama.
+
+00:09:11.900 --> 00:09:27.700
+<v Samurai>Ele confiou no que os olhos viram. Mas no mundo da inteligência artificial, ver não é mais garantia de acreditar. Por isso, combine agora mesmo uma palavra-senha com a sua família e nunca faça transferência sem antes ligar de volta no número original.
+
+00:09:27.980 --> 00:09:34.680
+<v Sara>Manda este episódio agora mesmo no grupo da família. Especialmente para os seus pais e avós ouvirem juntos.
+
+00:09:35.140 --> 00:09:41.100
+<v Samurai>Informação compartilhada é a melhor barreira contra o golpe. Até o próximo CyberJustiça.
