@@ -37,3 +37,7 @@ CI: `ci.yml` (check obrigatório `build`: vitest + astro check + build) e `e2e.y
 ## Deploy
 
 O app do Coolify é `cyberjust-web` (uuid `3xuywg7do0sgc8q7kzrclikz`), porta **8080**, healthcheck do Dockerfile. Um webhook do GitHub (push) publica cada commit na `main`, inclusive os do painel. Depois do merge, confira se o deploy terminou e teste o site no ar: CI verde não é deploy.
+
+### Espelho de emergência (Cloudflare Pages)
+
+Projeto Pages `cyberjus` ligado à `main`: comando `sh scripts/pages-build.sh`, saída `dist`, `NODE_VERSION=24` e `PNPM_VERSION` = a do `packageManager`. O `scripts/espelho-pages.mjs` gera `_headers` e `_redirects` **lendo o `docker/nginx.conf`** (fonte única) e tira o painel `/dash-*/` (no `pages.dev` não há Access). Quando a VM 520 ou o túnel caem, o Worker `n3xus-manutencao` (repositório `n3xus-site`, pasta `manutencao/`) serve o espelho no próprio `www.cyberjus.org` (header `x-n3xus-espelho: 1`). O contador continua no Worker dele; o painel e o Estúdio mostram a página de manutenção. Regex nova num `location ... return 301` só com grupos `(a|b)` e `/?` no fim: outra forma faz o build do espelho falhar de propósito.
