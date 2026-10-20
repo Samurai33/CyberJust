@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { DASH_PATH } from '../src/data/dash';
-import { EPISODIO } from './ajuda';
+import AUDIOS from '../src/data/audio.json';
+import { AUDIO_BASE, EPISODIO } from './ajuda';
 
 // Comportamento do nginx de produção. Não depende do navegador: roda só no projeto chromium.
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'chromium', 'teste de servidor, um navegador basta'));
@@ -32,9 +33,9 @@ test('/api/contador sem o Worker: "indisponível" em JSON, sem cache e com os he
   }
 });
 
-test('áudio: streaming por Range, tipo correto e cache imutável', async ({ request }) => {
+test('áudio (R2): streaming por Range, tipo correto e cache imutável', async ({ request }) => {
   // o nome do arquivo leva um hash e muda quando o áudio é refeito: lê da página do episódio
-  const audio = (await (await request.get(EPISODIO)).text()).match(/data-src="(\/audio\/[^"]+\.m4a)"/)![1]!;
+  const audio = AUDIO_BASE + (await (await request.get(EPISODIO)).text()).match(/data-src="(\/audio\/[^"]+\.m4a)"/)![1]!;
   const r = await request.get(audio, { headers: { Range: 'bytes=0-15' } });
   expect(r.status()).toBe(206);
   expect(r.headers()['content-type']).toBe('audio/mp4');
@@ -42,6 +43,7 @@ test('áudio: streaming por Range, tipo correto e cache imutável', async ({ req
   expect(r.headers()['cache-control']).toContain('immutable');
   // apps e players web de podcast tocam o áudio de outra origem
   expect(r.headers()['cross-origin-resource-policy']).toBe('cross-origin');
+  expect(r.headers()['access-control-allow-origin']).toBe('*');
   // MP4 com moov no início (faststart): o segundo átomo é "moov", senão o streaming quebra.
   const inicio = await request.get(audio, { headers: { Range: 'bytes=0-63' } });
   const b = await inicio.body();
@@ -49,6 +51,16 @@ test('áudio: streaming por Range, tipo correto e cache imutável', async ({ req
   expect(b.subarray(4, 8).toString()).toBe('ftyp');
   const r2 = await request.get(audio, { headers: { Range: `bytes=${tamanhoFtyp}-${tamanhoFtyp + 7}` } });
   expect((await r2.body()).subarray(4, 8).toString()).toBe('moov');
+});
+
+test('áudio (R2): todo arquivo do manifesto existe com o tamanho registrado; envio sem segredo é recusado', async ({ request }) => {
+  for (const [caminho, { bytes }] of Object.entries(AUDIOS)) {
+    const r = await request.head(AUDIO_BASE + caminho);
+    expect(r.status(), caminho).toBe(200);
+    expect(r.headers()['content-length'], caminho).toBe(String(bytes));
+  }
+  const [primeiro] = Object.keys(AUDIOS);
+  expect((await request.put(AUDIO_BASE + primeiro, { data: 'x' })).status()).toBe(401);
 });
 
 test('imagem de prévia com CORP cross-origin (WhatsApp Web)', async ({ request }) => {
@@ -130,7 +142,7 @@ test('feed do podcast válido para Apple e Podcasting 2.0', async ({ request }) 
   expect(itens.length).toBeGreaterThan(0);
   expect(itens.length).toBe((xml.match(/<item>/g) ?? []).length);
   for (const [, url, tam] of itens) {
-    const a = await request.head(url!.replace('https://www.cyberjus.org', ''));
+    const a = await request.head(url!.replace('https://www.cyberjus.org', AUDIO_BASE));
     expect(a.status()).toBe(200);
     expect(a.headers()['content-length']).toBe(tam);
   }

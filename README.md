@@ -72,16 +72,17 @@ BASE_URL=http://127.0.0.1:18080 pnpm test:e2e                # e2e contra a imag
 2. No painel, entre com um **token fine-grained do GitHub** com só *Contents: Read and write* no
    repositório `Samurai33/CyberJust`, com validade curta. O OAuth do GitHub foi descartado de propósito,
    porque exige acesso a todos os repositórios.
-3. Crie, edite ou remova episódios e envie o áudio `.m4a` e a transcrição `.vtt`. Cada "Salvar" vira
-   um commit na `main`, e o webhook publica no Coolify em 1 a 2 minutos.
+3. Crie, edite ou remova episódios e envie a transcrição `.vtt`. Cada "Salvar" vira um commit na `main`,
+   e o webhook publica no Coolify em 1 a 2 minutos. O áudio não passa pelo painel (veja abaixo).
 
 **Por Git:** crie `src/content/episodios/<slug>.md` seguindo o esquema de `src/content.config.ts` e abra um PR.
 
 Regras validadas pelo build (se algo quebrar, o deploy falha e o site anterior continua no ar):
-- **Áudio** em AAC/M4A com o índice no início:
-  `ffmpeg -i entrada -map 0:a -c copy -movflags +faststart public/audio/<nome-novo>.m4a`.
-  A duração e o tamanho são lidos do arquivo, então você não preenche nada à mão.
-  Use sempre um nome novo: o áudio tem cache imutável.
+- **Áudio** fica no Cloudflare R2, fora do Git, servido em `www.cyberjus.org/audio/` pelo Worker
+  `worker/audio` (Range nativo, cache imutável). O Estúdio publica sozinho. Arquivo avulso: AAC/M4A com o
+  índice no início (`ffmpeg -i entrada -map 0:a -c copy -movflags +faststart saida.m4a`), nome
+  `<slug>-<8 primeiros hex do sha256>.m4a` e `AUDIO_ENVIO=... node scripts/audio-r2.mjs <arquivo>`, que confere,
+  envia e grava duração e tamanho em `src/data/audio.json`. O build lê esse manifesto e falha se faltar o áudio.
 - **Resumo** com 50 a 155 caracteres e **título** com 10 a 90 (`tituloSeo` com até 60 para a aba e as prévias).
 - **Fontes** só com `https://` oficiais. Nada de números, nomes ou contatos sem fonte.
 - **Slug:** o nome do arquivo é a URL e não deve mudar depois de publicado.

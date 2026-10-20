@@ -3,6 +3,10 @@ import { expect, type Page } from '@playwright/test';
 // Episódio de referência dos testes (o nome da página não muda quando o áudio é refeito).
 export const EPISODIO = '/episodios/falso-advogado-ceara/';
 
+// O áudio fica no R2 e é servido pelo Worker worker/audio em www.cyberjus.org/audio/* (o contêiner não tem
+// /audio/). Antes da rota existir: AUDIO_BASE=https://cyberjus-audio.<conta>.workers.dev
+export const AUDIO_BASE = (process.env['AUDIO_BASE'] ?? 'https://www.cyberjus.org').replace(/\/$/, '');
+
 export const PAGINAS = [
   '/',
   '/episodios/',

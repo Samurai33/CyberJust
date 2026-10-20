@@ -8,7 +8,8 @@ services:
     command: python -m pipeline.bot
     restart: unless-stopped
     # painel.env: ACCESS_AUD (AUD do app "CyberJustiça Painel (/dash)") e PAINEL_EMAILS (quem pode entrar).
-    env_file: [gemini.env, nvidia.env, cloudflare.env, elevenlabs.env, telegram.env, vozes.env, painel.env]
+    # audio.env: AUDIO_ENVIO (o segredo ENVIO do Worker worker/audio; o episódio publicado manda o áudio para o R2).
+    env_file: [gemini.env, nvidia.env, cloudflare.env, elevenlabs.env, telegram.env, vozes.env, painel.env, audio.env]
     environment:
       DADOS: /dados
       REPO: /dados/repo

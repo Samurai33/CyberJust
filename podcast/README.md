@@ -14,7 +14,7 @@ pautas ──► roteiro ──► [aprovação] ──► áudio ──► lege
 | Roteiro | `pipeline.roteiro` | baixa as matérias (decodifica os links do Google Notícias), monta a ficha de fatos, escreve o diálogo com o protocolo de retenção, ajusta o tamanho, marca os capítulos se o modelo esqueceu, confere as regras no código e revisa contra a ficha com correções pontuais | grátis |
 | Áudio | `pipeline.audio` | Text to Dialogue da ElevenLabs em blocos de até 1.900 caracteres; cada bloco é salvo assim que chega e reaproveitado; normalização em duas passadas (-16 LUFS, pico < -1 dBTP) e AAC com faststart | ~0,44 crédito por caractere (eleven_v3) |
 | Legenda | `pipeline.legenda` | Whisper local alinha o áudio ao texto do roteiro: WebVTT com `<v Locutor>`, tempos dos capítulos e controle de qualidade | grátis |
-| Episódio | `pipeline.episodio` | Markdown no esquema de `src/content.config.ts`, áudio e VTT com hash no nome, recursos com link conferido (HTTP 200), commit e push | grátis |
+| Episódio | `pipeline.episodio` | Markdown no esquema de `src/content.config.ts`, áudio e VTT com hash no nome, recursos com link conferido (HTTP 200); o áudio vai para o R2 (Worker `worker/audio`) antes do commit e do push | grátis |
 | Bot | `pipeline.bot` | Telegram: sugere pautas (seg, qua e sex às 9h) e conduz as aprovações; só obedece ao chat do dono | grátis |
 | Estúdio | `pipeline.painel` | Painel web com tudo o que o bot faz e mais (ver abaixo); roda dentro do processo do bot | grátis |
 
@@ -39,7 +39,7 @@ docker compose -f app/compose.yml --project-directory . logs -f bot
 docker compose -f app/compose.yml --project-directory . run --rm bot python -m pipeline.audio trabalho/<slug>
 ```
 
-Arquivos fora do repositório, na pasta da VM: `gemini.env`, `elevenlabs.env`, `telegram.env` (`TELEGRAM_TOKEN`,
+Arquivos fora do repositório, na pasta da VM: `audio.env` (`AUDIO_ENVIO`, o segredo do Worker do áudio), `gemini.env`, `elevenlabs.env`, `telegram.env` (`TELEGRAM_TOKEN`,
 `TELEGRAM_CHAT`), `vozes.env` (`VOZ_SAMURAI`, `VOZ_COAPRESENTADORA` e `NOME_COAPRESENTADORA`, padrão Sara), `deploy_key` e
 `known_hosts` (push na `main`), `repo/` (clone do site) e `trabalho/<slug>/` (artefatos de cada episódio). As chaves
 são gravadas pelos scripts `n3x-*-token.sh` do Dell, que nunca mostram o valor.
