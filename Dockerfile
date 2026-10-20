@@ -14,6 +14,7 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY docker/security-headers-public.conf /etc/nginx/snippets/security-headers-public.conf
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY --chmod=755 docker/versao.sh /docker-entrypoint.d/40-versao.sh
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget -qO /dev/null http://127.0.0.1:8080/robots.txt || exit 1
