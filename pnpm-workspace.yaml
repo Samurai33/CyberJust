@@ -8,3 +8,10 @@ minimumReleaseAge: 20160
 onlyBuiltDependencies:
   - esbuild
   - sharp
+
+# Correções de segurança em dependências transitivas (alertas do Dependabot).
+# fflate: o satori fixa 0.7.3 (GHSA-px8p-9vwx-vf98, corrigido em 0.7.5).
+# source-map-js: postcss/css-tree ainda resolvem 1.2.1 (GHSA-68fv-2mgg-jv7q, corrigido em 1.2.2).
+overrides:
+  fflate@<0.7.5: 0.7.5
+  source-map-js@<1.2.2: 1.2.2
