@@ -31,5 +31,6 @@ describe('espelho do Pages', () => {
     expect(audio).toContain('Content-Type: audio/mp4');
     expect(audio).toContain('Cache-Control: public, max-age=31536000, immutable');
     expect(h).toContain('https://:project.pages.dev/*\n  X-Robots-Tag: noindex');
+    expect(h).toContain('/versao.txt\n  ! Cache-Control\n  Cache-Control: no-store');
   });
 });

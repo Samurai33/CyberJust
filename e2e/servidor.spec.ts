@@ -153,3 +153,13 @@ test('prévia de link própria por episódio (JPEG 1200x630, CORP cross-origin)'
   while (i < b.length && !(b[i] === 0xff && (b[i + 1] === 0xc0 || b[i + 1] === 0xc2))) i += 2 + b.readUInt16BE(i + 2);
   expect([b.readUInt16BE(i + 7), b.readUInt16BE(i + 5)]).toEqual([1200, 630]);
 });
+
+test('/versao.txt: commit publicado, sem cache e com os headers de segurança', async ({ request }) => {
+  const r = await request.get('/versao.txt');
+  expect(r.status()).toBe(200);
+  expect(r.headers()['content-type']).toContain('text/plain');
+  expect(r.headers()['cache-control']).toBe('no-store');
+  expect(r.headers()['x-content-type-options']).toBe('nosniff');
+  // o e2e do GitHub sobe o contêiner com SOURCE_COMMIT; sem ele (teste local), "desconhecido"
+  expect(await r.text()).toMatch(/^([0-9a-f]{40}|desconhecido)\n$/);
+});

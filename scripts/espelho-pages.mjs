@@ -88,6 +88,7 @@ export function gerarHeaders(conf, comuns, publicos) {
   const prev = bloco(conf, '~* ^/(og-');
   const manifest = bloco(conf, '= /site.webmanifest');
   const astro = bloco(conf, '/_astro/');
+  const versao = bloco(conf, '= /versao.txt');
   const cachePrev = valor(prev, 'Cache-Control');
 
   const regras = [
@@ -103,6 +104,8 @@ export function gerarHeaders(conf, comuns, publicos) {
       (r) => [r, publico(cachePrev)],
     ),
     ['/site.webmanifest', ['  ! Cache-Control', '  ! Content-Type', `  Content-Type: ${tipo(manifest)}`, `  Cache-Control: ${valor(manifest, 'Cache-Control')}`]],
+    // Commit do build (scripts/pages-build.sh): o monitor compara com o do site, então nada de cache.
+    ['/versao.txt', ['  ! Cache-Control', `  Cache-Control: ${valor(versao, 'Cache-Control')}`]],
     ['/.well-known/security.txt', ['  ! Content-Type', '  Content-Type: text/plain; charset=utf-8']],
     // Endereços próprios do espelho fora do Google (cópia do site). O www.cyberjus.org servido pelo espelho
     // num incidente continua indexável: o Worker tira este header.
