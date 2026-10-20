@@ -95,6 +95,11 @@ entrada no feed `/podcast.xml` (Apple Podcasts, Spotify e Podcasting 2.0), JSON-
 O Coolify (VM 520) constrói o `Dockerfile` a partir da `main` e serve na porta 8080 atrás do
 Cloudflare Tunnel. O domínio canônico é `www.cyberjus.org`; o nginx redireciona `cyberjus.org` para ele.
 
+**Espelho de emergência:** cada commit na `main` também publica uma cópia estática no Cloudflare Pages
+(`cyberjus.pages.dev`, gerada por `scripts/pages-build.sh` com os mesmos headers e redirects do nginx). Se o
+servidor cair, o Worker de manutenção da N3XUS serve essa cópia no próprio `www.cyberjus.org`, com os
+episódios tocando normalmente. O painel fica fora do espelho.
+
 ## Licença
 
 [MIT](LICENSE).
