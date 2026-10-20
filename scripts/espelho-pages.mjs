@@ -91,7 +91,8 @@ export function gerarHeaders(conf, comuns, publicos) {
   const cachePrev = valor(prev, 'Cache-Control');
 
   const regras = [
-    ['/*', [...fmt(comuns), `  Content-Security-Policy: ${csp}`, '  Cache-Control: no-cache']],
+    // O Pages põe Access-Control-Allow-Origin: * em tudo; o nginx só manda nos arquivos para outros sites.
+    ['/*', ['  ! Access-Control-Allow-Origin', ...fmt(comuns), `  Content-Security-Policy: ${csp}`, '  Cache-Control: no-cache']],
     ['/_astro/*', ['  ! Cache-Control', `  Cache-Control: ${valor(astro, 'Cache-Control')}`]],
     ['/audio/*', publico(valor(audio, 'Cache-Control'), [['Access-Control-Allow-Origin', '*'], ['Content-Type', tipo(audio)]])],
     ['/transcricoes/*', publico(valor(vtt, 'Cache-Control'), [['Access-Control-Allow-Origin', '*'], ['Content-Type', `${tipo(vtt)}; charset=utf-8`]])],
