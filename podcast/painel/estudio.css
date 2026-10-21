@@ -134,7 +134,35 @@ svg { inline-size: 18px; block-size: 18px; flex: none; fill: none; stroke: curre
 .botao[data-armado] { color: #04060b; background: var(--ok); border-color: var(--ok); }
 .botao.perigo[data-armado] { background: var(--crit); border-color: var(--crit); }
 .botao.gasta[data-armado] { background: var(--warn); border-color: var(--warn); }
-.botao:disabled { opacity: 0.45; cursor: not-allowed; }
+.botao:disabled, .botao[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
+.botao[aria-disabled='true']:hover { background: var(--accent-soft); }
+.botao.fantasma[aria-disabled='true']:hover { background: transparent; }
+/* em andamento: o rótulo diz o que está rodando e o botão fica legível (não apagado como o indisponível) */
+.botao[aria-busy='true'] { opacity: 1; cursor: progress; border-style: dashed; }
+
+/* ---------- carregamento ---------- */
+.giro { flex: none; inline-size: 14px; block-size: 14px; border-radius: 50%; border: 2px solid currentColor; border-inline-end-color: transparent; animation: giro 0.8s linear infinite; }
+@keyframes giro { to { rotate: 360deg; } }
+.esqueleto {
+  list-style: none; min-block-size: 18px; margin-block: 6px; border-radius: 6px;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.03) 25%, rgb(92 200 255 / 0.08) 50%, rgb(255 255 255 / 0.03) 75%) 0 0 / 200% 100%;
+  animation: brilho 1.4s ease-in-out infinite;
+}
+.kpis > .esqueleto { min-block-size: 78px; margin: 0; border: 1px solid var(--line); border-radius: 12px; }
+.quadro > .esqueleto { min-block-size: 92px; margin: 0; border-radius: 12px; }
+.lotes > .esqueleto { min-block-size: 64px; margin: 0; border-radius: 14px; }
+.falas > .esqueleto { min-block-size: 54px; margin: 0; border-radius: 10px; }
+@keyframes brilho { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+[aria-busy='true'] { cursor: progress; }
+.erro-carga { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border: 1px solid rgb(255 77 94 / 0.45); border-radius: 10px; background: var(--crit-soft); color: var(--fg); }
+.progresso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: -6px 0 16px; padding: 8px 12px; border: 1px solid var(--line-hi); border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
+.progresso-k { font-family: var(--font-hud); font-size: var(--hud-s); letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-subtle); }
+.progresso time { margin-inline-start: auto; color: var(--fg-muted); }
+/* sem animação para quem pede menos movimento (WCAG 2.3.3): o giro vira um anel parado e o esqueleto fica liso */
+@media (prefers-reduced-motion: reduce) {
+  .giro { animation: none; border-inline-end-color: currentColor; opacity: 0.6; }
+  .esqueleto { animation: none; background: rgb(255 255 255 / 0.05); }
+}
 .botao.mini { min-block-size: 30px; padding: 0 10px; }
 @media (pointer: coarse) { .botao.mini { min-block-size: 40px; } }
 .acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-block-end: 16px; }

@@ -103,6 +103,7 @@
       <h1 class="ep-titulo" id="t-ep"></h1>
       <p class="nota" id="ep-meta"></p>
       <div class="acoes" id="ep-acoes"></div>
+      <p class="progresso rot-oculto" id="ep-progresso"><span class="giro" aria-hidden="true"></span><span class="progresso-k">Em andamento</span><span role="status" id="ep-progresso-txt"></span><time id="ep-progresso-tempo" aria-hidden="true"></time></p>
       <div class="player" id="ep-player" hidden>
         <audio id="audio" controls preload="none"></audio>
         <ol class="capitulos" id="ep-caps"></ol>
@@ -144,6 +145,8 @@
   </main>
 
   <div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+  <!-- motivo dos botões indisponíveis (aria-describedby="motivo-ocupado") -->
+  <p class="rot-oculto" id="motivo-ocupado"></p>
 </div>
 </body>
 </html>
