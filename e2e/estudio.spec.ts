@@ -103,15 +103,16 @@ test('publicar: o botão fica indisponível e mostra "Publicando…" até a etap
   await expect(page.locator('#ep-progresso-txt')).toHaveAttribute('role', 'status');
   await expect(page.locator('#ep-progresso-tempo')).toHaveAttribute('aria-hidden', 'true');
 
-  // clicar no botão travado não envia nada e explica o motivo; ele continua focável
+  // acionar o botão travado (pelo teclado: ele continua focável) não envia nada e explica o motivo.
+  // O click() do Playwright recusa elemento aria-disabled, então o teste usa Enter e Espaço como uma pessoa faria.
   const posts: string[] = [];
   page.on('request', (r) => { if (r.method() === 'POST') posts.push(r.url()); });
-  await publicar.click();
-  await publicar.click();
-  await expect(page.locator('#avisos')).toContainText('Indisponível: o pipeline está publicando');
-  expect(posts).toEqual([]);
   await publicar.focus();
   await expect(publicar).toBeFocused();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Space');
+  await expect(page.locator('#avisos')).toContainText('Indisponível: o pipeline está publicando');
+  expect(posts).toEqual([]);
 
   // a etapa termina: botão liberado, rótulo e ícone de volta, faixa escondida
   sim.estado = { ...LIVRE };
