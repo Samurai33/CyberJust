@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { DASH_PATH } from '../src/data/dash';
-import AUDIOS from '../src/data/audio.json';
+import { readFileSync } from 'node:fs';
 import { AUDIO_BASE, EPISODIO } from './ajuda';
+
+// Lido do disco: o Playwright não importa JSON sem atributo de importação.
+const AUDIOS: Record<string, { bytes: number }> = JSON.parse(readFileSync('src/data/audio.json', 'utf8'));
 
 // Comportamento do nginx de produção. Não depende do navegador: roda só no projeto chromium.
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'chromium', 'teste de servidor, um navegador basta'));
