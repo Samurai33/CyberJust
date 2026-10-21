@@ -67,11 +67,12 @@ function r2() {
       const pedido = range.get('range');
       if (!pedido) return { ...m, body: o.bytes };
       const [, a, b] = /^bytes=(\d*)-(\d*)$/.exec(pedido);
-      if (a === '') return { ...m, range: { suffix: Number(b) }, body: o.bytes.slice(-Number(b)) };
+      // como o R2 de verdade: as três chaves sempre presentes, as que não se aplicam com undefined
+      if (a === '') return { ...m, range: { offset: undefined, length: undefined, suffix: Number(b) }, body: o.bytes.slice(-Number(b)) };
       const inicio = Number(a);
       if (inicio >= o.bytes.length) throw new RangeError('fora do arquivo');
       const fim = b === '' ? o.bytes.length - 1 : Math.min(Number(b), o.bytes.length - 1);
-      return { ...m, range: { offset: inicio, length: fim - inicio + 1 }, body: o.bytes.slice(inicio, fim + 1) };
+      return { ...m, range: { offset: inicio, length: fim - inicio + 1, suffix: undefined }, body: o.bytes.slice(inicio, fim + 1) };
     },
   };
 }

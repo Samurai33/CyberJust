@@ -64,9 +64,12 @@ async function servir(request, env, chave) {
   let status = 200;
   let tamanho = obj.size;
   if (obj.range && request.headers.has('range')) {
+    // O R2 real devolve as chaves que não se aplicam com valor undefined ({ offset, length, suffix }):
+    // testar com "in" dava NaN no Content-Range e o Safari não tocava.
     const r = obj.range;
-    const inicio = 'suffix' in r ? obj.size - r.suffix : r.offset ?? 0;
-    tamanho = 'suffix' in r ? r.suffix : r.length ?? obj.size - inicio;
+    const sufixo = r.suffix !== undefined;
+    const inicio = sufixo ? obj.size - r.suffix : r.offset ?? 0;
+    tamanho = sufixo ? r.suffix : r.length ?? obj.size - inicio;
     h.set('content-range', `bytes ${inicio}-${inicio + tamanho - 1}/${obj.size}`);
     status = 206;
   }
