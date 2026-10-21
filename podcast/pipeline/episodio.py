@@ -203,23 +203,40 @@ def main():
     validar(r, capitulos)
     rec = recursos(ler(pasta / "fontes.json"))
 
-    for tentativa in range(2):
+    # Qualquer saída sem push (ensaio, erro, push recusado duas vezes) devolve o clone à origin/main: o Estúdio lê
+    # src/content/episodios do clone, e um .md sem commit fazia o episódio parecer publicado e sumir o botão
+    # "Publicar" (Smart Sampa, 21/10/2026, depois de um 403 na conferência do áudio).
+    try:
+        for tentativa in range(2):
+            sincronizar(repo)
+            numero, nome, arq_audio, arquivos = montar(pasta, repo, r, capitulos, rec)
+            if not publicar:
+                git(repo, "status", "--short")
+                log(f"ENSAIO: nada foi enviado ({arq_audio} iria para o R2). Use --publicar para enviar, commit e push na main.")
+                break
+            arquivos.append(registrar_audio(repo, arq_audio, enviar_audio(pasta / "episodio.m4a", arq_audio)))
+            git(repo, "add", *arquivos)
+            git(repo, "commit", "-q", "-m", f"content: episódio {numero}, {r['titulo']}")
+            # Push recusado = alguém publicou na main no meio (o painel, outro episódio): refaz em cima da main nova,
+            # com o número recalculado.
+            if git(repo, "push", "-q", "origin", "HEAD:main", check=False).returncode == 0:
+                print(json.dumps({"numero": numero, "url": f"https://www.cyberjus.org/episodios/{nome}/"}))
+                return
+            log(f"push recusado (tentativa {tentativa + 1}/2); sincronizando com a main e montando de novo")
+        else:
+            raise SystemExit("O push para a main falhou duas vezes; nada foi publicado.")
+    except BaseException:
+        limpar(repo)
+        raise
+    limpar(repo)
+
+
+def limpar(repo):
+    """Volta o clone à origin/main sem mascarar o erro original se a rede também falhar."""
+    try:
         sincronizar(repo)
-        numero, nome, arq_audio, arquivos = montar(pasta, repo, r, capitulos, rec)
-        if not publicar:
-            git(repo, "status", "--short")
-            log(f"ENSAIO: nada foi enviado ({arq_audio} iria para o R2). Use --publicar para enviar, commit e push na main.")
-            return
-        arquivos.append(registrar_audio(repo, arq_audio, enviar_audio(pasta / "episodio.m4a", arq_audio)))
-        git(repo, "add", *arquivos)
-        git(repo, "commit", "-q", "-m", f"content: episódio {numero}, {r['titulo']}")
-        # Push recusado = alguém publicou na main no meio (o painel, outro episódio): refaz em cima da main nova,
-        # com o número recalculado.
-        if git(repo, "push", "-q", "origin", "HEAD:main", check=False).returncode == 0:
-            print(json.dumps({"numero": numero, "url": f"https://www.cyberjus.org/episodios/{nome}/"}))
-            return
-        log(f"push recusado (tentativa {tentativa + 1}/2); sincronizando com a main e montando de novo")
-    raise SystemExit("O push para a main falhou duas vezes; nada foi publicado.")
+    except Exception as e:  # noqa: BLE001
+        log(f"não consegui limpar o clone ({e}); a próxima publicação sincroniza de novo")
 
 
 if __name__ == "__main__":
