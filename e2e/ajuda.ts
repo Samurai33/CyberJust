@@ -28,7 +28,8 @@ export async function vigiar(page: Page): Promise<string[]> {
     });
   });
   page.on('console', (m) => {
-    if (m.type() === 'error') problemas.push(m.text());
+    // com a URL: "Failed to load resource" não diz qual (o 404 do <audio> no contêiner, sem /audio/, é esperado)
+    if (m.type() === 'error') problemas.push(`${m.text()} ${m.location().url}`.trim());
   });
   page.on('pageerror', (e) => problemas.push(e.message));
   return problemas;

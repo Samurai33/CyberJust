@@ -107,7 +107,10 @@ test('nenhum link interno das páginas principais leva a erro', async ({ request
     for (const [, href] of html.matchAll(/href="(\/(?!\/)[^"#?]*)"/g)) vistos.add(href!);
   }
   for (const href of vistos) {
-    const r = await request.get(href, { maxRedirects: 0 });
+    // o áudio fica no R2 (Worker worker/audio), não no contêiner: confere lá, só os cabeçalhos
+    const r = href.startsWith('/audio/')
+      ? await request.head(AUDIO_BASE + href)
+      : await request.get(href, { maxRedirects: 0 });
     expect(r.status(), href).toBeLessThan(400);
   }
 });
