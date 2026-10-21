@@ -1,6 +1,6 @@
 // Painel de episódios (Sveltia CMS, compatível com Decap). Doc: https://sveltiacms.app/en/docs
 // Cada "Salvar" vira um commit na main do GitHub; o webhook do Coolify publica o site em seguida.
-// O build valida tudo (esquema em src/content.config.ts e o áudio em src/lib/mp4.ts): se algo estiver
+// O build valida tudo (esquema em src/content.config.ts e o áudio em src/data/audio.json): se algo estiver
 // errado, o deploy falha e o site no ar continua o anterior.
 import type { CmsConfig } from '@sveltia/cms';
 import { TEMAS } from '../data/temas';
@@ -24,8 +24,9 @@ export const cmsConfig: CmsConfig = {
   site_url: 'https://www.cyberjus.org',
   display_url: 'https://www.cyberjus.org',
   logo: { src: '/icon-192.png' },
-  media_folder: '/public/audio',
-  public_folder: '/audio',
+  // O áudio não passa pelo painel (fica no R2): a pasta padrão é a das transcrições.
+  media_folder: '/public/transcricoes',
+  public_folder: '/transcricoes',
   slug: { encoding: 'ascii', clean_accents: true, sanitize_replacement: '-' },
   collections: [
     {
@@ -60,12 +61,10 @@ export const cmsConfig: CmsConfig = {
         {
           name: 'audio',
           label: 'Áudio (.m4a)',
-          widget: 'file',
+          widget: 'string',
           required: false,
-          media_folder: '/public/audio',
-          public_folder: '/audio',
-          accept: 'audio/mp4,audio/x-m4a,.m4a',
-          hint: 'AAC em M4A com faststart: ffmpeg -i entrada -map 0:a -c copy -movflags +faststart saida.m4a. Nome em minúsculas e com hífens; nunca substitua um arquivo publicado (use um nome novo).',
+          pattern: ['^/audio/[a-z0-9-]+-[0-9a-f]{8}\\.m4a$', '/audio/<nome>-<hash>.m4a'],
+          hint: 'O áudio fica no R2, fora do Git: o Estúdio publica sozinho. Arquivo avulso: AUDIO_ENVIO=... node scripts/audio-r2.mjs <nome>-<hash>.m4a (confere o faststart e grava src/data/audio.json); depois cole aqui o caminho /audio/... que ele mostrar.',
         },
         {
           name: 'transcricao',

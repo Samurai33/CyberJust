@@ -1,6 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { join } from 'node:path';
-import { lerInfoAudio, type InfoAudio } from './mp4';
+import AUDIOS from '../data/audio.json';
 import { TEMAS, type Tema } from '../data/temas';
 
 export type Episodio = CollectionEntry<'episodios'>;
@@ -17,16 +16,21 @@ export async function listarEpisodios(): Promise<Episodio[]> {
   );
 }
 
-const cacheAudio = new Map<string, InfoAudio>();
-/** Duração e tamanho do áudio, lidos do arquivo em public/ no build (falha se não servir para streaming). */
+export interface InfoAudio {
+  segundos: number;
+  bytes: number;
+}
+
+/**
+ * Duração e tamanho do áudio. O arquivo fica no R2 (worker/audio), não no Git: os dados vêm de
+ * src/data/audio.json, gravado por quem envia o áudio (pipeline ou scripts/audio-r2.mjs) depois que o Worker
+ * conferiu o faststart. Episódio com áudio fora do manifesto quebra o build.
+ */
 export function infoAudio(e: Episodio): InfoAudio | undefined {
   const arquivo = e.data.audio;
   if (!arquivo) return undefined;
-  let info = cacheAudio.get(arquivo);
-  if (!info) {
-    info = lerInfoAudio(join(process.cwd(), 'public', arquivo));
-    cacheAudio.set(arquivo, info);
-  }
+  const info = (AUDIOS as Record<string, InfoAudio>)[arquivo];
+  if (!info) throw new Error(`${e.id}: ${arquivo} não está em src/data/audio.json (envie com scripts/audio-r2.mjs)`);
   return info;
 }
 

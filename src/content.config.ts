@@ -29,11 +29,11 @@ const episodios = defineCollection({
     status: z.enum(STATUS).optional(),
     ameaca: z.enum(AMEACA),
     tags: z.array(z.string()).default([]),
-    // Arquivo em public/audio/. AAC em MP4 com o índice (moov) no início: duração e tamanho são lidos
-    // do arquivo no build (src/lib/mp4.ts), que falha se o arquivo não servir para streaming.
+    // Arquivo no R2, servido em /audio/ pelo Worker worker/audio. AAC em MP4 com o índice (moov) no início, nome
+    // terminado nos 8 primeiros hex do SHA-256; duração e tamanho vêm de src/data/audio.json.
     audio: z
       .string()
-      .regex(/^\/audio\/[a-z0-9-]+\.m4a$/, 'áudio em /audio/<nome-em-minusculas>.m4a')
+      .regex(/^\/audio\/[a-z0-9-]+-[0-9a-f]{8}\.m4a$/, 'áudio em /audio/<nome-em-minusculas>-<hash>.m4a')
       .optional(),
     // Transcrição em WebVTT em public/transcricoes/ (mostrada na página e publicada no feed).
     transcricao: z
