@@ -1,0 +1,145 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:09.520
+<v Samurai>Imagina a cena: você leva seu filho pequeno na creche municipal ou vai até uma sala de consulta no posto de saúde, achando que tá num ambiente reservado e seguro.
+
+00:00:09.840 --> 00:00:12.660
+<v Sara>E não tá? Tem uma câmera gravando lá dentro?
+
+00:00:13.000 --> 00:00:21.400
+<v Samurai>Tem uma câmera no teto. Só que o acesso à transmissão dessa câmera ficou largado num arquivo aberto na internet... por cerca de onze meses.
+
+00:00:21.820 --> 00:00:26.820
+<v Sara>Onze meses?! Qualquer um na internet conseguia entrar e assistir ao vivo?!
+
+00:00:26.820 --> 00:00:46.220
+<v Samurai>Qualquer um com uma conexão de internet e um navegador. Até o final deste episódio, Sara, você vai entender como dados e senhas de mais de cinquenta e oito mil câmeras da maior cidade do Brasil ficaram expostos, o perigo real pra população e uma justificativa oficial que até agora não convenceu os peritos.
+
+00:00:46.920 --> 00:00:49.960
+<v Samurai>Eu sou o Samurai, e este é o CyberJustiça.
+
+00:00:49.960 --> 00:01:02.420
+<v Sara>Samurai, antes de entrar nos detalhes técnicos desse caso... se alguém trabalha com sistemas de monitoramento ou lida com câmeras corporativas, qual é a regra de ouro pra isso nunca acontecer?
+
+00:01:02.780 --> 00:01:24.400
+<v Samurai>A dica fundamental número um é nunca permitir acesso externo a fluxos de imagem com login e senha simples. Sistema de videomonitoramento exige autenticação em dois fatores obrigatória, controle de privilégio mínimo e auditoria contínua de acessos. Se você só pede senha comum, você não tem segurança; você tem apenas a ilusão dela.
+
+00:01:24.640 --> 00:01:30.780
+<v Sara>E foi exatamente essa ilusão que caiu em São Paulo com o Smart Sampa, né? O que é esse programa afinal?
+
+00:01:31.560 --> 00:01:47.840
+<v Samurai>O Smart Sampa é a grande aposta de videomonitoramento da Prefeitura de São Paulo. Um projeto gigantesco, operado pelo consórcio Smart City São Paulo e a plataforma Sentinelx, sob um contrato estimado em quinhentos e oitenta e oito milhões de reais por cinco anos.
+
+00:01:47.840 --> 00:01:59.360
+<v Sara>E pelas contas oficiais da prefeitura, o sistema ajudou a capturar mais de três mil e seiscentos foragidos e localizar duzentas e oitenta e quatro pessoas desaparecidas, certo?
+
+00:01:59.700 --> 00:02:15.600
+<v Samurai>Exato: três mil seiscentos e vinte e oito foragidos capturados, segundo o balanço oficial. Mas em vinte de outubro de dois mil e vinte e seis, uma reportagem do portal Uol revelou o outro lado dessa moeda: a central inteira estava escancarada na rede.
+
+00:02:15.600 --> 00:02:20.200
+<v Sara>Escancarada como? Não eram só as câmeras de trânsito nas avenidas?
+
+00:02:20.560 --> 00:02:32.780
+<v Samurai>Longe disso. Das mais de cinquenta e oito mil câmeras ativas, os dados vazados davam as coordenadas e acessos de mil cento e cinquenta e sete câmeras em Unidades Básicas de Saúde, as U-B-S.
+
+00:02:33.600 --> 00:02:36.220
+<v Sara>Isso é gravíssimo... e nas escolas?
+
+00:02:37.960 --> 00:02:51.540
+<v Samurai>Quatrocentas e vinte e quatro câmeras em escolas de educação infantil, as creches e Emeis, além de trezentas e noventa e seis em escolas de ensino fundamental. Crianças e bebês com suas rotinas diárias monitoradas por olhos que ninguém sabe de quem eram.
+
+00:02:52.760 --> 00:02:57.820
+<v Sara>Pera aí... além das imagens das crianças e pacientes, quem mais foi exposto nesse arquivo?
+
+00:02:58.120 --> 00:03:14.800
+<v Samurai>Os próprios policiais e agentes da Guarda Civil Metropolitana. O vazamento continha uma lista cadastral com dados pessoais, incluindo nomes e cê-pê-êfes, de mais de seis mil agentes de segurança pública, dentro de um universo de cerca de sete mil e quinhentos operadores autorizados.
+
+00:03:15.120 --> 00:03:23.040
+<v Sara>Mas Samurai, como esse material foi parar na internet aberta? Foi um ataque de ransomware, um hacker russo invadindo servidores?
+
+00:03:23.040 --> 00:03:37.580
+<v Samurai>Nada tão sofisticado, Sara. A investigação aponta que a falha partiu de dentro da própria Guarda Civil Metropolitana de São Paulo. Um servidor com credencial válida extraiu arquivos técnicos, códigos e acessos do sistema.
+
+00:03:37.900 --> 00:03:46.060
+<v Sara>Espera... o próprio funcionário subiu o código e as senhas pra internet e ninguém da prefeitura percebeu por quase um ano?!
+
+00:03:46.060 --> 00:04:02.260
+<v Samurai>Onze meses, pra ser preciso. E a imprensa comprovou na prática: jornalistas encontraram cento e oitenta e um logins e senhas válidos nesse repositório. Eles testaram as credenciais na plataforma Sentinelx e entraram direto nas transmissões ao vivo.
+
+00:04:02.540 --> 00:04:06.920
+<v Sara>Sem pedir código de confirmação no celular? Sem segundo fator nenhum?
+
+00:04:06.920 --> 00:04:22.100
+<v Samurai>Nada de segundo fator. Era digitar o login vazado, a senha vazada, e pronto: você estava dentro da rede do Smart Sampa, assistindo ao trânsito, ao pátio da creche ou localizando viaturas da G-C-M em tempo real pelas ruas.
+
+00:04:22.700 --> 00:04:33.060
+<v Samurai>E tinha mais: o pacote incluía scripts e instruções técnicas que ensinavam passo a passo como emular a central de monitoramento em computadores pessoais e até em celulares.
+
+00:04:33.060 --> 00:04:42.540
+<v Sara>Quer dizer que se uma facção criminosa encontrasse esse repositório, ela poderia acompanhar a posição exata de cada viatura da guarda pela cidade?
+
+00:04:43.080 --> 00:04:54.300
+<v Samurai>Exatamente. Saberia onde estão os guardas, quem são os guardas e quem está entrando numa delegacia ou numa base comunitária. É o sonho de consumo de qualquer quadrilha organizada.
+
+00:04:54.540 --> 00:05:01.220
+<v Sara>E a prefeitura de São Paulo? Qual foi a resposta oficial quando os repórteres bateram na porta com esses acessos na mão?
+
+00:05:01.220 --> 00:05:13.300
+<v Samurai>A Secretaria Municipal de Segurança Urbana soltou nota dizendo que o repositório não continha senhas e que não houve invasão da infraestrutura central. Só que a imprensa mostrou as credenciais funcionando na tela.
+
+00:05:13.560 --> 00:05:17.560
+<v Sara>E qual era aquela justificativa oficial que você comentou no começo, Samurai?
+
+00:05:17.920 --> 00:05:38.000
+<v Samurai>Pois é. Em declaração pública, o prefeito admitiu que o guarda guardava senhas, mas aventou a possibilidade de aquilo ser uma espécie de 'isca' monitorada pra atrair acessos suspeitos. Só que nenhuma perícia, nenhum relatório da guarda e nenhum inquérito confirmou essa história até agora. Ficou só na retórica política.
+
+00:05:38.280 --> 00:05:45.920
+<v Sara>E enquanto as câmeras ficavam expostas, como a inteligência artificial do sistema estava se comportando nas ruas com o cidadão comum?
+
+00:05:45.920 --> 00:06:00.700
+<v Samurai>Os dados oficiais entre novembro de dois mil e vinte e quatro e maio de dois mil e vinte e seis mostram que duzentas e sessenta e oito pessoas foram conduzidas indevidamente a delegacias por alertas do sistema e acabaram liberadas em seguida.
+
+00:06:00.880 --> 00:06:04.380
+<v Sara>Que pesadelo pro cidadão que tá indo trabalhar de manhã cedo...
+
+00:06:04.620 --> 00:06:21.800
+<v Samurai>Um pesadelo que custa caro. E o caso está longe de um desfecho final. A situação atual é de apuração em múltiplas frentes. Não houve prisões até aqui: apenas um servidor da G-C-M foi formalmente identificado e afastado de suas funções públicas.
+
+00:06:21.960 --> 00:06:24.060
+<v Sara>E quem tá investigando esse caso agora?
+
+00:06:24.480 --> 00:06:47.540
+<v Samurai>A Corregedoria da G-C-M abriu processo administrativo disciplinar contra o servidor. A Polícia Civil de São Paulo abriu inquérito policial formal. No Ministério Público estadual, a promotoria do Patrimônio Público instaurou uma Notícia de Fato para que um promotor analise se abre inquérito civil. E o Tribunal de Contas do Município acompanha a execução do contrato milionário.
+
+00:06:47.680 --> 00:06:51.220
+<v Sara>A prefeitura tomou alguma atitude prática depois da denúncia?
+
+00:06:51.440 --> 00:07:12.960
+<v Samurai>Tirou o repositório da internet às pressas e declarou ter implantado autenticação em dois fatores com verificação de código por S-M-S para a criação de novas senhas. Só que a perícia técnica conclusiva ainda não terminou, então ninguém sabe exatamente quantas pessoas de fora baixaram esses arquivos durante os onze meses de exposição.
+
+00:07:13.140 --> 00:07:25.680
+<v Sara>E você que tá ouvindo a gente agora e mora em São Paulo, ou em qualquer cidade com câmeras de reconhecimento facial... o que deve fazer se desconfiar que foi vítima de exposição ou abordagem errada?
+
+00:07:25.680 --> 00:07:42.240
+<v Samurai>Primeiro: se você foi abordado indevidamente por engano da máquina ou teve imagem violada em espaço assistencial, registre imediatamente um boletim de ocorrência na Polícia Civil de São Paulo e protocole uma representação junto à Promotoria de Justiça do Patrimônio Público do M-P-S-P.
+
+00:07:44.160 --> 00:08:02.120
+<v Samurai>Segundo: faça também uma denúncia na Corregedoria da Guarda Civil Metropolitana. Terceiro: se você é agente de segurança e teve seu nome ou cê-pê-êfe exposto na lista vazada, troque na hora todas as suas senhas corporativas e ative alertas de monitoramento de crédito no seu documento.
+
+00:08:02.620 --> 00:08:07.700
+<v Sara>E a Lei Geral de Proteção de Dados, Samurai? A prefeitura não tem que prestar contas?
+
+00:08:07.940 --> 00:08:29.780
+<v Samurai>Com certeza. Pela resolução número quinze da Autoridade Nacional de Proteção de Dados, a A-N-P-D, incidentes graves de segurança precisam ser comunicados à autoridade e aos titulares afetados em até três dias úteis. O passo a passo completo pra quem teve dados vazados ou direitos violados tá lá em cyberjus ponto org, na página Fui vítima.
+
+00:08:30.000 --> 00:08:39.600
+<v Sara>Pensar naquela mãe ou naquele paciente que foi filmado sem saber por uma câmera com senha aberta na internet... dá um frio na espinha, né?
+
+00:08:39.600 --> 00:08:51.020
+<v Samurai>Dá mesmo, Sara. A vigilância prometia proteger a cidade, mas por puro desleixo com regras básicas de cibersegurança, quem acabou vigiado sem defesa foi o próprio cidadão.
+
+00:08:51.200 --> 00:09:01.860
+<v Sara>Manda este episódio agora praquele amigo ou colega de trabalho que acha que reconhecimento facial público nunca falha e que segurança não precisa de dois fatores.
+
+00:09:02.220 --> 00:09:06.600
+<v Samurai>Cuidem-se bem, protejam seus acessos e até o próximo CyberJustiça.
