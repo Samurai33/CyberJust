@@ -125,6 +125,28 @@ def duracao(arquivo):
     return float(r.stdout.strip())
 
 
+def silencios(arquivo, ini, fim):
+    """Silêncios reais (pelo menos 0,12 s abaixo de -40 dB) entre ini e fim, em segundos do arquivo."""
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-ss", f"{ini:.3f}", "-t", f"{fim - ini:.3f}", "-i", str(arquivo),
+                        "-af", "silencedetect=noise=-40dB:d=0.12", "-f", "null", "-"], capture_output=True, text=True)
+    comecos = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", r.stderr)]
+    fins = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r.stderr)]
+    return [(ini + s, ini + e) for s, e in zip(comecos, fins)]
+
+
+def no_silencio(arquivo, t, desde=0.0, ate=float("inf"), raio=0.8):
+    """Leva o ponto de corte t para o meio do silêncio real mais perto (até raio segundos), entre desde e ate.
+
+    Os tempos da legenda vêm do Whisper, que erra o fim e o começo de siglas e números: no episódio do Smart Sampa
+    (21/10/2026) o corte caiu 0,4 s antes do silêncio e comeu o "U-B-S" do Samurai e o começo do "Quatrocentas".
+    Sem silêncio por perto, fica o tempo da legenda."""
+    perto = [(s, e) for s, e in silencios(arquivo, max(0.0, t - raio), t + raio) if desde <= (s + e) / 2 <= ate]
+    if not perto:
+        return t
+    s, e = min(perto, key=lambda x: 0.0 if x[0] <= t <= x[1] else min(abs(t - x[0]), abs(t - x[1])))
+    return (s + e) / 2
+
+
 def refazer_fala(pasta, n, gerar):
     """Regenera só a fala n (índice 0) e a encaixa no bloco bruto, sem tocar no resto do episódio.
 
@@ -158,6 +180,12 @@ def refazer_fala(pasta, n, gerar):
     # A janela pode passar da borda do bloco quando a fala é a primeira ou a última dele (o silêncio vizinho está no
     # bloco ao lado); o atrim com tempo negativo falha.
     a, b = max(0.0, a - inicio_bloco), min(duracao(partes[k]), b - inicio_bloco)
+    # O corte vai para o silêncio real mais perto: a antes do fim da fala, b depois do começo dela (uma pausa no meio
+    # da própria fala, como "gravíssimo... e nas escolas?", não pode virar ponto de corte).
+    ini_fala, fim_fala = cues[n][0] - inicio_bloco, cues[n][1] - inicio_bloco
+    a = no_silencio(partes[k], a, ate=min(ini_fala + 0.3, fim_fala))
+    b = no_silencio(partes[k], b, desde=max(fim_fala - 0.3, ini_fala))
+    log(f"corte no bloco {k + 1}: {a:.2f}s a {b:.2f}s")
 
     corpo = {"model_id": MODELO, "language_code": "pt", "inputs": [{"text": texto, "voice_id": VOZES[fala["quem"]]}],
              "seed": 2033, "settings": {"stability": float(os.environ.get("ESTABILIDADE_REFAZER", "0.5"))}}

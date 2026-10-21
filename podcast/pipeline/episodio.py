@@ -93,17 +93,23 @@ def validar(r, capitulos):
 def enviar_audio(arquivo, caminho):
     """PUT no Worker do áudio, que confere o faststart e o hash do nome; reenviar o mesmo arquivo é idempotente."""
     dados = arquivo.read_bytes()
+    # User-Agent próprio em TODOS os pedidos: a Cloudflare devolve 403 para o "Python-urllib" padrão (a 1ª publicação
+    # pelo R2, em 21/10/2026, enviou o áudio e caiu no HEAD de conferência por isso).
+    ua = {"User-Agent": "cyberjust-pipeline/1"}
     req = urllib.request.Request(AUDIO_BASE + caminho, data=dados, method="PUT", headers={
-        "Authorization": f"Bearer {os.environ['AUDIO_ENVIO']}", "Content-Type": "audio/mp4",
-        "User-Agent": "cyberjust-pipeline/1"})
+        "Authorization": f"Bearer {os.environ['AUDIO_ENVIO']}", "Content-Type": "audio/mp4", **ua})
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             info = json.load(r)
     except urllib.error.HTTPError as e:
         raise SystemExit(f"O R2 recusou o áudio ({e.code}): {e.read().decode(errors='replace')[:300]}")
-    with urllib.request.urlopen(urllib.request.Request(AUDIO_BASE + caminho, method="HEAD"), timeout=30) as r:
-        if r.headers.get("Content-Length") != str(len(dados)):
-            raise SystemExit(f"{caminho}: o HEAD depois do envio não bate com o tamanho do arquivo")
+    try:
+        with urllib.request.urlopen(urllib.request.Request(AUDIO_BASE + caminho, method="HEAD", headers=ua), timeout=30) as r:
+            tamanho = r.headers.get("Content-Length")
+    except urllib.error.HTTPError as e:
+        raise SystemExit(f"O áudio foi enviado, mas a conferência em {AUDIO_BASE + caminho} deu {e.code}; nada foi publicado.")
+    if tamanho != str(len(dados)):
+        raise SystemExit(f"{caminho}: o HEAD depois do envio não bate com o tamanho do arquivo")
     log(f"áudio no R2: {caminho} ({len(dados) / 1048576:.1f} MB, {info['segundos']} s)")
     return {"segundos": info["segundos"], "bytes": info["bytes"]}
 
