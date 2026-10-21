@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { infoMp4 } from './mp4.js';
+import { intervalo } from './intervalo.js';
 import worker from './worker.js';
 
 const caixa = (tipo, corpo = new Uint8Array(0)) => {
@@ -67,12 +68,12 @@ function r2() {
       const pedido = range.get('range');
       if (!pedido) return { ...m, body: o.bytes };
       const [, a, b] = /^bytes=(\d*)-(\d*)$/.exec(pedido);
-      // como o R2 de verdade: as três chaves sempre presentes, as que não se aplicam com undefined
-      if (a === '') return { ...m, range: { offset: undefined, length: undefined, suffix: Number(b) }, body: o.bytes.slice(-Number(b)) };
+      // o formato do range que o R2 real devolve não é confiável: o Worker calcula pelo cabeçalho
+      if (a === '') return { ...m, range: { formato: 'desconhecido' }, body: o.bytes.slice(-Number(b)) };
       const inicio = Number(a);
       if (inicio >= o.bytes.length) throw new RangeError('fora do arquivo');
       const fim = b === '' ? o.bytes.length - 1 : Math.min(Number(b), o.bytes.length - 1);
-      return { ...m, range: { offset: inicio, length: fim - inicio + 1, suffix: undefined }, body: o.bytes.slice(inicio, fim + 1) };
+      return { ...m, range: { formato: 'desconhecido' }, body: o.bytes.slice(inicio, fim + 1) };
     },
   };
 }
@@ -89,6 +90,18 @@ const enviar = (e, corpo = BOM, nome = NOME, token = 'segredo-de-teste') =>
     }),
     e,
   );
+
+describe('intervalo (Range)', () => {
+  it('início-fim, aberto, sufixo e inválidos', () => {
+    expect(intervalo('bytes=0-15', 100)).toEqual({ inicio: 0, fim: 15 });
+    expect(intervalo('bytes=90-', 100)).toEqual({ inicio: 90, fim: 99 });
+    expect(intervalo('bytes=95-500', 100)).toEqual({ inicio: 95, fim: 99 });
+    expect(intervalo('bytes=-10', 100)).toEqual({ inicio: 90, fim: 99 });
+    expect(intervalo('bytes=-500', 100)).toEqual({ inicio: 0, fim: 99 });
+    expect(intervalo(null, 100)).toBeNull();
+    expect(intervalo('bytes=0-1,5-6', 100)).toBeNull();
+  });
+});
 
 describe('Worker do áudio', () => {
   it('envio: valida, grava e devolve os dados do manifesto', async () => {

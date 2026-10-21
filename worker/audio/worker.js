@@ -8,6 +8,7 @@
 //               mesmo é idempotente, conteúdo diferente com o mesmo nome é recusado.
 //               Devolve { caminho, bytes, segundos } para o src/data/audio.json.
 import { infoMp4 } from './mp4.js';
+import { intervalo } from './intervalo.js';
 
 const NOME = /^\/audio\/([a-z0-9-]+)-([0-9a-f]{8})\.m4a$/;
 const MAXIMO = 95 * 1024 * 1024; // abaixo do limite de corpo de 100 MB da Cloudflare
@@ -63,14 +64,12 @@ async function servir(request, env, chave) {
 
   let status = 200;
   let tamanho = obj.size;
-  if (obj.range && request.headers.has('range')) {
-    // O R2 real devolve as chaves que não se aplicam com valor undefined ({ offset, length, suffix }):
-    // testar com "in" dava NaN no Content-Range e o Safari não tocava.
-    const r = obj.range;
-    const sufixo = r.suffix !== undefined;
-    const inicio = sufixo ? obj.size - r.suffix : r.offset ?? 0;
-    tamanho = sufixo ? r.suffix : r.length ?? obj.size - inicio;
-    h.set('content-range', `bytes ${inicio}-${inicio + tamanho - 1}/${obj.size}`);
+  const pedido = intervalo(request.headers.get('range'), obj.size);
+  if (pedido && obj.range) {
+    // Calculado do cabeçalho do pedido, não do obj.range: o formato que o R2 real devolve ali deu NaN no
+    // Content-Range (e o Safari não toca sem ele certo). O R2 já recortou o corpo com o mesmo cabeçalho.
+    tamanho = pedido.fim - pedido.inicio + 1;
+    h.set('content-range', `bytes ${pedido.inicio}-${pedido.fim}/${obj.size}`);
     status = 206;
   }
   h.set('content-length', String(tamanho));

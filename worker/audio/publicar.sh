@@ -35,7 +35,8 @@ script)
   c -X PUT "$API/accounts/$ACC/workers/scripts/$NOME" \
     -F "metadata=$META;type=application/json" \
     -F "worker.js=@$DIR/worker.js;type=application/javascript+module" \
-    -F "mp4.js=@$DIR/mp4.js;type=application/javascript+module" | ok ;;
+    -F "mp4.js=@$DIR/mp4.js;type=application/javascript+module" \
+    -F "intervalo.js=@$DIR/intervalo.js;type=application/javascript+module" | ok ;;
 segredo)
   : "${ENVIO:?defina ENVIO (o mesmo valor de AUDIO_ENVIO no pipeline)}"
   python3 -c 'import json,os;print(json.dumps({"name":"ENVIO","text":os.environ["ENVIO"],"type":"secret_text"}))' |
