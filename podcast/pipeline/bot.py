@@ -244,8 +244,10 @@ def gerar_audio(nome):
     capitulos = "\n".join(f"{c['inicio']} {esc(c['titulo'])}" for c in caps)
     selo = "✅" if qa["aprovado"] else "❌"
     fora = qa.get("fora_do_tom", [])
-    aviso = "".join(f"\n⚠️ {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} {esc(f['locutor'])} fora do tom "
-                    f"(voz {f['f0']:+.0%}, brilho {f['brilho']:+.0%}): {esc(f['texto'][:60])}" for f in fora)
+    aviso = "".join(f"\n⚠️ {int(f['inicio'] // 60)}:{int(f['inicio'] % 60):02d} {esc(f['locutor'])} "
+                    + (f"sussurrando (grave {f['grave_db']:+.0f} dB)" if f.get("motivo") == "sussurro"
+                       else f"fora do tom (voz {f['f0']:+.0%}, brilho {f['brilho']:+.0%})")
+                    + f": {esc(f['texto'][:60])}" for f in fora)
     msg(f"{selo} <b>Controle de qualidade</b>\nduração {int(qa['duracao_s'] // 60)}:{int(qa['duracao_s'] % 60):02d} · "
         f"{qa['lufs']} LUFS · pico {qa['pico_dbtp']} dBTP · faststart {'ok' if qa['faststart'] else 'FALHOU'} · "
         f"alinhamento {qa['cobertura_alinhamento']:.0%}\n\n<b>Capítulos</b>\n{capitulos}\n\n"

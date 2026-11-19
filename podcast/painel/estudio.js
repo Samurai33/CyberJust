@@ -539,7 +539,9 @@ function desenharFalas(ep) {
     const ferramentas = h('div', { class: 'ferramentas' });
     if (fora.has(i)) {
       const x = fora.get(i);
-      ferramentas.append(h('span', { class: 'tag', dataset: { st: 'warn' }, title: `voz ${Math.round(x.f0 * 100)}%, brilho ${Math.round(x.brilho * 100)}%`, text: 'fora do tom' }));
+      ferramentas.append(x.motivo === 'sussurro'
+        ? h('span', { class: 'tag', dataset: { st: 'warn' }, title: `grave ${x.grave_db} dB abaixo do normal`, text: 'sussurro' })
+        : h('span', { class: 'tag', dataset: { st: 'warn' }, title: `voz ${Math.round(x.f0 * 100)}%, brilho ${Math.round(x.brilho * 100)}%`, text: 'fora do tom' }));
     }
     if (podeEditar) {
       ferramentas.append(h('button', { type: 'button', class: 'botao fantasma mini', title: 'Editar a fala', 'aria-label': `Editar fala ${i + 1}`,

@@ -122,7 +122,7 @@ def main():
     gravar(pasta / "capitulos.json", capitulos)
 
     qa = medir(audio) | {"cobertura_alinhamento": round(cobertura, 3)}
-    # Fala gritada ou eufórica (episódio 14, 4:03): voz bem mais aguda e brilhante que a mediana do locutor.
+    # Fala gritada ou eufórica (episódio 14, 4:03) ou sussurrada (episódio 11): reprova e oferece refazer a fala.
     qa["fora_do_tom"] = analisar(audio, pasta / "episodio.vtt")
     qa["aprovado"] = (qa["faststart"] and qa["pico_dbtp"] <= -1.0 and abs(qa["lufs"] + 16) <= 1.0 and cobertura >= 0.85
                       and not qa["fora_do_tom"])
