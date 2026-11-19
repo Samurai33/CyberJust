@@ -1,0 +1,154 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:10.680
+<v Samurai>Madrugada de sábado, sete de novembro de dois mil e vinte e seis. Três horas da manhã. Nos servidores da Autoridade Portuária de Santos, telas começam a travar uma a uma.
+
+00:00:12.080 --> 00:00:17.460
+<v Sara>Pera aí... os funcionários estavam trabalhando de madrugada ou os computadores começaram a desligar sozinhos?
+
+00:00:17.880 --> 00:00:33.960
+<v Samurai>Tudo começou a apagar sem intervenção humana. Sistemas de protocolo, telefonia, internet, controle de acessos. Horas depois, chega uma mensagem direta dos invasores por e-mail: os dados estavam criptografados e eles queriam dinheiro para devolver a chave.
+
+00:00:34.120 --> 00:00:38.920
+<v Sara>Um pedido de resgate sequestrando a estrutura do maior porto da América Latina?!
+
+00:00:39.400 --> 00:01:01.620
+<v Samurai>Exatamente, Sara. E hoje você vai entender como um código malicioso ficou escondido por semanas esperando uma oportunidade, e como um acidente totalmente físico com um guindaste serviu de gatilho para a extorsão. No final, vou te contar a decisão técnica que evitou um colapso completo no abastecimento do país. Eu sou o Samurai, e este é o CyberJustiça.
+
+00:01:01.820 --> 00:01:10.920
+<v Sara>Samurai, quando a gente ouve falar em ataque hacker no Porto de Santos, dá um frio na espinha. O porto parou? Os navios ficaram presos no mar?
+
+00:01:11.160 --> 00:01:26.400
+<v Samurai>Não pararam, e aqui já entra a regra de ouro da segurança que salvou a operação: a segregação de redes. A regra número um para infraestrutura crítica e empresas é nunca manter sistemas administrativos e operações físicas no mesmo ambiente digital.
+
+00:01:26.400 --> 00:01:29.100
+<v Sara>Como assim? Explica melhor essa divisão.
+
+00:01:29.320 --> 00:01:46.420
+<v Samurai>A Autoridade Portuária cuida da gestão pública, do site, dos gates, da intranet. Já os terminais de contêineres privados têm infraestrutura própria e independente. Quando o vírus atingiu a rede corporativa da empresa pública, a barreira técnica impediu que ele saltasse para os guindastes e navios.
+
+00:01:46.760 --> 00:01:59.120
+<v Samurai>E olha o tamanho do risco: o Porto de Santos responde por quase um terço de todo o comércio exterior brasileiro. Só em dois mil e vinte e cinco, movimentou mais de cento e oitenta e seis milhões de toneladas de carga.
+
+00:01:59.520 --> 00:02:09.280
+<v Sara>Caramba, ainda bem que essa barreira segurou! Porque se o porto inteiro parasse por causa desse vírus, o colapso econômico no país seria gigantesco.
+
+00:02:09.920 --> 00:02:16.780
+<v Sara>Ufa... menos mal. Mas e os sistemas internos da administração portuária? O que foi que caiu exatamente?
+
+00:02:17.600 --> 00:02:29.300
+<v Samurai>Caiu praticamente tudo na administração central: o sistema de gestão S-A-P, o sistema Docas Digital, a telefonia interna, os protocolos e as catracas biométricas de entrada pública.
+
+00:02:29.580 --> 00:02:34.620
+<v Sara>Nossa! E como esse bicho entrou lá dentro? Foi um super ataque de filme?
+
+00:02:35.020 --> 00:02:48.240
+<v Samurai>A principal hipótese da investigação é o método mais clássico e perigoso: um simples e-mail com anexo malicioso, o famoso phishing. Alguém na rede interna clicou, e o arquivo instalou um programa silencioso.
+
+00:02:48.240 --> 00:02:53.820
+<v Sara>Mas se o funcionário clicou dias antes, por que o ataque só explodiu na madrugada de sábado?
+
+00:02:54.120 --> 00:03:03.780
+<v Samurai>Porque o malware estava dormindo na rede. Esperando. E aí entra o evento mais curioso desse caso: a física atropelou a tecnologia.
+
+00:03:04.080 --> 00:03:07.420
+<v Sara>A física atropelou a tecnologia? O que aconteceu?
+
+00:03:07.960 --> 00:03:21.940
+<v Samurai>Na sexta-feira, seis de novembro, um guindaste bateu na linha de transmissão de energia da Usina Hidrelétrica de Itatinga. Isso causou uma oscilação forte de energia na Baixada Santista e atingiu em cheio os data centers da autoridade portuária.
+
+00:03:22.140 --> 00:03:26.200
+<v Sara>Pera... um acidente com guindaste cortou a luz dos servidores?
+
+00:03:26.680 --> 00:03:40.620
+<v Samurai>Cortou. Um dos data centers locais desligou com o pico. O segundo assumiu a carga, mas também não aguentou e caiu na sequência. Quando as máquinas foram reinicializadas à força na madrugada de sábado, o software malicioso acordou.
+
+00:03:40.620 --> 00:03:44.760
+<v Sara>Nossa... a reinicialização forçada ativou o vírus?
+
+00:03:45.100 --> 00:03:59.380
+<v Samurai>Tudo indica que sim. Por volta das três da manhã, o programa começou a criptografar arquivos e travar as bases de dados. Quando os técnicos perceberam, os invasores já tinham mandado o e-mail exigindo pagamento em dinheiro para liberar as chaves.
+
+00:04:00.160 --> 00:04:12.680
+<v Samurai>Naquele momento de crise, a prioridade foi isolar os servidores e cortar conexões para conter o malware. Desligar a rede impede que o sequestro avance para outros sistemas corporativos enquanto a equipe avalia o estrago.
+
+00:04:12.880 --> 00:04:21.580
+<v Sara>Imagina a tensão de ter que puxar tudo da tomada às três da manhã para o estrago não se alastrar! E com os invasores já na ofensiva...
+
+00:04:22.340 --> 00:04:26.940
+<v Sara>E quanto os criminosos queriam de dinheiro? A autoridade portuária pensou em pagar?
+
+00:04:27.320 --> 00:04:39.040
+<v Samurai>O valor exato exigido não foi divulgado publicamente. Mas a resposta foi categórica: a autoridade portuária não respondeu, não negociou e não pagou nenhum centavo de resgate.
+
+00:04:39.640 --> 00:04:46.900
+<v Sara>Certíssimo, né? Se pagar, além de financiar criminoso, não tem garantia nenhuma de que eles vão devolver os dados.
+
+00:04:47.280 --> 00:04:59.400
+<v Samurai>Exatamente, Sara. Pagar resgate a extorsionário é alimentar o próximo ataque. E tem outro detalhe crucial: as perícias confirmaram que os comandos desse ataque partiram de fora do Brasil.
+
+00:04:59.400 --> 00:05:03.380
+<v Sara>De fora do país? E quem foi acionado para lidar com essa encrenca?
+
+00:05:04.360 --> 00:05:17.020
+<v Samurai>A direção da autoridade portuária agiu rápido na contenção. Montou um gabinete de crise formal com nove representantes de áreas vitais: tecnologia, jurídico, segurança, compliance e operações.
+
+00:05:17.440 --> 00:05:19.140
+<v Sara>E a polícia entrou em campo quando?
+
+00:05:19.680 --> 00:05:34.580
+<v Samurai>A Polícia Federal instaurou inquérito formal em dez de novembro para apurar os crimes e fazer perícia digital nos servidores. A Comissão Estadual de Segurança Pública nos Portos elevou a segurança para o Nível Dois, aumentando o rigor nas vistorias presenciais.
+
+00:05:35.220 --> 00:05:42.140
+<v Sara>E os dados de quem passa pelo porto? Informações de caminhoneiros, funcionários... vazou alguma coisa?
+
+00:05:42.500 --> 00:05:59.060
+<v Samurai>A Autoridade Nacional de Proteção de Dados, a A-N-P-D, foi formalmente notificada no dia nove de novembro para acompanhar os riscos. Até o momento, a administração informa que não há confirmação de que dados confidenciais tenham sido extraídos ou vazados para a internet.
+
+00:05:59.340 --> 00:06:02.360
+<v Sara>E como eles recuperaram tudo sem pagar nada aos chantagistas?
+
+00:06:03.420 --> 00:06:16.700
+<v Samurai>Com o bom e velho backup. A equipe técnica chamou o Serpro e especialistas externos. Isolaram as máquinas infectadas, fizeram uma varredura rigorosa para não reinstalar o vírus e começaram a restauração.
+
+00:06:16.840 --> 00:06:19.320
+<v Sara>E conseguiram trazer os arquivos de volta rápido?
+
+00:06:19.600 --> 00:06:32.860
+<v Samurai>A telefonia e a internet voltaram na segunda-feira, dia nove. O site institucional retornou na noite de doze de novembro. E até essa data, cerca de setenta por cento dos backups de arquivos já estavam restaurados com segurança.
+
+00:06:33.100 --> 00:06:40.840
+<v Sara>E os navios? Você prometeu no início contar o que manteve os caminhões e cargas rodando enquanto os sistemas estavam apagados.
+
+00:06:41.160 --> 00:06:55.600
+<v Samurai>Foi a redundância de processos. Quando as catracas digitais caíram, os fiscais usaram procedimentos manuais e acionaram o sistema federal Porto Sem Papel, autorizando as cargas por e-mail e contingência física. O comércio não parou.
+
+00:06:55.820 --> 00:06:59.920
+<v Sara>Mas e a investigação? Algum dos chantagistas foi preso até agora?
+
+00:07:00.280 --> 00:07:12.120
+<v Samurai>Nenhum suspeito foi preso até o momento. O inquérito da Polícia Federal continua em andamento, analisando as conexões internacionais usadas no ataque. Não é um caso resolvido, é uma ameaça contínua.
+
+00:07:12.120 --> 00:07:23.680
+<v Sara>Para você que tá ouvindo a gente: só em dois mil e vinte e seis, a A-N-P-D já registrou seiscentas e setenta e duas ocorrências de segurança digital no Brasil. Ninguém tá imune.
+
+00:07:23.940 --> 00:07:40.760
+<v Samurai>Nenhuma empresa e nenhum cidadão. E o caso de Santos deixa lições práticas para qualquer negócio ou profissional. Primeiro passo: backup isolado da rede principal. Se a máquina principal for sequestrada, o backup offline garante a sua vida sem pagar resgate.
+
+00:07:40.760 --> 00:07:53.020
+<v Sara>Segundo passo: olho vivo nos e-mails. Se desconfiar do remetente ou do anexo, não clica, não abre e avisa o suporte de tecnologia imediatamente.
+
+00:07:53.280 --> 00:08:07.900
+<v Samurai>Terceiro passo: se você for alvo de ataque cibernético, isole os aparelhos da internet na hora, registre boletim de ocorrência na polícia e nunca negocie com criminosos. Se houver dados pessoais envolvidos, notifique a A-N-P-D.
+
+00:08:08.740 --> 00:08:22.700
+<v Samurai>E antes de subir qualquer cópia de segurança, é obrigatório fazer uma varredura completa para limpar os vestígios da invasão. Além disso, as empresas precisam testar planos de contingência manuais para não travar no susto.
+
+00:08:22.880 --> 00:08:30.420
+<v Sara>Fundamental mesmo, porque não adianta nada plugar o backup de volta se o vírus ainda estiver escondido em algum canto da rede.
+
+00:08:31.000 --> 00:08:41.140
+<v Sara>E para quem quiser conferir guias completos de como agir diante de fraudes e vazamentos, o passo a passo está em cyberjus ponto org, na página Fui vítima.
+
+00:08:41.520 --> 00:09:00.680
+<v Samurai>Lembra daquele guindaste que esbarrou na fiação elétrica lá no início? No mundo digital, uma faísca imprevista pode acender um rastro de pólvora plantado semanas antes. Compartilhe este episódio com quem gerencia redes, cuida de empresas ou trabalha com dados sensíveis. A prevenção é a nossa única defesa.
