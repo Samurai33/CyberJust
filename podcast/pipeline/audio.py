@@ -51,8 +51,10 @@ def api(caminho, corpo=None):
 
 # Rede de segurança do tom (episódio 14, 4:03: [excited] no Samurai saiu quase gritado). Mesmo que o roteiro traga
 # essas tags, elas não chegam à ElevenLabs; a Sara pode usar [excited], o Samurai não.
-PROIBIDAS = {"samurai": re.compile(r"\[(excited|shouting|angry|yelling|shouts|furious)\]\s*", re.I),
-             "coapresentadora": re.compile(r"\[(shouting|angry|yelling|shouts|furious)\]\s*", re.I)}
+# Episódio 11: [whispers] saiu sussurrado e o episódio foi despublicado. Sussurro é proibido para os dois locutores.
+SUSSURRO = r"whisper\w*|softly|quietly|hushed|murmur\w*|under (?:her|his) breath"
+PROIBIDAS = {"samurai": re.compile(rf"\[(excited|shouting|angry|yelling|shouts|furious|{SUSSURRO})\]\s*", re.I),
+             "coapresentadora": re.compile(rf"\[(shouting|angry|yelling|shouts|furious|{SUSSURRO})\]\s*", re.I)}
 
 
 def texto_seguro(fala):

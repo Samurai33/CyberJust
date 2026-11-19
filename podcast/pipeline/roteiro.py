@@ -86,6 +86,11 @@ vem do ritmo, das pausas e das palavras, nunca do volume. Nas falas do Samurai s
 [shouting], [angry] e [yelling] e pontos de exclamação em sequência ("!!"). No episódio 14 uma fala dele com
 [excited] saiu quase gritada e soou brava. A Sara pode se surpreender ([surprised], "Sério?!"), sem gritar.
 
+SEM SUSSURRO (regra fixa, Samurai e Sara): ninguém sussurra nem fala baixinho, em nenhuma fala. São PROIBIDAS as tags
+[whispers], [whispering], [softly], [quietly], [hushed] e [murmurs], e também pedir no texto para falar baixo. No
+episódio 11 uma fala com [whispers] saiu sussurrada e o episódio foi despublicado. Suspense se faz com pausa
+(reticências), frase curta e [serious], nunca baixando a voz.
+
 ESTILO DE APRESENTADOR (soar falado, nunca lido; o modelo de voz segue o texto e a pontuação):
 - Escreva como brasileiro fala: "tá", "pra", "né", "a gente", "olha", "sabe?", "então"; frases curtas, às vezes
   incompletas; repetição de ênfase ("dois milhões. Dois milhões!").
@@ -103,7 +108,7 @@ ESCRITA PARA VOZ (ElevenLabs):
   "cyberjus ponto org" para o site.
 - Título de capítulo vai só no campo "capitulo", nunca falado ("Capítulo um: ..." não entra no texto).
 - Tags de entrega em inglês entre colchetes, no início da fala, no máximo uma a cada 3 falas: [chuckles], [sighs],
-  [curious], [sarcastic], [serious], [surprised], [whispers], [short pause], [clears throat]; [excited] só para a
+  [curious], [sarcastic], [serious], [surprised], [short pause], [clears throat]; [excited] só para a
   Sara e no máximo uma vez no episódio.
   Reticências e travessões para pausas. Sem SSML.
 - Falas de 1 a 4 frases. Duração alvo: 8 a 9 minutos (1.300 a 1.450 palavras no total).
@@ -153,7 +158,8 @@ Procure: número, data, cidade, órgão ou nome que não está na ficha ou diver
 idade, "exatamente", citação literal de pessoa real); status do caso diferente da ficha; suspeito não condenado
 citado pelo nome; riso ou deboche sobre o prejuízo da vítima; tags de emoção demais (mais de uma a cada 3 falas);
 tag [excited], [shouting], [angry] ou [yelling] em fala do Samurai, ou fala dele escrita para soar brava ou
-eufórica (exclamações em sequência, caixa alta); siglas não soletradas e números não escritos por extenso; a
+eufórica (exclamações em sequência, caixa alta); tag de sussurro ([whispers], [softly], [quietly], [hushed],
+[murmurs]) em fala de qualquer locutor, ou fala pedindo para falar baixo; siglas não soletradas e números não escritos por extenso; a
 apresentação "Eu sou o Samurai, e este é o CyberJustiça." ausente ou dita pela coapresentadora; a coapresentadora
 chamada por outro nome que não Sara; promessa do início não cumprida. Confira também os campos da página.
 Os PROBLEMAS DETECTADOS PELO CÓDIGO (se houver) são certos: corrija cada um que estiver numa fala.
@@ -296,6 +302,7 @@ def aplicar_revisao(roteiro, problemas):
 
 TAG = re.compile(r"\[[^\]]+\]")
 PROIBIDAS_SAMURAI = re.compile(r"\[(excited|shouting|angry|yelling|shouts|furious)\]", re.I)
+SUSSURRO = re.compile(r"\[(whisper\w*|softly|quietly|hushed|murmur\w*|under (?:her|his) breath)\]", re.I)
 SIGLA = re.compile(r"\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{2,}\b")
 
 
@@ -320,6 +327,8 @@ def conferir(roteiro):
         texto = TAG.sub("", f["texto"])
         if f["quem"] == "samurai" and (PROIBIDAS_SAMURAI.search(f["texto"]) or "!!" in texto):
             achados.append((i, "fala do Samurai com tag ou pontuação de grito (o tom dele é calmo)"))
+        if SUSSURRO.search(f["texto"]):
+            achados.append((i, "tag de sussurro: ninguém sussurra no CyberJustiça (troque por pausa ou [serious])"))
         if f["quem"] == "coapresentadora" and re.search(rf"\b{re.escape(nome)}\b", texto, re.I):
             achados.append((i, f"a {nome} diz o próprio nome"))
         if re.match(r"\s*cap[ií]tulo\s+\w+\s*:", texto, re.I):
