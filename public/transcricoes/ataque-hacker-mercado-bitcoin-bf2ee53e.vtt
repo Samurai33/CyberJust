@@ -1,0 +1,121 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:07.120
+<v Samurai>Madrugada de segunda-feira, dois de novembro de dois mil e vinte e seis. Três horas e dezenove minutos da manhã.
+
+00:00:07.380 --> 00:00:09.960
+<v Sara>Todo mundo dormindo no feriado prolongado...
+
+00:00:10.300 --> 00:00:25.460
+<v Samurai>Quase todo mundo. Nos servidores do Mercado Bitcoin, a maior corretora do país, centenas de alertas automáticos começam a disparar. Em questão de minutos, mais de trinta e cinco mil carteiras de clientes começam a ser limpas, uma por uma.
+
+00:00:26.100 --> 00:00:29.060
+<v Sara>Trinta e cinco mil contas esvaziadas ao mesmo tempo?!
+
+00:00:29.060 --> 00:00:58.380
+<v Samurai>Isso mesmo. Quarenta e nove vírgula dois milhões de dólares evaporando da plataforma em menos de cinco horas. Isso dá cerca de duzentos e sessenta e seis milhões de reais. Hoje você vai descobrir como essa invasão aconteceu, a corrida contra o tempo para congelar o rastro do invasor e, o mais importante para o seu bolso, o artigo de lei que proíbe qualquer corretora de repassar esse prejuízo para você. Eu sou o Samurai, e este é o CyberJustiça.
+
+00:00:58.380 --> 00:01:10.900
+<v Sara>Samurai, quando a gente ouve que quarenta e nove milhões de dólares sumiram de uma corretora com quatro milhões e meio de clientes, a primeira pergunta de quem tem dinheiro lá é: o que aconteceu com o meu saldo?
+
+00:01:11.180 --> 00:01:33.360
+<v Samurai>E a resposta começa com a nossa dica de ouro logo de início: corretora não é cofre seguro de longo prazo. O ditado clássico do mundo cripto nunca foi tão real: se as chaves privadas não estão com você, as moedas não são suas. Quem quer proteger patrimônio precisa aprender a usar carteira fria, a chamada cold wallet, guardada fora da internet.
+
+00:01:33.640 --> 00:01:39.480
+<v Sara>Pera... mas as pessoas confiam na plataforma pra guardar, né? Como os invasores conseguiram entrar?
+
+00:01:39.880 --> 00:01:52.100
+<v Samurai>Pois é, Sara. O criminoso não bateu na porta da frente. Ele mirou a infraestrutura de pagamentos e as chamadas hot wallets, que são as carteiras ativas, conectadas à rede pra processar saques rápidos.
+
+00:01:52.100 --> 00:02:10.180
+<v Samurai>A partir de uma vulnerabilidade de autenticação ou comprometimento prévio nos sistemas internos, o invasor ganhou controle sobre as chaves associadas aos endereços de depósito dos clientes. Em apenas vinte e cinco minutos, ele raspou ativos em pelo menos dez redes de blockchain diferentes.
+
+00:02:10.620 --> 00:02:13.860
+<v Sara>E como isso não foi barrado na hora pelo sistema de segurança?
+
+00:02:14.380 --> 00:02:31.740
+<v Samurai>Porque o invasor programou o ataque para simular a rotina comum de envio da própria corretora. Ele executou transferências automáticas pagando taxas de rede muito altas para furar a fila da blockchain. Foram quase trinta e seis mil endereços drenados quase simultaneamente.
+
+00:02:31.960 --> 00:02:34.040
+<v Sara>E o que ele levou? Foi só Bitcoin?
+
+00:02:34.560 --> 00:02:54.640
+<v Samurai>Não só. O maior estrago foi na rede Ethereum, com quase vinte e nove vírgula seis milhões de dólares. Em Bitcoin foram oito vírgula três milhões, cerca de cento e seis unidades. Depois veio Solana, com três vírgula cinco milhões, Stellar com dois vírgula um milhões, e outras redes menores.
+
+00:02:54.940 --> 00:03:00.780
+<v Sara>Nossa... E com essa montanha de moedas digitais na mão, pra onde esse invasor correu?
+
+00:03:00.940 --> 00:03:24.380
+<v Samurai>Ele partiu para a dispersão on-chain. Em poucos minutos, fragmentou mais de treze milhões de dólares em vinte e três carteiras externas, sendo vinte e duas delas novinhas em folha, criadas só para o golpe. Depois fez trezentas e trinta e oito trocas rápidas de tokens por mais de quatro mil e seiscentos ethers, e conseguiu vender dez milhões e meio de dólares.
+
+00:03:24.740 --> 00:03:26.400
+<v Sara>Então ele escapou com tudo?!
+
+00:03:26.940 --> 00:03:44.560
+<v Samurai>Não tudo, Sara. E é aqui que a tecnologia mostra o outro lado da moeda. A corretora cortou as conexões, suspendeu saques e chamou reforço pericial com empresas como a Chainalysis, Bitquery e CertiK. Mas o socorro mais rápido veio das emissoras de stablecoins.
+
+00:03:44.820 --> 00:03:48.220
+<v Sara>Como assim? O que as emissoras de moeda estável podem fazer?
+
+00:03:48.660 --> 00:04:11.540
+<v Samurai>Elas têm travas programadas no código dos contratos inteligentes. Empresas como a Tether, a Circle e a Paxos receberam as listas de carteiras suspeitas e congelaram os fundos diretamente na blockchain. Começou travando seis milhões e meio de dólares, passou para onze, quinze... até ultrapassar dezesseis milhões de dólares completamente bloqueados.
+
+00:04:11.820 --> 00:04:17.940
+<v Sara>Ou seja, o ladrão viu o dinheiro na tela dele, mas não conseguia mover um centavo!
+
+00:04:18.440 --> 00:04:41.020
+<v Samurai>Exato. Ficou a ver navios com mais de dezesseis milhões. Ele até tentou converter seiscentos e cinquenta mil dólares para Bitcoin usando uma ponte entre redes, mas a operação foi interceptada e abortada. Mesmo assim, cerca de trinta e três milhões de dólares continuam em poder dele. As investigações policiais seguem ativas e ninguém foi preso até agora.
+
+00:04:41.220 --> 00:04:52.020
+<v Sara>Samurai, trinta e três milhões de dólares ainda sumidos... E o investidor comum que acorda e vê a corretora travada? Ele tem que assumir esse prejuízo?
+
+00:04:52.280 --> 00:05:07.900
+<v Samurai>De jeito nenhum. E aqui a gente cumpre a promessa do início do episódio. A lei brasileira é absolutamente cristalina sobre isso: a relação entre cliente e corretora de criptoativos é uma relação de consumo, protegida pelo Código de Defesa do Consumidor.
+
+00:05:08.100 --> 00:05:11.320
+<v Sara>E o que diz a Justiça sobre ataque hacker nesse caso?
+
+00:05:11.600 --> 00:05:34.220
+<v Samurai>O Superior Tribunal de Justiça já pacificou o entendimento de que invasão cibernética em sistema bancário ou de corretora é o que a lei chama de fortuito interno. Isso significa que o risco de invasão faz parte do próprio modelo de negócio da empresa. Ela lucra com as taxas de negociação, então o dever de custódia é integralmente dela. Não pode transferir a perda para o usuário.
+
+00:05:34.400 --> 00:05:36.640
+<v Sara>E o Mercado Bitcoin reconheceu isso?
+
+00:05:37.000 --> 00:05:54.800
+<v Samurai>Sim. A direção da corretora declarou oficialmente que nenhum cliente terá prejuízo e anunciou um plano de recompra de mercado com recursos próprios para honrar todos os saldos existentes antes do ataque. As contas foram reabertas para consulta gradualmente, começando pela visualização de extratos.
+
+00:05:55.680 --> 00:06:03.460
+<v Sara>Mas enquanto a poeira baixa, imagino que os golpistas aproveitem a confusão pra atacar quem tá nervoso querendo sacar o dinheiro...
+
+00:06:03.640 --> 00:06:17.920
+<v Samurai>Você tocou na ferida, Sara. Quando sai na notícia que uma corretora foi hackeada, começam a chover quadrilhas falsificando páginas de suporte, mandando mensagens no WhatsApp e no Telegram, dizendo: clique aqui para liberar seu saldo retido.
+
+00:06:18.160 --> 00:06:21.200
+<v Sara>E o desespero faz a pessoa clicar sem pensar...
+
+00:06:21.500 --> 00:06:40.460
+<v Samurai>Pois anote bem: o Mercado Bitcoin, assim como nenhuma instituição séria, nunca vai te pedir senha, código de autenticação de dois fatores, nem vai te mandar link externo pedindo depósito em dinheiro pra liberar saque. Todo comunicado oficial só sai no site legítimo e no aplicativo autenticado.
+
+00:06:40.760 --> 00:06:45.060
+<v Sara>E pra quem tinha saldo lá antes do ataque, qual é o roteiro prático agora?
+
+00:06:45.440 --> 00:07:01.280
+<v Samurai>Muito simples. Primeiro: acerte o seu histórico. Tire capturas de tela do seu saldo, baixe todos os extratos de negociações anteriores e guarde os comprovantes de transferências de dinheiro que você fez pra lá. Isso é sua prova jurídica inviolável.
+
+00:07:01.500 --> 00:07:05.280
+<v Sara>E se houver divergência no saldo quando o sistema liberar a consulta?
+
+00:07:05.520 --> 00:07:28.300
+<v Samurai>Abra um protocolo imediatamente no canal oficial de atendimento. Se não resolverem no prazo, formalize reclamação no Procon do seu estado, na plataforma consumidor ponto gov ponto br e registre um boletim de ocorrência na Delegacia Eletrônica. O passo a passo completo pra documentar fraudes digitais tá lá no nosso portal, em cyberjus ponto org, na página Fui vítima.
+
+00:07:28.500 --> 00:07:32.060
+<v Sara>E tem mais um detalhe técnico vital sobre carteiras, né?
+
+00:07:32.420 --> 00:07:49.260
+<v Samurai>Com certeza. Se você costumava transferir criptoativos para um endereço de depósito antigo da plataforma, pare agora. Nunca reutilize endereços de depósito anteriores até que a corretora confirme formalmente que todas as chaves foram renovadas e saneadas.
+
+00:07:49.760 --> 00:07:57.780
+<v Sara>Aquelas três horas da manhã mostraram que deixar patrimônio acumulado na corretora é um risco que a gente não precisa correr todo dia.
+
+00:07:58.060 --> 00:08:15.540
+<v Samurai>Lembre-se sempre: custódia compartilhada exige vigilância redobrada. Manda este episódio para aquele amigo ou parente que investe em cripto e ainda deixa todas as moedas paradas na corretora sem saber dos próprios direitos. A gente se vê no próximo episódio do CyberJustiça.
