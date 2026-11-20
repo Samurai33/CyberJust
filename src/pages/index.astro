@@ -6,11 +6,12 @@ import BotaoOuvir from '../components/BotaoOuvir.astro';
 import Selo from '../components/Selo.astro';
 import Contador from '../components/Contador.astro';
 import Icon from '../components/Icon.astro';
+import OucaEm from '../components/OucaEm.astro';
 import { infoAudio, listarEpisodios, rotuloEpisodio, urlEpisodio } from '../lib/episodios';
 import { formatarTempo } from '../lib/tempo';
 import { Image } from 'astro:assets';
 import retrato from '../assets/img/samurai.png';
-import { SITE, TIPOS_DE_CRIME, PROTECAO, APRESENTADOR, CANAIS, LD } from '../data/site';
+import { SITE, TIPOS_DE_CRIME, PROTECAO, APRESENTADOR, CANAIS, LD, PLATAFORMAS } from '../data/site';
 
 const episodios = await listarEpisodios();
 const comAudio = episodios.filter((e) => e.data.audio);
@@ -28,6 +29,7 @@ const serie = {
   webFeed: new URL('/podcast.xml', Astro.site).href,
   author: { '@id': LD.samurai },
   publisher: { '@id': LD.n3xus },
+  sameAs: PLATAFORMAS.map((p) => p.url),
 };
 ---
 <Base title={SITE.nome} description={SITE.descricao} jsonLd={[serie]}>
@@ -44,6 +46,7 @@ const serie = {
           <BotaoOuvir ep={destaque} />
           <a class="btn btn-line" href="/episodios/">Todos os episódios <Icon name="arrow" class="ico-arrow" /></a>
         </div>
+        <OucaEm />
       </div>
       <article class="surface feature" aria-labelledby="destaque-titulo">
         <div class="feature-top">

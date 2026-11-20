@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Base from '../../layouts/Base.astro';
 import BotaoOuvir from '../../components/BotaoOuvir.astro';
+import OucaEm from '../../components/OucaEm.astro';
 import LinhaEpisodio from '../../components/LinhaEpisodio.astro';
 import Selo from '../../components/Selo.astro';
 import Icon from '../../components/Icon.astro';
@@ -115,6 +116,7 @@ const episodioLd = {
           </a>
         )}
       </div>
+      <OucaEm titulo="Siga o podcast no seu app" />
     </div>
   </section>
 

@@ -2,7 +2,7 @@
 // Rodapé no padrão do n3xus.dev: marca, navegação, transparência/legal e contato; razão social e CNPJ embaixo.
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { SITE, N3XUS } from '../data/site';
+import { SITE, N3XUS, PLATAFORMAS } from '../data/site';
 ---
 <footer class="site-footer">
   <div class="wrap">
@@ -21,6 +21,12 @@ import { SITE, N3XUS } from '../data/site';
           <li><a href="/sobre/">Sobre e especialista</a></li>
           <li><a href="/apoie/">Apoie o podcast</a></li>
           <li><a href="/podcast.xml" data-astro-reload>Feed RSS</a></li>
+        </ul>
+      </nav>
+      <nav class="foot-col" aria-label="Ouça no seu app">
+        <h2>Ouça no seu app</h2>
+        <ul role="list">
+          {PLATAFORMAS.map((p) => <li><a href={p.url} rel="noopener noreferrer" target="_blank">{p.nome} <Icon name="external" size={12} /></a></li>)}
         </ul>
       </nav>
       <nav class="foot-col" aria-label="Ajuda e transparência">
