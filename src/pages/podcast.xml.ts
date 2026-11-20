@@ -6,6 +6,9 @@ import { createHash } from 'node:crypto';
 import { dataCompleta, infoAudio, listarEpisodios, urlEpisodio } from '../lib/episodios';
 import { APRESENTADOR, N3XUS, SITE } from '../data/site';
 
+/** Hub WebSub público: o bot avisa este hub quando um episódio entra no ar (podcast/pipeline/bot.py). */
+const HUB_WEBSUB = 'https://pubsubhubbub.appspot.com/';
+
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** podcast:guid = UUIDv5 da URL do feed sem protocolo (namespace definido pelo Podcasting 2.0). */
@@ -56,6 +59,7 @@ export const GET: APIRoute = async ({ site }) => {
     <title>${esc(SITE.nome)}</title>
     <link>${base}/</link>
     <atom:link href="${feed}" rel="self" type="application/rss+xml" />
+    <atom:link href="${HUB_WEBSUB}" rel="hub" />
     <language>pt-br</language>
     <copyright>© ${new Date().getFullYear()} ${esc(N3XUS.razao)}</copyright>
     <description>${esc(SITE.descricao)}</description>
