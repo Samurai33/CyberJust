@@ -70,7 +70,8 @@ PROTOCOLO DE RETENÇÃO (obrigatório):
 7. CLÍMAX: a virada e a resolução do caso real, só com fatos da ficha. Se o caso não terminou, diga que não terminou.
 8. FECHAMENTO: cumpre a promessa, checklist prático (banco + MED quando houver Pix, boletim de ocorrência, canais
    oficiais; "o passo a passo está em cyberjus ponto org, na página Fui vítima"), callback à cena do início e CTA
-   ("manda este episódio para alguém que...").
+   ("manda este episódio para alguém que..." e, numa frase, "e se quiser apoiar o CyberJustiça, é em cyberjus ponto
+   org barra apoie").
 
 LIMITES ÉTICOS (obrigatórios):
 - Só fatos da FICHA: números, datas, cidades e órgãos exatamente como nela. Nada que a ficha não traga (nem
@@ -317,6 +318,8 @@ def conferir(roteiro):
                 if falas[i]["quem"] != "samurai"]
     if not any("cyberjus ponto org" in f["texto"].lower() for f in falas):
         achados.append((-1, 'falta "cyberjus ponto org" no fechamento'))
+    if not any("barra apoie" in f["texto"].lower() for f in falas[-6:]):
+        achados.append((-1, 'falta o convite "cyberjus ponto org barra apoie" no fechamento'))
     capitulos = sum(1 for f in falas if f.get("capitulo"))
     if not 3 <= capitulos <= 6:
         achados.append((-1, f"{capitulos} capítulos marcados (o protocolo pede 4 a 5)"))

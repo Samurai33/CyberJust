@@ -1,0 +1,118 @@
+---
+// Apoio dos ouvintes: o formulário chama o Worker worker/apoio (rota /api/apoio), que cria a cobrança no Asaas
+// da N3XUS e devolve o Pix (copia e cola + QR) e o link da fatura (cartão e boleto). Script: src/scripts/apoio.ts.
+import Base from '../layouts/Base.astro';
+import Trilha from '../components/Trilha.astro';
+import Icon from '../components/Icon.astro';
+import { trilhaLd } from '../lib/ld';
+import { N3XUS } from '../data/site';
+
+const trilha = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Apoie', href: '/apoie/' },
+];
+const valores = [10, 25, 50];
+const usos = [
+  { titulo: 'Episódios novos', texto: 'Apuração dos casos em fontes oficiais, roteiro e gravação de cada episódio.' },
+  { titulo: 'Site sem anúncio de terceiros', texto: 'Servidores, áudio e transcrições abertos para todo mundo, sem rastreadores.' },
+  { titulo: 'Guia Fui vítima', texto: 'Manter atualizado o passo a passo para quem caiu num golpe agir rápido.' },
+];
+---
+<Base title="Apoie o CyberJustiça" description="Apoie o podcast CyberJustiça Brasil com Pix, cartão ou boleto, uma vez ou todo mês, e ajude mais gente a não cair em golpe digital." jsonLd={[trilhaLd(Astro.site, trilha)]}>
+  <section class="page-head">
+    <div class="wrap">
+      <Trilha itens={trilha} />
+      <h1>Apoie o CyberJustiça</h1>
+      <p class="lede">O podcast é gratuito e continua assim. Com o seu apoio, mais casos são explicados e mais gente aprende a não cair em golpe.</p>
+    </div>
+  </section>
+
+  <section class="section section-tight" aria-labelledby="usos-t">
+    <div class="wrap">
+      <h2 class="label" id="usos-t">Para onde vai o apoio</h2>
+      <ul class="canais" role="list">
+        {usos.map((u) => <li class="surface canal"><h3>{u.titulo}</h3><p>{u.texto}</p></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="form-t">
+    <div class="wrap apoio-grid">
+      <form class="surface apoio-form" data-apoio novalidate>
+        <h2 id="form-t">Quero apoiar</h2>
+
+        <fieldset class="filtro">
+          <legend class="label">Frequência</legend>
+          <input type="radio" name="tipo" id="a-unico" value="unico" checked /><label for="a-unico">Uma vez</label>
+          <input type="radio" name="tipo" id="a-mensal" value="mensal" /><label for="a-mensal">Todo mês</label>
+        </fieldset>
+
+        <fieldset class="filtro">
+          <legend class="label">Valor</legend>
+          {valores.map((v, i) => (
+            <>
+              <input type="radio" name="valor" id={`a-v${v}`} value={v} checked={i === 1} /><label for={`a-v${v}`}>R$ {v}</label>
+            </>
+          ))}
+          <input type="radio" name="valor" id="a-outro" value="outro" /><label for="a-outro">Outro valor</label>
+        </fieldset>
+
+        <div class="campo" data-apoio-outro hidden>
+          <label for="a-valor">Valor em reais (de R$ 5 a R$ 1.000)</label>
+          <input id="a-valor" name="valorLivre" type="number" inputmode="decimal" min="5" max="1000" step="1" />
+        </div>
+        <div class="campo">
+          <label for="a-nome">Nome completo</label>
+          <input id="a-nome" name="nome" type="text" autocomplete="name" required maxlength="100" />
+        </div>
+        <div class="campo">
+          <label for="a-cpf">CPF</label>
+          <input id="a-cpf" name="cpf" type="text" inputmode="numeric" autocomplete="off" required maxlength="14" aria-describedby="a-cpf-ajuda" />
+          <p class="ajuda" id="a-cpf-ajuda">O Asaas, que processa o pagamento, exige o CPF para emitir a cobrança.</p>
+        </div>
+        <div class="campo">
+          <label for="a-email">E-mail <span data-apoio-email-opcional>(opcional)</span></label>
+          <input id="a-email" name="email" type="email" autocomplete="email" maxlength="254" aria-describedby="a-email-ajuda" />
+          <p class="ajuda" id="a-email-ajuda">No apoio mensal é por ele que chega a cobrança de cada mês.</p>
+        </div>
+        <div class="isca" aria-hidden="true">
+          <label for="a-site">Não preencha</label>
+          <input id="a-site" name="site" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <div class="campo campo-check">
+          <input id="a-aceite" name="aceite" type="checkbox" required />
+          <label for="a-aceite">Concordo que meu nome, CPF e e-mail sejam enviados ao Asaas só para gerar a cobrança, como explica a <a href="/privacidade/#apoio">política de privacidade</a>.</label>
+        </div>
+
+        <p class="apoio-erro" role="alert" data-apoio-erro></p>
+        <button class="btn" type="submit" data-apoio-enviar>Gerar pagamento <Icon name="arrow" /></button>
+        <noscript><p class="ajuda">Para apoiar pelo formulário, ative o JavaScript. Se preferir, escreva para <a href={`mailto:${N3XUS.email}`}>{N3XUS.email}</a>.</p></noscript>
+      </form>
+
+      <div class="surface apoio-resultado" data-apoio-resultado hidden tabindex="-1" aria-labelledby="res-t">
+        <h2 id="res-t">Falta só pagar</h2>
+        <div data-apoio-pix hidden>
+          <p>Abra o app do seu banco, escolha <strong>Pix copia e cola</strong> ou leia o QR Code.</p>
+          <img class="apoio-qr" data-apoio-qr alt="QR Code Pix do apoio" width="220" height="220" />
+          <label for="a-copia" class="label">Pix copia e cola</label>
+          <textarea id="a-copia" readonly rows="4" data-apoio-copia></textarea>
+          <button class="btn btn-line" type="button" data-apoio-copiar>Copiar código Pix</button>
+          <p class="ajuda" role="status" data-apoio-copiado></p>
+        </div>
+        <p><a class="link-arrow" data-apoio-fatura href="https://www.asaas.com/" rel="noopener noreferrer" target="_blank">Pagar com cartão ou boleto <Icon name="external" size={12} /></a></p>
+        <p class="ajuda" data-apoio-mensal hidden>Apoio mensal: as próximas cobranças chegam no seu e-mail. Para cancelar, escreva para <a href={`mailto:${N3XUS.email}`}>{N3XUS.email}</a>.</p>
+        <p class="ajuda">Obrigado! Cada apoio ajuda a explicar mais um golpe antes que ele faça a próxima vítima.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-tight" aria-labelledby="quem-t">
+    <div class="wrap">
+      <h2 class="label" id="quem-t">Quem recebe</h2>
+      <p class="muted">
+        O apoio vai para a {N3XUS.razao} (CNPJ {N3XUS.cnpj}), que produz o CyberJustiça. O pagamento é processado pelo
+        Asaas: o site não vê nem guarda dados de cartão. Dúvidas: <a href={`mailto:${N3XUS.email}`}>{N3XUS.email}</a>.
+      </p>
+    </div>
+  </section>
+</Base>
