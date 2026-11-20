@@ -72,9 +72,6 @@ PROTOCOLO DE RETENÇÃO (obrigatório):
    oficiais; "o passo a passo está em cyberjus ponto org, na página Fui vítima"), callback à cena do início e CTA
    ("manda este episódio para alguém que..." e, numa frase, "e se quiser apoiar o CyberJustiça, é em cyberjus ponto
    org barra apoie").
-9. INTERVALO: não escreva anúncio nem patrocínio. O código insere sozinho, na virada do segundo para o terceiro
-   capítulo, uma fala fixa do Samurai sobre a Nexus, que produz o podcast; ela termina com "Bom, voltando ao caso.",
-   então o terceiro capítulo começa retomando a história normalmente.
 
 LIMITES ÉTICOS (obrigatórios):
 - Só fatos da FICHA: números, datas, cidades e órgãos exatamente como nela. Nada que a ficha não traga (nem
@@ -154,28 +151,6 @@ ESQUEMA = {
     "required": ["titulo", "tituloSeo", "slug", "resumo", "descricao", "ameaca", "status", "tags", "pontos", "alertas", "promessa", "falas"],
 }
 
-# ---------- intervalo da N3XUS ----------
-
-# Anúncio da casa (a N3XUS produz o podcast), lido pelo Samurai. Texto fixo: inserido pelo código, nunca escrito
-# pelo modelo, para não sair promessa que a N3XUS não faz. "Nexus" é como se fala N3XUS; o CTA é um redirect do
-# próprio site (docker/nginx.conf: /nexus -> n3xus.dev com UTM), porque "n3xus ponto dev" falado vira nexus.dev.
-INTERVALO = ("Um recado rápido de quem faz o CyberJustiça. Este podcast é produzido pela Nexus, que protege empresas "
-             "contra golpes e ataques digitais, com auditoria de segurança, monitoramento e resposta a incidentes. "
-             "Se a sua empresa quer se proteger antes do prejuízo, o caminho é cyberjus ponto org barra nexus... "
-             "Bom, voltando ao caso.")
-MARCA_INTERVALO = "barra nexus"
-
-
-def com_intervalo(roteiro):
-    """Garante uma (e só uma) fala do intervalo, com o texto fixo, logo antes do 3º capítulo (ou a ~40% do episódio
-    se houver menos de 3). Rodar de novo não duplica: a fala antiga sai e entra a do texto fixo."""
-    falas = [f for f in roteiro["falas"] if MARCA_INTERVALO not in f["texto"].lower()]
-    inicios = [i for i, f in enumerate(falas) if f.get("capitulo")]
-    pos = inicios[2] if len(inicios) >= 3 else max(6, round(len(falas) * 0.4))
-    falas.insert(min(pos, len(falas)), {"quem": "samurai", "texto": INTERVALO})
-    return {**roteiro, "falas": falas}
-
-
 # ---------- revisão ----------
 
 REVISAR = """Você é o revisor de fatos e de tom do CyberJustiça. Compare o ROTEIRO (falas numeradas) com a FICHA DE
@@ -188,7 +163,6 @@ eufórica (exclamações em sequência, caixa alta); tag de sussurro ([whispers]
 [murmurs]) em fala de qualquer locutor, ou fala pedindo para falar baixo; siglas não soletradas e números não escritos por extenso; a
 apresentação "Eu sou o Samurai, e este é o CyberJustiça." ausente ou dita pela coapresentadora; a coapresentadora
 chamada por outro nome que não Sara; promessa do início não cumprida. Confira também os campos da página.
-A fala do intervalo da Nexus ("cyberjus ponto org barra nexus") tem texto fixo: nunca a corrija nem a aponte.
 Os PROBLEMAS DETECTADOS PELO CÓDIGO (se houver) são certos: corrija cada um que estiver numa fala.
 Para cada problema devolva a CORREÇÃO PRONTA: em fala, o texto completo da fala corrigida (mesmo locutor, tamanho
 parecido, mesmo estilo, mudando o mínimo); em campo da página, o valor novo. UM item por fala: se a mesma fala tem
@@ -426,7 +400,7 @@ def naturalizar(pasta):
         if campo in roteiro:
             novo[campo] = roteiro[campo]
     gravar(pasta / "roteiro-antes-naturalizar.json", roteiro)
-    gravar(pasta / "roteiro.json", com_intervalo(novo))
+    gravar(pasta / "roteiro.json", novo)
     log(f"naturalizado: {palavras(roteiro)} -> {palavras(novo)} palavras")
 
 
@@ -463,7 +437,6 @@ def main():
                   f"ROTEIRO (falas numeradas):\n{numeradas}{detectados}", tarefa="revisão",
                   instrucao=REVISAR + "\n\n" + PROTOCOLO, esquema=ESQUEMA_REVISAO, temperatura=0.1)
     final, aplicadas = aplicar_revisao(roteiro, revisao["problemas"])
-    final = com_intervalo(final)  # depois da revisão: o texto fixo não passa por nenhum modelo
     final["tema"] = pauta["tema"] if pauta["tema"] in TEMAS else "fraudes"
     gravar(pasta / "revisao.json", aplicadas)
     gravar(pasta / "roteiro.json", final)
