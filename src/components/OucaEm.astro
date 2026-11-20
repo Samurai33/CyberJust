@@ -1,0 +1,16 @@
+---
+// "Ouça no seu app": links para o programa em cada plataforma (dados em src/data/site.ts#PLATAFORMAS).
+// Aponta para o programa, não para o episódio: as plataformas não expõem o link do episódio de forma estável.
+import Icon from './Icon.astro';
+import { PLATAFORMAS } from '../data/site';
+interface Props { titulo?: string }
+const { titulo = 'Ouça no seu app' } = Astro.props;
+---
+<nav class="ouca" aria-label={titulo}>
+  <p class="label">{titulo}</p>
+  <ul role="list">
+    {PLATAFORMAS.map((p) => (
+      <li><a href={p.url} rel="noopener noreferrer" target="_blank">{p.nome} <Icon name="external" size={12} /><span class="visually-hidden"> (abre em outra aba)</span></a></li>
+    ))}
+  </ul>
+</nav>

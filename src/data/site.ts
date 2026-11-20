@@ -8,6 +8,15 @@ export const SITE = {
   repo: 'https://github.com/Samurai33/CyberJust',
 } as const;
 
+// Onde o podcast está publicado (o feed próprio /podcast.xml alimenta todos). Links conferidos (HTTP 200) em 20/11/2026.
+export const PLATAFORMAS = [
+  { nome: 'Spotify', url: 'https://open.spotify.com/show/7Kr3H4EUbdsZXqZOUj3jPt' },
+  { nome: 'Apple Podcasts', url: 'https://podcasts.apple.com/br/podcast/id6837189729' },
+  { nome: 'YouTube', url: 'https://www.youtube.com/playlist?list=PLStlX92qCw_8' },
+  { nome: 'Amazon Music', url: 'https://music.amazon.com.br/podcasts/746f7ce2-4832-4d6c-a0fe-b6ea63bf61fd' },
+  { nome: 'Deezer', url: 'https://www.deezer.com/br/show/1003777901' },
+] as const;
+
 export const MENU = [
   { href: '/episodios/', label: 'Episódios' },
   { href: '/temas/', label: 'Temas' },
