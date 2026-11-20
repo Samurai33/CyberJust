@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Imagens fixadas por digest (as mesmas do n3xus.dev): build reproduzível e sem troca silenciosa de base.
-FROM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
+FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5 AS build
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
