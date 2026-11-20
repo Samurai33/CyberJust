@@ -101,17 +101,24 @@ async function asaas(env, caminho, { metodo = 'GET', corpo } = {}) {
   return dados;
 }
 
-async function cliente(env, { nome, cpf, email }) {
+// Notificações do Asaas (e-mail/SMS ao apoiador) custam a "taxa de mensageria" (R$ 0,99 por cobrança). No apoio único
+// a pessoa já vê o Pix na tela: notificação desligada. No mensal ficam ligadas, porque é por elas que chega a cobrança
+// de cada mês; um apoio único de quem já é mensal não mexe nisso.
+async function cliente(env, { nome, cpf, email, tipo }) {
+  const mensal = tipo === 'mensal';
   const achado = await asaas(env, `/customers?cpfCnpj=${cpf}&limit=1`);
   const existente = achado.data?.[0];
   if (existente && !existente.deleted) {
+    const mudar = {};
     // Atualiza o e-mail se a pessoa informou um novo (é por ele que chegam as cobranças mensais).
-    if (email && existente.email !== email) await asaas(env, `/customers/${existente.id}`, { metodo: 'PUT', corpo: { email } });
+    if (email && existente.email !== email) mudar.email = email;
+    if (mensal && existente.notificationDisabled) mudar.notificationDisabled = false;
+    if (Object.keys(mudar).length) await asaas(env, `/customers/${existente.id}`, { metodo: 'PUT', corpo: mudar });
     return existente.id;
   }
   const novo = await asaas(env, '/customers', {
     metodo: 'POST',
-    corpo: { name: nome, cpfCnpj: cpf, ...(email ? { email } : {}), externalReference: REFERENCIA },
+    corpo: { name: nome, cpfCnpj: cpf, ...(email ? { email } : {}), notificationDisabled: !mensal, externalReference: REFERENCIA },
   });
   return novo.id;
 }

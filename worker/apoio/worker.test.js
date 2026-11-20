@@ -39,14 +39,14 @@ function banco() {
 }
 
 // Asaas de mentira: registra as chamadas e responde como a API v3.
-function asaasFalso({ clienteExiste = false, semPix = false, erroCliente = null, pagamento = {} } = {}) {
+function asaasFalso({ clienteExiste = false, clienteMudo = false, semPix = false, erroCliente = null, pagamento = {} } = {}) {
   const chamadas = [];
   const resp = (status, corpo) => new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json' } });
   const fetchFalso = vi.fn(async (url, init = {}) => {
     const caminho = String(url).replace(BASE, '');
     const corpo = init.body ? JSON.parse(init.body) : undefined;
     chamadas.push({ metodo: init.method ?? 'GET', caminho, corpo, headers: init.headers });
-    if (caminho.startsWith('/customers?')) return resp(200, { data: clienteExiste ? [{ id: 'cus_1', email: 'antigo@example.com' }] : [] });
+    if (caminho.startsWith('/customers?')) return resp(200, { data: clienteExiste ? [{ id: 'cus_1', email: 'antigo@example.com', notificationDisabled: clienteMudo }] : [] });
     if (caminho === '/customers') return erroCliente ? resp(400, { errors: [{ description: erroCliente }] }) : resp(200, { id: 'cus_2' });
     if (caminho.startsWith('/customers/')) return resp(200, { id: 'cus_1' });
     if (caminho === '/payments') return resp(200, { id: 'pay_abc123', invoiceUrl: 'https://sandbox.asaas.com/i/abc123' });
@@ -135,6 +135,34 @@ describe('POST /api/apoio', () => {
     expect(chamadas.some((c) => c.metodo === 'POST' && c.caminho === '/customers')).toBe(false);
     expect(chamadas.find((c) => c.metodo === 'PUT').corpo).toEqual({ email: 'maria@example.com' });
     expect(chamadas.find((c) => c.caminho === '/payments').corpo.customer).toBe('cus_1');
+  });
+
+  it('apoio único cria o cliente sem notificação do Asaas (sem taxa de mensageria)', async () => {
+    const { chamadas, fetchFalso } = asaasFalso();
+    vi.stubGlobal('fetch', fetchFalso);
+    await worker.fetch(post(formulario()), env());
+    expect(chamadas.find((c) => c.metodo === 'POST' && c.caminho === '/customers').corpo.notificationDisabled).toBe(true);
+  });
+
+  it('apoio mensal cria o cliente com notificação (a cobrança de cada mês chega por e-mail)', async () => {
+    const { chamadas, fetchFalso } = asaasFalso();
+    vi.stubGlobal('fetch', fetchFalso);
+    await worker.fetch(post(formulario({ tipo: 'mensal', valor: 10 })), env());
+    expect(chamadas.find((c) => c.metodo === 'POST' && c.caminho === '/customers').corpo.notificationDisabled).toBe(false);
+  });
+
+  it('apoio mensal de cliente que estava sem notificação religa a notificação', async () => {
+    const { chamadas, fetchFalso } = asaasFalso({ clienteExiste: true, clienteMudo: true });
+    vi.stubGlobal('fetch', fetchFalso);
+    await worker.fetch(post(formulario({ tipo: 'mensal', valor: 10 })), env());
+    expect(chamadas.find((c) => c.metodo === 'PUT').corpo).toEqual({ email: 'maria@example.com', notificationDisabled: false });
+  });
+
+  it('apoio único de quem já é mensal não desliga a notificação', async () => {
+    const { chamadas, fetchFalso } = asaasFalso({ clienteExiste: true });
+    vi.stubGlobal('fetch', fetchFalso);
+    await worker.fetch(post(formulario({ email: 'antigo@example.com' })), env());
+    expect(chamadas.some((c) => c.metodo === 'PUT')).toBe(false);
   });
 
   it('sem chave Pix na conta: devolve só a fatura (cartão/boleto)', async () => {
