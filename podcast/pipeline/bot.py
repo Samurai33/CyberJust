@@ -287,7 +287,8 @@ def publicar(nome):
         time.sleep(30)
         try:
             if urllib.request.urlopen(pedido, timeout=20).status == 200:
-                return msg(f"🎉 <b>No ar:</b> {info['url']}", aba="publicacao")
+                msg(f"🎉 <b>No ar:</b> {info['url']}", aba="publicacao")
+                return avisar_agregadores()
         except urllib.error.HTTPError as e:
             ultimo = f"HTTP {e.code}"  # 404 é o normal enquanto o deploy roda
         except Exception as e:
@@ -295,6 +296,38 @@ def publicar(nome):
     log("publicação: página não respondeu 200 em 15 min; última resposta:", ultimo)
     msg(f"⚠️ O commit foi feito, mas {info['url']} ainda não responde (última resposta: {esc(ultimo)}). "
         "Confira o deploy no Coolify.", aba="publicacao")
+
+
+FEED = "https://www.cyberjus.org/podcast.xml"
+HUB_WEBSUB = "https://pubsubhubbub.appspot.com/"  # o mesmo do <atom:link rel="hub"> em src/pages/podcast.xml.ts
+UA = "CyberJust-pipeline/1.0 (+https://www.cyberjus.org)"
+
+
+def avisar_agregadores():
+    """Avisa que o feed mudou, para o episódio aparecer em segundos e não na próxima leitura (que pode levar horas).
+    WebSub: Google e quem assina o hub. Podcast Index: abastece os apps do Podcasting 2.0. Podping: só com o token
+    PODPING_TOKEN (pedido à equipe do Podcast Index). Falha aqui não desfaz a publicação: só vai para o log e o aviso."""
+    def chamar(nome, url, dados=None, cabecalhos=None):
+        corpo = urllib.parse.urlencode(dados).encode() if dados else None
+        pedido = urllib.request.Request(url, data=corpo, headers={"User-Agent": UA, **(cabecalhos or {})})
+        try:
+            with urllib.request.urlopen(pedido, timeout=20) as r:
+                return f"{nome} {r.status}"
+        except urllib.error.HTTPError as e:
+            return f"{nome} ✗ HTTP {e.code}"
+        except Exception as e:
+            return f"{nome} ✗ {repr(e)[:80]}"
+
+    feed = urllib.parse.quote(FEED, safe="")
+    res = [chamar("WebSub", HUB_WEBSUB, {"hub.mode": "publish", "hub.url": FEED}),
+           chamar("Podcast Index", f"https://api.podcastindex.org/api/1.0/hub/pubnotify?url={feed}")]
+    if token := os.environ.get("PODPING_TOKEN"):
+        res.append(chamar("Podping", f"https://podping.cloud/?url={feed}&reason=update&medium=podcast",
+                          cabecalhos={"Authorization": token}))
+    log("avisos do feed:", "; ".join(res))
+    if any("✗" in r for r in res):
+        msg(f"⚠️ Episódio no ar, mas um aviso aos agregadores falhou ({esc('; '.join(res))}). "
+            "Eles pegam o episódio na próxima leitura do feed.", aba="publicacao")
 
 
 def descartar(nome):
