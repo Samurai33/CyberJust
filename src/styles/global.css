@@ -284,6 +284,29 @@
   .canal p { font-size: 0.95rem; }
   @media (max-width: 960px) { .canais { grid-template-columns: 1fr; } }
 
+  /* apoio (src/pages/apoie.astro) */
+  .apoio-grid { display: grid; grid-template-columns: minmax(0, 560px); gap: 24px; }
+  .apoio-form, .apoio-resultado { padding: clamp(20px, 4vw, 32px); display: grid; gap: 16px; align-content: start; }
+  .apoio-form h2, .apoio-resultado h2 { font-size: var(--step-2); letter-spacing: -0.03em; }
+  .apoio-form .filtro { margin: 0; }
+  .campo { display: grid; gap: 6px; }
+  .campo label { font-weight: 500; }
+  .campo input:not([type='checkbox']), .apoio-resultado textarea {
+    inline-size: 100%; min-block-size: var(--tap); padding: 10px 14px; border-radius: 10px;
+    background: rgb(255 255 255 / 0.03); border: 1px solid var(--line-strong);
+  }
+  .apoio-resultado textarea { font-family: var(--font-mono); font-size: 0.8rem; resize: vertical; word-break: break-all; }
+  .campo input:focus-visible, .apoio-resultado textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .campo-check { grid-template-columns: auto 1fr; align-items: start; gap: 10px; }
+  .campo-check input { inline-size: 20px; block-size: 20px; margin-block-start: 2px; accent-color: var(--accent); }
+  .campo-check label { font-weight: 400; color: var(--fg-muted); font-size: 0.95rem; }
+  .ajuda { font-size: var(--step--1); color: var(--fg-subtle); }
+  .apoio-erro:empty { display: none; }
+  .apoio-erro { color: #ffb4b4; font-weight: 500; }
+  .apoio-qr { inline-size: 220px; block-size: 220px; background: #fff; border-radius: 12px; padding: 8px; }
+  .isca { position: absolute; inset-inline-start: -9999px; inline-size: 1px; block-size: 1px; overflow: hidden; }
+  .apoio-form .btn { justify-self: start; }
+
   /* cabeçalho de página interna */
   .page-head { padding-block: clamp(48px, 8vw, 96px) clamp(32px, 5vw, 56px); position: relative; isolation: isolate; }
   .page-head::after { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(50% 80% at 85% 0%, rgb(92 200 255 / 0.1), transparent 70%); }

@@ -85,6 +85,8 @@ const ANTIGOS: [string, string][] = [
   ['/episodios/namoral', '/episodios/'],
   ['/episodios/fraudes-digitais/', '/episodios/'],
   ['/episodios', '/episodios/'],
+  ['/nexus', 'https://n3xus.dev/?utm_source=cyberjus&utm_medium=podcast'],
+  ['/nexus/', 'https://n3xus.dev/?utm_source=cyberjus&utm_medium=podcast'],
 ];
 for (const [de, para] of ANTIGOS) {
   test(`redirect 301 ${de} → ${para}`, async ({ request }) => {

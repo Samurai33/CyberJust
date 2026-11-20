@@ -74,6 +74,7 @@ export const GET: APIRoute = async ({ site }) => {
     <itunes:type>episodic</itunes:type>
     <podcast:guid>${guidDoFeed(feed)}</podcast:guid>
     <podcast:locked owner="${N3XUS.email}">yes</podcast:locked>
+    <podcast:funding url="${base}/apoie/">Apoie o CyberJustiça</podcast:funding>
     ${pessoa}
 ${itens}
   </channel>

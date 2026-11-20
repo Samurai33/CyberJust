@@ -41,18 +41,29 @@ const VIGENCIA = '13 de outubro de 2026';
         e não é gravado). Navegadores com Global Privacy Control ou "Não rastrear" ligado não entram na conta.
         O número só aparece a partir de 100 pessoas.
       </p>
+      <h2 id="apoio">Apoio ao podcast (pagamentos)</h2>
+      <p>
+        Quem apoia pela página <a href="/apoie/">Apoie</a> informa nome, CPF e, se quiser (obrigatório no apoio
+        mensal), e-mail. Esses dados vão direto do formulário ao Asaas, que processa o pagamento como operador
+        e exige o CPF para emitir a cobrança; a finalidade é só gerar e cobrar o apoio (base legal: execução de
+        contrato, art. 7º, V, da LGPD) e cumprir obrigações fiscais (art. 7º, II). O site não guarda esses dados
+        nem dados de cartão: o servidor do apoio guarda apenas o total de apoios e uma marca embaralhada (hash)
+        de cada pagamento já contado. O Asaas guarda os dados da cobrança pelos prazos legais e tem política de
+        privacidade própria. Para cancelar um apoio mensal ou exercer seus direitos, escreva para
+        <a href={`mailto:${N3XUS.emailPrivacidade}`}>{N3XUS.emailPrivacidade}</a>.
+      </p>
       <h2>O que chega ao servidor</h2>
       <p>
         Como em qualquer site, cada acesso gera dados técnicos: endereço IP, data e hora, página pedida e
         navegador. Eles são usados só para entregar as páginas, manter o site no ar e protegê-lo contra
         ataques (base legal: legítimo interesse, art. 7º, IX, da LGPD), não são usados para perfil nem
         publicidade e não são vendidos ou compartilhados para outras finalidades. Participam como operadores
-        a Cloudflare (rede de entrega e proteção) e a infraestrutura própria da N3XUS (servidor do site).
+        a Cloudflare (rede de entrega e proteção), a infraestrutura própria da N3XUS (servidor do site) e, só para quem apoia, o Asaas (pagamentos).
         Registros de acesso podem ser guardados pelo prazo exigido pelo Marco Civil da Internet (art. 15, seis meses).
       </p>
       <h2>O que não fazemos</h2>
       <p>
-        Não há cookies, analytics, pixels de redes sociais, formulários nem contas (o contador acima só soma um número). Fontes, imagens e áudios
+        Não há cookies, analytics, pixels de redes sociais nem contas (o contador acima só soma um número, e o único formulário é o do apoio, explicado acima). Fontes, imagens e áudios
         são servidos deste domínio, sem chamadas a terceiros. Links para órgãos oficiais (Planalto, Banco
         Central, SaferNet, Polícia Federal) abrem os sites deles, que têm políticas próprias.
       </p>
